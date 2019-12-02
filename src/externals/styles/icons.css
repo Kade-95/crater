@@ -1,0 +1,23 @@
+.crater-icons{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: stretch
+}
+
+.crater-icons-icon{
+    width: 70px;
+    height: auto;
+    margin: 1em;
+    background-color: red;
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.crater-icons-icon-image{
+    width: inherit;
+    height: inherit;
+}
+

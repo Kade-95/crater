@@ -1,0 +1,40 @@
+.crater-arrow {
+    border-left: 2px solid #fff;
+    border-top: 2px solid #fff;
+    cursor: pointer
+}
+
+.crater-left-arrow {
+    transform: rotate(-45deg);
+    left: 0;
+    margin-left: 5px;
+}
+
+.crater-right-arrow {
+    transform: rotate(-225deg);
+    right: 0;
+    margin-right: 5px;
+}
+
+.crater-up-arrow {
+    transform: rotate(45deg);
+    top: 0;
+    margin-top: 5px;
+}
+
+.crater-down-arrow {
+    transform: rotate(225deg);
+    bottom: 0;
+    margin-bottom: 5px;
+}
+
+.crater-curve{
+    border-radius: 10px;
+}
+
+.crater-center{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-content: center;
+}

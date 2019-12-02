@@ -1,0 +1,48 @@
+.crater-color-picker {
+    padding: .5em;
+    display: grid;
+    z-index: 20;
+}
+
+.crater-canvas {
+    height: inherit;
+    width: inherit;
+    display: block;
+    border: 1px solid gray;
+}
+
+.crater-color-picker-result {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    margin: .1em 0em;
+}
+
+.crater-picked-color {
+    width: 50px;
+    height: 30px;
+    border: 1px solid black;
+}
+
+.crater-picked-color-value {
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    color: black;
+}
+
+.crater-close-color-picker {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: white;
+    background-color: black;
+    margin: .1em 0em;
+    cursor: pointer;
+}

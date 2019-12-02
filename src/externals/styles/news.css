@@ -1,0 +1,70 @@
+.crater-ticker {
+    color: var(--secondary-color);
+    background-color: var(--lighter-primary-color);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+}
+
+.crater-ticker-title {
+    width: 30%;
+    float: left;
+    background-color: var(--light-primary-color);
+    box-shadow: 1px 1px 2px var(--lighter-accient-color);
+    height: inherit;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+}
+
+.crater-ticker-news-container {
+    width: 70%;
+    float: right;
+    min-height: 50px;
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    flex-direction: row;
+    position: relative;
+    overflow: hidden;
+}
+
+a.crater-ticker-news {
+    position: absolute;
+    font-size: 1.2em;
+    font-family: monospace;
+    font-weight: 500;
+    text-decoration: none;
+    text-transform: capitalize;
+    color: black;
+    text-align: justify;
+    padding: 0em .5em;
+    animation-duration: 2s;
+    animation-fill-mode: forwards;
+}
+
+.crater-ticker-controller {
+    position: relative;
+    margin: 0em .5em;
+}
+
+.crater-ticker .crater-arrow {
+    height: 8px;
+    width: 8px;
+    position: absolute;
+    z-index: 2;
+    /* visibility: hidden; */
+}
+
+.crater-ticker .crater-down-arrow {
+    display: block;
+    position: relative;
+}
+
+.crater-ticker .crater-up-arrow {
+    display: block;
+    position: relative;
+}

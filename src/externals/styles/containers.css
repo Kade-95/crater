@@ -1,0 +1,142 @@
+.crater .card {
+    display: block;
+    margin: 5em 1em;
+    background-color: var(--secondary-color);
+    color: var(--accient-color);
+    padding-bottom: .5em;
+}
+
+.crater .card:hover {
+    box-shadow: var(--accient-shadow);
+    transition-duration: .5s;
+}
+
+.crater .card-title {
+    text-align: center;
+    padding: 0em;
+}
+
+.crater .card-title .title {
+    letter-spacing: .1em;
+    background-color: var(--dark-accient-color);
+    padding: .3em;
+    text-align: center;
+    font-size: 1em;
+    color: var(--secondary-color);
+    text-transform: uppercase;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.crater .card-toggle {
+    left: 0;
+    top: 0;
+}
+
+.crater .card-content {
+    margin: .3em;
+    padding: .1em;
+    text-align: center;
+}
+
+.crater .row {
+    border: 1px solid var(--light-accient-color);
+    margin: .5em;
+    padding: 2em 0em;
+    position: relative;
+}
+
+.crater .cell {
+    display: inline-grid;
+    margin: .5em;
+    font-size: 1em;
+    letter-spacing: .1em;
+    font-weight: 300;
+    box-shadow: var(--accient-shadow);
+    border-radius: 10px;
+    overflow: auto;
+    text-align: center;
+}
+
+.crater .cell:hover, .crater .cell:focus {
+    box-shadow: var(--primary-shadow);
+    transition-duration: .5s;
+}
+
+.crater .cell-label {
+    text-transform: uppercase;
+    background-color: var(--dark-accient-color);
+    color: var(--dark-secondary-color);
+    padding: 0.3em;
+    text-align: center;
+    font-weight: 400;
+}
+
+.crater .cell-data {
+    padding: 0.3em;
+    text-align: center;
+    width: unset;
+    outline: none;
+    border: none;
+    color: var(--accient-color);
+}
+
+.crater .cell-data:hover, .crater .cell-data:focus {
+    cursor: text;
+    transition-duration: 1s;
+}
+
+.crater .webpart-options {
+    position: absolute;
+    background-color: white;
+    display: none;
+    top: 0;
+    z-index: 100;
+    margin: .2em;
+}
+
+.crater .webpart-options .webpart-option {
+    text-transform: uppercase;
+    display: block;
+    padding: .1em .4em;
+    margin: 0em .1em;
+    text-decoration: none;
+    color: rgb(5, 5, 5);
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.crater .webpart-options img.webpart-option {
+    width: 1.5em;
+    height: 1.5em;
+}
+
+.crater .webpart-options .webpart-option:hover {
+    box-shadow: 0.5px 0.5px 5px 0.5px #666;
+}
+
+.crater .crater-style-options {
+    z-index: 2;
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: .5em;
+    background-color: white;
+}
+
+.crater .crater-style-options img.crater-style-option {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+
+.crater .crater-content-options{
+    position: absolute;
+    top: 0;
+    left: 50%;
+    right: 50%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}

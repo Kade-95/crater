@@ -1,0 +1,21 @@
+.crater-section {
+    position: relative;
+    min-height: 50px;
+    vertical-align: top;
+}
+
+.crater-section:hover {
+    box-shadow: 1px 1px 2px #aaaaaa, -1px -1px 2px #aaaaaa;
+}
+
+.crater-section-content{
+    position: relative;
+    width: 100%;
+}
+
+.crater-section-content .keyed-element {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}

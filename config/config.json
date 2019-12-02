@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "crater-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/crater/Crater.js",
+          "manifest": "./src/webparts/crater/Crater.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "CraterWebPartStrings": "lib/webparts/crater/loc/{locale}.js"
+  }
+}

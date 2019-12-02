@@ -1,0 +1,71 @@
+:root {
+    --primary-color: rgb(0, 0, 255);
+    --secondary-color: rgb(255, 255, 255);
+    --accient-color: rgb(0, 0, 0);
+    --lighter-primary-color: rgb(0, 0, 255, 0.3);
+    --lighter-secondary-color: rgb(255, 255, 255, 0.3);
+    --lighter-accient-color: rgb(0, 0, 0, 0.3);
+    --light-primary-color: rgb(0, 0, 255, 0.5);
+    --light-secondary-color: rgb(255, 255, 255, 0.5);
+    --light-accient-color: rgb(0, 0, 0, 0.5);
+    --dark-primary-color: rgb(0, 0, 255, 0.8);
+    --dark-secondary-color: rgb(255, 255, 255, 0.8);
+    --dark-accient-color: rgb(0, 0, 0, 0.8);
+    --primary-shadow: 1px 1px 5px var(--lighter-primary-color), -1px -1px 5px var(--lighter-primary-color);
+    --secondary-shadow: 1px 1px 5px var(--lighter-secondary-color), -1px -1px 5px var(--lighter-secondary-color);
+    --accient-shadow: 4px 4px 10px var(--lighter-accient-color), -4px -4px 10px var(--lighter-accient-color);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+.crater .btn {
+    padding: 1em;
+    font-size: 1em;
+    font-weight: 400;
+    background-color: white;
+    color: black;
+    cursor: pointer;
+    border: unset;
+    box-shadow: var(--accient-shadow);
+}
+
+.crater input[type='file'] {
+    outline: none;
+}
+
+.crater .small.btn {
+    padding: .2em;
+}
+
+.crater button:hover {
+    box-shadow: var(--primary-shadow);
+}
+
+.crater .crater-component {
+    text-align: center;
+    display: block;
+    position: relative;
+    min-height: 50px;
+}
+
+.crater-sections-container{
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+}
+
+.crater .crater-icon {
+    width: 2em;
+    height: auto;
+}
+
+.crater-close {
+    position: absolute;
+    height: auto;
+    width: 1em;
+    top: .5em;
+    right: .5em;
+    background-color: white;
+}

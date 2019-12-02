@@ -1,0 +1,38 @@
+.crater-countdown {
+    position: relative;
+}
+
+.crater-countdown-content {
+    
+}
+
+.crater-countdown .crater-countdown-block {
+    margin: 1em 1em;
+    color: var(--secondary-color);
+    background-color: var(--lighter-primary-color);
+    display: inline-block;
+}
+
+.crater-countdown .crater-countdown-block:hover{
+    box-shadow: var(--accient-shadow);
+}
+
+.crater-countdown .crater-countdown-counting {
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    align-content: center;
+    padding: 2em 1em;
+    font-size: 3em;
+    border-bottom: 1px solid var(--light-accient-color);
+}
+
+.crater-countdown .crater-countdown-label{
+    font-size: 1.2em;
+    padding: .5em;
+}
+
+
+.crater-countdown-past .crater-countdown-counting{
+    visibility: hidden;
+}

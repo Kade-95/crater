@@ -1,0 +1,29 @@
+.crater-button{
+    background-color: var(--secondary-color);
+    color: var(--accient-color);
+}
+
+.crater-button-content{
+    
+}
+
+.crater-button-single{
+    text-decoration: none;
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 1em;
+    box-shadow: teal;
+}
+
+.crater-button-icon{
+    width: 20px;
+    height: auto;
+}
+
+.crater-button-text{
+    color: black;
+    font-size: 1.3em;
+    font-weight: bold;
+}

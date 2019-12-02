@@ -1,0 +1,141 @@
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+        z-index: 0;
+    }
+    100% {
+        opacity: 1;
+        z-index: 1;
+    }
+}
+
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+        z-index: 1;
+    }
+    100% {
+        opacity: 0;
+        z-index: 0;
+    }
+}
+
+@keyframes swipe-in {
+    0% {
+        top: unset;
+        bottom: -10px;
+        opacity: 0;
+        z-index: 0;
+    }
+    100% {
+        top: unset;
+        bottom: unset;
+        opacity: 1;
+        z-index: 1;
+    }
+}
+
+@keyframes swipe-out {
+    0% {
+        top: unset;
+        bottom: unset;
+        opacity: 1;
+        z-index: 1;
+    }
+    100% {
+        top: -10px;
+        bottom: unset;
+        opacity: 0;
+        z-index: 0;
+    }
+}
+
+@keyframes reverse-swipe-in {
+    0% {
+        top: -10px;
+        bottom: unset;
+        opacity: 1;
+        z-index: 1;
+    }
+    100% {
+        top: unset;
+        bottom: unset;
+        opacity: 1;
+        z-index: 1;
+    }
+}
+
+@keyframes reverse-swipe-out {
+    0% {
+        top: unset;
+        bottom: unset;
+        opacity: 1;
+        z-index: 1;
+    }
+    100% {
+        top: unset;
+        bottom: -10px;
+        opacity: 0;
+        z-index: 0;
+    }
+}
+
+@keyframes slide-in {
+    0% {
+        left: unset;
+        right: -10px;
+        opacity: 0;
+        z-index: 0;
+    }
+    100% {
+        left: unset;
+        right: unset;
+        opacity: 1;
+        z-index: 1;
+    }
+}
+
+@keyframes slide-out {
+    0% {
+        left: unset;
+        right: unset;
+        opacity: 1;
+        z-index: 1;
+    }
+    100% {
+        left: -10px;
+        right: unset;
+        opacity: 0;
+        z-index: 0;
+    }
+}
+
+@keyframes reverse-slide-in {
+    0% {
+        left: -10px;
+        right: unset;
+        opacity: 1;
+        z-index: 1;
+    }
+    100% {
+        left: unset;
+        right: unset;
+        opacity: 1;
+        z-index: 1;
+    }
+}
+
+@keyframes reverse-slide-out {
+    0% {
+        left: unset;
+        right: unset;
+        opacity: 1;
+        z-index: 1;
+    }
+    100% {
+        left: unset;
+        right: -10px;
+        opacity: 0;
+        z-index: 0;
+    }
+}
