@@ -24,7 +24,7 @@
     align-content: center;
     padding: 2em 1em;
     font-size: 3em;
-    border-bottom: 1px solid var(--light-accient-color);
+    border-bottom: 1px solid var(--light-primary-color);
 }
 
 .crater-countdown .crater-countdown-label{

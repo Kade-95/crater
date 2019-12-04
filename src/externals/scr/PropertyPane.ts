@@ -94,11 +94,10 @@ class PropertyPane {
                         this.element.setBackgroundImage(this.sharePoint.properties.pane.content[key].draft.dom.dataset.backgroundImage);
                     }
 
-                    this.clearDraft(this.sharePoint.properties.pane.content[key].draft);
                     this.sharePoint.saved = true;
                     this.sharePoint.savedWebPart = this.element;
 
-                    console.log('Crater edition aved');
+                    console.log('Crater edition saved');
                 } else if (event.target.id == 'crater-editor-cancel') {//keep draft and exit
                     this.clearDraft(this.sharePoint.properties.pane.content[key].draft);
                     console.log('Crater edition cancelled');
@@ -245,6 +244,8 @@ class PropertyPane {
         draft.pane.content = '';// clear draft content
         draft.pane.styles = '';// clear draft style
         draft.html = '';
+
+        console.log('Draft cleared');
     }
 }
 

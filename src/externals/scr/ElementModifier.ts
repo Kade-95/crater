@@ -474,7 +474,7 @@ function prepareFrameWork(): void {
         if (func.isset(params.text)) element.textContent = params.text;//set the innerText
 
         if (func.isset(params.value)) element.value = params.value;//set the value
-        
+
         if (func.isset(params.options)) {//add options if isset
             for (var i of params.options) {
                 element.makeElement({ element: 'option', value: i, text: i, attachment: 'append' });
@@ -706,12 +706,13 @@ function prepareFrameWork(): void {
     };
 
     Element.prototype['css'] = function (params) {
-        // set css style of element using json
+        // set css style of element using json        
         if (func.isset(params)) {
             Object.keys(params).map((styleKey) => {
                 this.style[styleKey] = params[styleKey];
             });
         }
+
         let css = this.style.cssText,
             style = {},
             key,
@@ -722,9 +723,11 @@ function prepareFrameWork(): void {
             let pair;
             for (let i of css) {
                 pair = func.trem(i);
-                key = pair.split(':')[0];
-                value = pair.split(':').pop();
-                if (key != '') style[key] = func.trem(value);
+                key = func.jsStyleName(pair.split(':')[0]);
+                value = func.stringReplace(pair.split(':').pop(), ';', '');
+                if (key != '') {
+                    style[key] = func.trem(value);
+                }
             }
         }
 
@@ -821,20 +824,31 @@ function prepareFrameWork(): void {
         let value = this.getAttribute('value');
 
         let updateMe = (event) => {
-            if (event.target.type == 'date') {
-                if (func.isDate(this.value)) this.setAttribute('value', this.value);
-            }
-            else if (event.target.type == 'time') {
-                if (func.isTimeValid(this.value)) this.setAttribute('value', this.value);
-            }
-            else {
-                this.setAttribute('value', this.value);
+            if (event.target.nodeName == 'INPUT') {
+                if (event.target.type == 'date') {
+                    if (func.isDate(this.value)) this.setAttribute('value', this.value);
+                }
+                else if (event.target.type == 'time') {
+                    if (func.isTimeValid(this.value)) this.setAttribute('value', this.value);
+                }
+                else {
+                    this.setAttribute('value', this.value);
+                }
+            } else if (event.target.nodeName == 'SELECT') {
+                for (let i = 0; i < event.target.options.length; i++) {
+                    if (i == event.target.selectedIndex) {
+                        event.target.options[i].setAttribute('selected', true);
+                    } else {
+                        event.target.options[i].removeAttribute('selected');
+                    }
+                }
             }
 
             if (func.isset(callBack)) {
                 callBack(this.value);
             }
         };
+
         this.addEventListener('keyup', (event) => {
             updateMe(event);
         });

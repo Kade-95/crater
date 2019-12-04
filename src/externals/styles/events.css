@@ -1,0 +1,89 @@
+.crater-events{
+    box-shadow: var(--accient-shadow);
+}
+
+.crater-events-title{
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    background-color: var(--primary-color);
+    padding: .5em;
+}
+
+.crater-events-title-icon{
+    width: 2em;
+    height: auto;
+}
+
+.crater-events-title-text{
+    font-size: 1.2em;
+    color: var(--secondary-color);
+}
+
+.crater-events-content{
+    display: grid;
+}
+
+.crater-events-row{
+    display: grid;
+    grid-template-columns: 1fr 10fr 1fr;
+}
+
+.crater-events-row:hover{
+    box-shadow: var(--primary-shadow);
+}
+
+.crater-events-row-icon{
+    width: 2em;
+    height: auto;
+    align-self: center;
+    justify-self: center;
+    padding: 0.5em;
+}
+
+.crater-events-details{
+    display: grid;
+    grid-template-rows: repeat(2, 1fr);
+}
+
+.crater-events-task{
+    font-size: 1.2em;
+    font-weight: bolder;
+    letter-spacing: .02em;
+    padding: 0.3em;
+    justify-self: start;
+    /* align-items: center; */
+}
+
+.crater-events-durationandlocation{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.crater-events-duration, .crater-events-location{
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    padding: 0.3em;
+}
+
+.crater-events-duration-icon, .crater-events-location-icon{
+    width: 1em;
+    height: auto;
+    display: inline-block;
+    padding: 0.3em;
+}
+
+.crater-events-duration-value, .crater-events-location-value{
+    font-size: 1em;
+    color: var(--light-accient-color);
+    padding: 0.3em;
+}
+
+.crater-events-date{
+    align-self: center;
+    justify-self: center;
+    padding: 0.5em;
+}
