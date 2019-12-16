@@ -18,6 +18,14 @@ class Func {
 
 	}
 
+	public trimMonthArray() {
+		let trimmedMonths = [];
+		for (let i = 0; i < this.months[i].length; i++) {
+			trimmedMonths.push(this.months[i].slice(0, 3));
+		}
+		return trimmedMonths;
+	}
+
 	public jsStyleName(name) {
 		let newName = '';
 		for (let i = 0; i < name.length; i++) {
@@ -412,7 +420,7 @@ class Func {
 	public getDateObject(value: any) {
 		let days: number = Math.floor(value / this.secondsInDays(1));
 		// console.log(value, this.secondsInDays(1));
-		
+
 		value -= this.secondsInDays(days);
 
 		let hours = Math.floor(value / this.secondsInHours(1));

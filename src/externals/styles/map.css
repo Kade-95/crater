@@ -1,0 +1,21 @@
+.crater-map {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+#crater-map-div{
+    width:100%;
+    height: 400px;
+}
+
+.message-note{
+    display: flex;
+    justify-items: center;
+    background-color: palegoldenrod;
+    color: tomato;
+    border: 2px solid tomato;
+    padding: 2em;
+    margin: auto;
+    width: 300px;
+}

@@ -1,0 +1,17 @@
+.crater-instagram{
+    position: relative;
+}
+
+.crater-instagram-error{
+    background-color: lightgoldenrodyellow;
+    border: 3px solid tomato;
+    color: tomato;
+    padding: 2em;
+    display: none;
+    transition: 2s ease;
+    margin: 2em;
+}
+.crater-instagram-content{
+    display: flex;
+    justify-content: center;
+}

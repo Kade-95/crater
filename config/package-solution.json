@@ -2,7 +2,7 @@
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
     "name": "crater-client-side-solution",
-    "id": "72d34102-fcf8-46c2-939b-04a100ea6819",
+    "id": "d106d91f-d11e-4738-94d0-8ae900394058",
     "version": "1.0.0.0",
     "includeClientSideAssets": true,
     "isDomainIsolated": false

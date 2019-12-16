@@ -1,6 +1,6 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
-  "id": "98b96636-62de-4b9f-ad30-4e2635626608",
+  "id": "85f78f0d-e7eb-47b3-a145-786312546651",
   "alias": "Crater",
   "componentType": "WebPart",
   // The "*" signifies that the version should be taken from the package.json

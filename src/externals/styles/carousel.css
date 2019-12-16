@@ -1,0 +1,41 @@
+.crater-carousel {}
+
+.crater-carousel-content {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 1fr;
+    grid-gap: 1em;
+}
+
+.crater-carousel-column {
+    width: 100%;
+    display: grid;
+    transition-duration: .5s;
+}
+
+.crater-carousel-image {
+    width: 100%;
+    height: auto;
+}
+
+.crater-carousel-text {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+}
+
+.crater-carousel-content .crater-left-arrow {
+    margin-left: 1.5em
+}
+
+.crater-carousel-content .crater-right-arrow {
+    margin-right: 1.5em
+}
+
+.crater-carousel-radio-toggle {
+    margin: .3em;
+    cursor: pointer;
+    animation-duration: .5s;
+}
+

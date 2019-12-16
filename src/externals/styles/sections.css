@@ -1,6 +1,6 @@
 .crater-section {
     position: relative;
-    min-height: 50px;
+    min-height: 150px;
     vertical-align: top;
 }
 
@@ -11,6 +11,8 @@
 .crater-section-content{
     position: relative;
     width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
 }
 
 .crater-section-content .keyed-element {

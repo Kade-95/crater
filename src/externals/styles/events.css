@@ -1,5 +1,6 @@
 .crater-events{
     box-shadow: var(--accient-shadow);
+    position: relative;
 }
 
 .crater-events-title{

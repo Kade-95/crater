@@ -1,7 +1,6 @@
 import { ElementModifier, func, ColorPicker, Connection } from '.';
 import FroalaEditor from 'froala-editor';
 import 'froala-editor/js/plugins/align.min.js';
-import { PropertyPane } from './PropertyPane';
 
 require('./../styles/events.css');
 require('./../styles/list.css');
@@ -18,6 +17,11 @@ require('./../styles/icons.css');
 require('./../styles/button.css');
 require('./../styles/countdown.css');
 require('./../styles/tab.css');
+require('./../styles/carousel.css');
+require('./../styles/map.css');
+require('./../styles/datelist.css');
+require('./../styles/instagram.css');
+require('./../styles/beforeafter.css');
 require('./../../../node_modules/froala-editor/css/froala_editor.pkgd.min.css');
 
 class CraterWebParts {
@@ -314,6 +318,540 @@ class Sample extends CraterWebParts {
 	}
 }
 
+class Carousel extends CraterWebParts {
+	public params: any;
+	public elementModifier = new ElementModifier();
+	public paneContent: any;
+	public element: any;
+	private backgroundImage = '';
+	private backgroundColor = '#999999';
+	private color = 'white';
+	private columns: number = 3;
+	private duration: number = 10;
+	private key: any;
+
+	constructor(params) {
+		super({ sharePoint: params.sharePoint });
+		this.sharePoint = params.sharePoint;
+		this.backgroundImage = this.sharePoint.images.append;
+		this.params = params;
+	}
+
+	public render(params) {
+		if (!func.isset(params.source)) params.source = [
+			{ image: this.sharePoint.images.append, text: 'One here' },
+			{ image: this.sharePoint.images.edit, text: 'Two now' },
+			{ image: this.sharePoint.images.sync, text: 'Three then' },
+			{ image: this.sharePoint.images.async, text: 'Four done' },
+			{ image: this.sharePoint.images.delete, text: 'Five when' }
+		];
+
+		let carousel = this.createKeyedElement({ element: 'div', attributes: { class: 'crater-carousel crater-component', 'data-type': 'carousel' } });
+
+		let radioToggle = carousel.makeElement({ element: 'span', attributes: { class: 'crater-top-right', id: 'crater-carousel-controller' } });
+
+		let content = carousel.makeElement({
+			element: 'div', attributes: { class: 'crater-carousel-content' }
+		});
+
+		for (let src of params.source) {
+			radioToggle.makeElement({ element: 'input', attributes: { type: 'radio', class: 'crater-carousel-radio-toggle' } });
+			content.makeElement({
+				element: 'span', attributes: { class: 'crater-carousel-column' }, children: [
+					{ element: 'img', attributes: { class: 'crater-carousel-image', src: src.image } },
+					{ element: 'span', attributes: { class: 'crater-carousel-text' }, text: src.text }
+				]
+			});
+		}
+
+		carousel.makeElement({ element: 'span', attributes: { class: 'crater-arrow crater-left-arrow' } });
+		carousel.makeElement({ element: 'span', attributes: { class: 'crater-arrow crater-right-arrow' } });
+
+		this.key = carousel.dataset['key'];
+		//upload the pre-defined settings of the webpart
+		this.sharePoint.properties.pane.content[this.key].settings.columns = 3;
+		this.sharePoint.properties.pane.content[this.key].settings.duration = 1000;
+		return carousel;
+	}
+
+	public rendered(params) {
+		this.params = params;
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+
+		this.columns = this.sharePoint.properties.pane.content[this.key].settings.columns / 1;
+
+		this.duration = this.sharePoint.properties.pane.content[this.key].settings.duration / 1;
+
+		this.startSlide();
+	}
+
+	public startSlide() {
+		this.key = this.element.dataset['key'];
+		let controller = this.element.querySelector('#crater-carousel-controller'),
+			arrows = this.element.querySelectorAll('.crater-arrow'),
+			radios,
+			columns = this.element.querySelectorAll('.crater-carousel-column'),
+			radio: any,
+			key = 0;
+
+		if (this.element.length < 1) return;
+
+		//reset control buttons
+		controller.innerHTML = '';
+
+		//stack the first slide ontop
+		for (let position = 0; position < columns.length; position++) {
+			columns[position].css({ zIndex: 0 });
+			if (position == 0) columns[position].css({ zIndex: 1 });
+			controller.makeElement({
+				element: 'input', attributes: { class: 'crater-carousel-radio-toggle', type: 'radio' }
+			});
+		}
+		radios = controller.querySelectorAll('.crater-carousel-radio-toggle');
+
+		//fading and fadeout animation
+
+		let runSliding = () => {
+			if (key < 0) key = radios.length - 1;
+			if (key >= radios.length) key = 0;
+			for (let element of radios) {
+				if (radio != element) element.checked = false;
+			}
+
+			let getColumns = () => {
+				let currentColunms = [];
+				for (let i = 0; i < this.columns; i++) {
+					currentColunms[i] = key + i;
+					if (currentColunms[i] >= columns.length) {
+						currentColunms[i] -= columns.length;
+					}
+				}
+
+				return currentColunms;
+			};
+
+			let current = getColumns();
+			for (let i = 0; i < columns.length; i++) {
+				let position: number = current.indexOf(i);
+				if (position != -1) {
+					columns[i].show();
+					columns[i].css({ gridColumnStart: position + 1, gridRowStart: 1 });
+				} else {
+					columns[i].hide();
+				}
+			}
+		};
+
+		//move to next slide
+		let keepSliding = () => {
+			clearInterval(this.sharePoint.properties.pane.content[this.key].settings.animation);
+			this.sharePoint.properties.pane.content[this.key].settings.animation = setInterval(() => {
+				key++;
+				runSliding();
+			}, this.sharePoint.properties.pane.content[this.key].settings.duration);
+		};
+
+		//run animation when arrow is clicked
+		for (let arrow of arrows) {
+			arrow.css({ marginTop: `${(this.element.position().height - arrow.position().height) / 2}px` });
+			arrow.addEventListener('click', event => {
+				if (arrow.classList.contains('crater-left-arrow')) {
+					key--;
+				}
+				else if (arrow.classList.contains('crater-right-arrow')) {
+					key++;
+				}
+
+				clearInterval(this.sharePoint.properties.pane.content[this.key].settings.animation);
+				runSliding();
+			});
+		}
+
+		//run animation when a controller is clicked
+		for (let position = 0; position < radios.length; position++) {
+			radios[position].addEventListener('click', () => {
+				clearInterval(this.sharePoint.properties.pane.content[this.key].settings.animation);
+				key = position;
+				runSliding();
+			});
+		}
+
+		//click the first controller and set the first slide
+		radios[key].click();
+		keepSliding();
+	}
+
+	public setUpPaneContent(params): any {
+		this.element = params.element;
+		this.key = params.element.dataset['key'];
+
+		this.paneContent = this.elementModifier.createElement({
+			element: 'div',
+			attributes: { class: 'crater-property-content' }
+		});
+
+		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		}
+		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		}
+		else {
+			let columns = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelectorAll('.crater-carousel-column');
+
+			this.paneContent.makeElement({
+				element: 'div', children: [
+					this.elementModifier.createElement({
+						element: 'button', attributes: { class: 'btn new-component', style: { display: 'inline-block', borderRadius: '5px' } }, text: 'Add New'
+					})
+				]
+			});
+
+			this.paneContent.append(this.generatePaneContent(columns));
+
+			let settingsPane = this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'card settings-pane' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: "Settings"
+							})
+						]
+					}),
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'Duration', value: this.sharePoint.properties.pane.content[this.key].settings.duration || ''
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Columns', value: this.sharePoint.properties.pane.content[this.key].settings.columns || ''
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'FontSize'
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'FontStyle'
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'ImageSize'
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'ShowText', value: this.sharePoint.properties.pane.content[this.key].settings.showText || '', options: ['Yes', 'No']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'Curved', value: this.sharePoint.properties.pane.content[this.key].settings.curved || '', options: ['Yes', 'No']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'Shadow', value: this.sharePoint.properties.pane.content[this.key].settings.shadow || '', options: ['Yes', 'No']
+							}),
+						]
+					})
+				]
+			});
+
+			let update = this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'card update-pane update' }, children: [
+					{
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'Update'
+							})
+						]
+					},
+					{ element: 'label', text: 'The list to fetch must contain Image and Text ' },
+
+					{
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'Site', attributes: {}, dataAttributes: {}
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'List', attributes: {}, dataAttributes: {}
+							}),
+
+							{
+								element: 'div', attributes: { class: 'crater-center' }, children: [
+									{ element: 'button', attributes: { class: 'btn', id: 'update-source', style: { display: 'flex', alignSelf: 'center' } }, text: 'Update Source' }
+								]
+							}
+						]
+					}
+				]
+			});
+		}
+
+		return this.paneContent;
+	}
+
+	public generatePaneContent(columns) {
+		let columnsPane = this.elementModifier.createElement({
+			element: 'div', attributes: { class: 'card columns-pane' }, children: [
+				this.elementModifier.createElement({
+					element: 'div', attributes: { class: 'card-title' }, children: [
+						this.elementModifier.createElement({
+							element: 'h2', attributes: { class: 'title' }, text: "Columns"
+						})
+					]
+				}),
+			]
+		});
+
+		for (let i = 0; i < columns.length; i++) {
+			columnsPane.makeElement({
+				element: 'div',
+				attributes: {
+					style: { border: '1px solid #bbbbbb', margin: '.5em 0em' }, class: 'crater-carousel-column-pane row'
+				},
+				children: [
+					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-carousel-column' }),
+					this.elementModifier.cell({
+						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: columns[i].querySelector('.crater-carousel-image').src }
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'Text', attributes: {}, value: columns[i].querySelector('.crater-carousel-text').innerText || ''
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'Color', attributes: {}, value: columns[i].querySelector('.crater-carousel-text').css().color || ''
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'BackgroundColor', attributes: {}, value: columns[i].querySelector('.crater-carousel-text').css().backgroundColor || ''
+					}),
+				]
+			});
+		}
+
+		return columnsPane;
+	}
+
+	public listenPaneContent(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+
+		let domDraft = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let content = domDraft.querySelector('.crater-carousel-content');
+		let columns = domDraft.querySelectorAll('.crater-carousel-column');
+
+		let columnPanePrototype = this.elementModifier.createElement({
+			element: 'div',
+			attributes: {
+				style: { border: '1px solid #bbbbbb', margin: '.5em 0em' }, class: 'crater-carousel-column-pane row'
+			},
+			children: [
+				this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-carousel-column' }),
+				this.elementModifier.cell({
+					element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: this.sharePoint.images.append }
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'Text', attributes: {}, value: 'Text Here'
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'Color', attributes: {}
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'BackgroundColor', attributes: {}
+				}),
+			]
+		});
+
+		let columnPrototype = this.elementModifier.createElement({
+			element: 'span', attributes: { class: 'crater-carousel-column' }, children: [
+				{ element: 'img', attributes: { class: 'crater-carousel-image', src: this.sharePoint.images.append } },
+				{ element: 'span', attributes: { class: 'crater-carousel-text' }, text: 'Text Here' }
+			]
+		});
+
+		let carouselColumnHandler = (columnPane, columnDom) => {
+			columnPane.addEventListener('mouseover', event => {
+				columnPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+			});
+
+			columnPane.addEventListener('mouseout', event => {
+				columnPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+			});
+
+			let imageCell = columnPane.querySelector('#Image-cell').parentNode;
+			this.uploadImage({ parent: imageCell }, (image) => {
+				imageCell.querySelector('#Image-cell').src = image.src;
+				columnDom.querySelector('.crater-carousel-image').src = image.src;
+			});
+
+			columnPane.querySelector('#Text-cell').onChanged(value => {
+				columnDom.querySelector('.crater-carousel-text').textContent = value;
+			});
+
+			let colorCell = columnPane.querySelector('#Color-cell').parentNode;
+			this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#Color-cell') }, (color) => {
+				columnDom.querySelector('.crater-carousel-text').css({ color });
+				colorCell.querySelector('#Color-cell').value = color;
+				colorCell.querySelector('#Color-cell').setAttribute('value', color);
+			});
+
+			let backgroundColorCell = columnPane.querySelector('#BackgroundColor-cell').parentNode;
+			this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#BackgroundColor-cell') }, (backgroundColor) => {
+				columnDom.css({ backgroundColor });
+				backgroundColorCell.querySelector('#BackgroundColor-cell').value = backgroundColor;
+				backgroundColorCell.querySelector('#BackgroundColor-cell').setAttribute('value', backgroundColor);
+			});
+
+			columnPane.querySelector('.delete-crater-carousel-column').addEventListener('click', event => {
+				columnDom.remove();
+				columnPane.remove();
+			});
+
+			columnPane.querySelector('.add-before-crater-carousel-column').addEventListener('click', event => {
+				let newColumnPrototype = columnPrototype.cloneNode(true);
+				let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
+
+				columnDom.before(newColumnPrototype);
+				columnPane.before(newColumnPanePrototype);
+				carouselColumnHandler(newColumnPanePrototype, newColumnPrototype);
+			});
+
+			columnPane.querySelector('.add-after-crater-carousel-column').addEventListener('click', event => {
+				let newColumnPrototype = columnPrototype.cloneNode(true);
+				let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
+
+				columnDom.after(newColumnPrototype);
+				columnPane.after(newColumnPanePrototype);
+				carouselColumnHandler(newColumnPanePrototype, newColumnPrototype);
+			});
+		};
+
+		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+			let newColumnPrototype = columnPrototype.cloneNode(true);
+			let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
+
+			content.append(newColumnPrototype);//c
+			this.paneContent.querySelector('.columns-pane').append(newColumnPanePrototype);
+
+			carouselColumnHandler(newColumnPanePrototype, newColumnPrototype);
+		});
+
+		this.paneContent.querySelectorAll('.crater-carousel-column-pane').forEach((columnPane, position) => {
+			carouselColumnHandler(columnPane, columns[position]);
+		});
+
+		let settingsPane = this.paneContent.querySelector('.settings-pane');
+
+		settingsPane.querySelector('#Duration-cell').onChanged();
+
+		settingsPane.querySelector('#Columns-cell').onChanged(value => {
+			domDraft.querySelector('.crater-carousel-content').css({ gridTemplateColumns: `repeat(${value}, 1fr)` });
+		});
+
+		settingsPane.querySelector('#FontSize-cell').onChanged(fontSize => {
+			domDraft.querySelectorAll('.crater-carousel-text').forEach(text => {
+				text.css({ fontSize });
+			});
+		});
+
+		settingsPane.querySelector('#FontStyle-cell').onChanged(fontFamily => {
+			domDraft.querySelectorAll('.crater-carousel-text').forEach(text => {
+				text.css({ fontFamily });
+			});
+		});
+
+		settingsPane.querySelector('#ImageSize-cell').onChanged(width => {
+			domDraft.querySelectorAll('.crater-carousel-image').forEach(text => {
+				text.css({ width });
+			});
+		});
+
+		settingsPane.querySelector('#ShowText-cell').onChanged(display => {
+			domDraft.querySelectorAll('.crater-carousel-text').forEach(text => {
+				if (display.toLowerCase() == 'no') {
+					text.hide();
+				} else {
+					text.show();
+				}
+			});
+		});
+
+		settingsPane.querySelector('#Curved-cell').onChanged(curved => {
+			domDraft.querySelectorAll('.crater-carousel-column').forEach(column => {
+				if (curved.toLowerCase() == 'yes') {
+					column.css({ borderRadius: '10px' });
+				} else {
+					column.cssRemove(['border-radius']);
+				}
+			});
+		});
+
+		settingsPane.querySelector('#Shadow-cell').onChanged(shadow => {
+			domDraft.querySelectorAll('.crater-carousel-column').forEach(column => {
+				if (shadow.toLowerCase() == 'yes') {
+					column.css({ boxShadow: 'var(--accient-shadow)' });
+				} else {
+					column.cssRemove(['box-shadow']);
+				}
+			});
+		});
+
+		this.paneContent.addEventListener('mutated', event => {
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+		});
+
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+
+			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.querySelector('#Duration-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.querySelector('#Columns-cell').value;
+
+			// this.sharePoint.properties.pane.content[this.key].settings.height = this.paneContent.querySelector('#Height-cell').value;
+			// this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth = this.paneContent.querySelector('#BackgroundWidth-cell').value;
+			// this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight = this.paneContent.querySelector('#BackgroundHeight-cell').value;
+			// this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition = this.paneContent.querySelector('#BackgroundPosition-cell').value;
+
+			// this.element.querySelectorAll('.crater-counter-content-column').forEach((element, position) => {
+			// 	let pane = this.paneContent.querySelectorAll('.crater-counter-content-column-pane')[position];
+
+			// 	if (func.isset(pane.dataset.backgroundImage)) {
+			// 		element.setBackgroundImage(pane.dataset.backgroundImage);
+			// 	}
+			// });
+		});
+
+		this.updateContent();
+	}
+
+	private updateContent() {
+		let sourceRow = this.paneContent.querySelector('#update-source').getParents('.row');
+
+		sourceRow.querySelector('#Site-cell').onChanged();
+		sourceRow.querySelector('#List-cell').onChanged();
+
+		let updateButton = this.paneContent.querySelector('#update-source');
+
+		updateButton.addEventListener('click', event => {
+			let link = sourceRow.querySelector('#Site-cell').value;
+			let list = sourceRow.querySelector('#List-cell').value;
+
+			updateButton.render({
+				element: 'img', attributes: { class: 'crater-icon', src: this.sharePoint.images.loading }
+			});
+
+			this.sharePoint.connection.find({ link, list, data: 'Image,Text' }).then(source => {
+				if (Array.isArray(source) && source.length > 0) {
+					//reset the pane and note the changes
+					let newContent = this.render({ source });
+					this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-carousel-content').innerHTML = newContent.querySelector('.crater-carousel-content').innerHTML;
+
+					this.paneContent.querySelector('.columns-pane').innerHTML = this.generatePaneContent({ list: newContent.querySelectorAll('.crater-carousel-column') }).innerHTML;
+				}
+				updateButton.innerHTML = 'Update';
+			}).catch((error) => {
+				updateButton.innerHTML = 'Update';
+			});
+
+		});
+	}
+}
+
 class Events extends CraterWebParts {
 	public params: any;
 	public elementModifier = new ElementModifier();
@@ -593,15 +1131,17 @@ class Events extends CraterWebParts {
 			});
 
 			let update = this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'card update-pane' }, children: [
-					this.elementModifier.createElement({
+				element: 'div', attributes: { class: 'card update-pane update' }, children: [
+					{
 						element: 'div', attributes: { class: 'card-title' }, children: [
 							this.elementModifier.createElement({
-								element: 'h2', attributes: { class: 'title' }, text: 'Events Update'
+								element: 'h2', attributes: { class: 'title' }, text: 'Update'
 							})
 						]
-					}),
-					this.elementModifier.createElement({
+					},
+					{ element: 'label', text: 'The list to fetch must contain Task, Icon, Location, Duration and Date ' },
+
+					{
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
 								element: 'input', name: 'Site', attributes: {}, dataAttributes: {}
@@ -616,7 +1156,7 @@ class Events extends CraterWebParts {
 								]
 							}
 						]
-					})
+					}
 				]
 			});
 		}
@@ -854,30 +1394,30 @@ class Events extends CraterWebParts {
 
 		let handleProperties = (property, pane) => {
 			pane.querySelector('#fontsize-cell').onChanged(fontSize => {
-				domDraft.querySelectorAll(`.crater-events-${property}`).forEach(icon => {
-					icon.css({ fontSize });
+				domDraft.querySelectorAll(`.crater-events-${property}-value`).forEach(value => {
+					value.css({ fontSize });
 				});
 			});
 
 			pane.querySelector('#fontstyle-cell').onChanged(fontFamily => {
-				domDraft.querySelectorAll(`.crater-events-${property}`).forEach(icon => {
-					icon.css({ fontFamily });
+				domDraft.querySelectorAll(`.crater-events-${property}-value`).forEach(value => {
+					value.css({ fontFamily });
 				});
 			});
 
 			let paneColorCell = pane.querySelector('#color-cell').parentNode;
 			this.pickColor({ parent: paneColorCell, cell: paneColorCell.querySelector('#color-cell') }, (color) => {
-				domDraft.querySelectorAll(`.crater-events-${property}`).forEach(icon => {
-					icon.css({ color });
+				domDraft.querySelectorAll(`.crater-events-${property}-value`).forEach(value => {
+					value.css({ color });
 				});
 				paneColorCell.querySelector('#color-cell').value = color;
 				paneColorCell.querySelector('#color-cell').setAttribute('value', color);
 			});
 
 			pane.querySelector('#show-cell').onChanged(display => {
-				domDraft.querySelectorAll(`.crater-events-${property}`).forEach(icon => {
-					if (display.toLowerCase() == 'no') icon.css({ display: 'none' });
-					else icon.cssRemove(['display']);
+				domDraft.querySelectorAll(`.crater-events-${property}`).forEach(aProperty => {
+					if (display.toLowerCase() == 'no') aProperty.css({ display: 'none' });
+					else aProperty.cssRemove(['display']);
 				});
 			});
 		};
@@ -894,8 +1434,6 @@ class Events extends CraterWebParts {
 		let datesPane = this.paneContent.querySelector('.dates-pane');
 		handleProperties('date', datesPane);
 
-		let updatePane = this.paneContent.querySelector('.update-pane');
-
 		this.paneContent.addEventListener('mutated', event => {
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
@@ -906,6 +1444,37 @@ class Events extends CraterWebParts {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart			
+		});
+
+		this.updateContent();
+	}
+
+	private updateContent() {
+		let updatePane = this.paneContent.querySelector('.update-pane');
+
+		let updateButton = updatePane.querySelector('#update-source');
+
+		updateButton.addEventListener('click', event => {
+			let link = updatePane.querySelector('#Site-cell').value;
+			let list = updatePane.querySelector('#List-cell').value;
+
+			updateButton.render({
+				element: 'img', attributes: { class: 'crater-icon', src: this.sharePoint.images.loading }
+			});
+
+			this.sharePoint.connection.find({ link, list, data: 'Task, Icon, Duration, Location, Date' }).then(source => {
+				if (Array.isArray(source) && source.length > 0) {
+					//reset the pane and note the changes
+					let newContent = this.render({ source });
+					this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-events-content').innerHTML = newContent.querySelector('.crater-events-content').innerHTML;
+
+					this.paneContent.querySelector('.events-pane').innerHTML = this.generatePaneContent({ list: newContent.querySelectorAll('.crater-events-content') }).innerHTML;
+				}
+				updateButton.innerHTML = 'Update Successful';
+			}).catch((error) => {
+				updateButton.innerHTML = 'Update Failed';
+			});
+
 		});
 	}
 }
@@ -1176,7 +1745,7 @@ class Button extends CraterWebParts {
 		//set the display of the button
 		settingsPane.querySelector('#ImageDisplay-cell').onChanged(value => {
 			console.log(value);
-			
+
 			icons.forEach(single => {
 				if (value == 'No') single.hide();
 				else single.show();
@@ -2651,15 +3220,17 @@ class List extends CraterWebParts {
 			this.paneContent.append(this.generatePaneContent({ list: peopleListRows }));
 
 			let update = this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'card list-pane update' }, children: [
-					this.elementModifier.createElement({
+				element: 'div', attributes: { class: 'card update-pane update' }, children: [
+					{
 						element: 'div', attributes: { class: 'card-title' }, children: [
 							this.elementModifier.createElement({
 								element: 'h2', attributes: { class: 'title' }, text: 'Update'
 							})
 						]
-					}),
-					this.elementModifier.createElement({
+					},
+					{ element: 'label', text: 'The list to fetch must contain Title, Job, Link and Image ' },
+
+					{
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
 								element: 'input', name: 'Site', attributes: {}, dataAttributes: {}
@@ -2674,7 +3245,7 @@ class List extends CraterWebParts {
 								]
 							}
 						]
-					})
+					}
 				]
 			});
 
@@ -2864,6 +3435,23 @@ class List extends CraterWebParts {
 		});
 
 		//update the source of the webpart
+		this.updateContent();
+
+		this.paneContent.addEventListener('mutated', event => {
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+		});
+
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
+
+			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+
+			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+		});
+	}
+
+	private updateContent() {
 		let sourceRow = this.paneContent.querySelector('#update-source').getParents('.row');
 
 		sourceRow.querySelector('#Site-cell').onChanged();
@@ -2892,19 +3480,6 @@ class List extends CraterWebParts {
 				updateButton.innerHTML = 'Update';
 			});
 
-		});
-
-		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
-		});
-
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
-
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 		});
 	}
 }
@@ -4145,7 +4720,7 @@ class Crater extends CraterWebParts {
 
 	public render() {
 		this.element = this.createKeyedElement({
-			element: 'div', attributes: { class: 'crater-component', style: { display: 'block', minHeight: '50px', width: '100%' }, 'data-type': 'crater' }, options: ['Edit', 'Delete'], children: [
+			element: 'div', attributes: { class: 'crater-component', style: { display: 'block', minHeight: '100px', width: '100%' }, 'data-type': 'crater' }, options: ['Edit', 'Delete'], children: [
 				{ element: 'div', attributes: { class: 'crater-sections-container' } }
 			], alignOptions: 'left',
 		});
@@ -4170,10 +4745,10 @@ class Crater extends CraterWebParts {
 
 		// return;
 
-		let dragging = false;
+		let dragging = false,
+			position;
 
 		let adjustWidth = (event) => {
-
 			//make sure that section does not exceed the bounds of the parent/crater
 			// if section or siblings width is less than or equals 50 stop dragging
 			if (event.clientX > this.element.position().right - 50) return;
@@ -4214,61 +4789,33 @@ class Crater extends CraterWebParts {
 				//update the section and siblings width 
 				currentSection.css({ width: myWidth + 'px' });
 				currentSibling.css({ width: mySiblingWidth + 'px' });
+				console.log(this.widths);
+
 
 				craterSectionsContainer.css({ gridTemplateColumns: func.stringReplace(this.widths.toString(), ',', ' ') });
 			}
 		};
 
 		let adjustHeight = (event) => {
-
 			//make sure that section does not exceed the bounds of the parent/crater
-			// if section or siblings width is less than or equals 50 stop dragging
-			if (event.clientY < this.element.position().bottom - 50) return;
-			if (event.clientX < this.element.position().left + 50) return;
-			if (currentSection.dataset.direction == 'left' && event.clientX > otherDirection)
-				return;
-			if (currentSection.dataset.direction == 'right' && event.clientX < otherDirection)
-				return;
+			if (func.isnull(currentSection)) return;
+			if (event.clientY < this.element.position().bottom - 100 && event.clientY > this.element.position().bottom + 100) return;
 
-			let currentWidth = currentSection.position().width;
-			let siblingWidth = currentSibling.position().width;
+			let currentHeight = currentSection.position().height;
+			let difference = event.clientY - currentSection.position().bottom;
+			let height = (currentHeight + difference);
 
-			if (func.isnull(currentSection) || func.isnull(currentSibling)) return;
+			if (height <= 100) return;
 
-			if (event.clientX > this.element.position().left - 50 && event.clientX < this.element.position().right + 50) {
-				let myWidth = currentWidth;
-
-				if (event.clientX > currentSection.position().left) {
-					if (currentSection.dataset.direction == 'left') {
-						myWidth = currentSection.position().right - event.clientX;
-					} else {
-						myWidth = event.clientX - currentSection.position().left;
-					}
-				}
-				else {
-					myWidth = currentSection.position().right - event.clientX;
-				}
-
-				let mySiblingWidth = siblingWidth + (currentWidth - myWidth);
-
-				if (myWidth > this.element.position().width - 50) return;
-				if (mySiblingWidth > this.element.position().width - 50) return;
-
-				if (myWidth <= 50 || mySiblingWidth <= 50) return;
-
-				this.widths[func.getPositionInArray(sections, currentSection)] = myWidth + 'px';
-				this.widths[func.getPositionInArray(sections, currentSibling)] = mySiblingWidth + 'px';
-				//update the section and siblings width 
-				currentSection.css({ width: myWidth + 'px' });
-				currentSibling.css({ width: mySiblingWidth + 'px' });
-
-				craterSectionsContainer.css({ gridTemplateColumns: func.stringReplace(this.widths.toString(), ',', ' ') });
-			}
+			currentSection.css({ height: height + 'px' });
 		};
 
 		let dragSection = (event) => {
+			this.element.removeEventListener('mousemove', adjustWidth, false);
+			this.element.removeEventListener('mousemove', adjustHeight, false);
 			// get the sibling to work with
 			if (func.isnull(currentSection)) return;
+			position = { X: event.clientX, Y: event.clientY };
 
 			currentSibling = currentSection.dataset.direction == 'left' ? currentSection.previousSibling : currentSection.nextSibling;
 
@@ -4276,8 +4823,12 @@ class Crater extends CraterWebParts {
 
 			// set dragging to true
 			dragging = true;
-			//drag section
-			this.element.addEventListener('mousemove', adjustWidth, false);
+			//drag section			
+			if (currentSection.dataset.orientation == 'X') {
+				this.element.addEventListener('mousemove', adjustWidth, false);
+			} else {
+				this.element.addEventListener('mousemove', adjustHeight, false);
+			}
 			this.element.querySelectorAll('.crater-section').forEach(section => {
 				if (section != currentSection) section.css({ visibility: 'hidden' });
 			});
@@ -4288,6 +4839,7 @@ class Crater extends CraterWebParts {
 		let stopDraggingSection = () => {
 			//cancel all dragging
 			this.element.removeEventListener('mousemove', adjustWidth, false);
+			this.element.removeEventListener('mousemove', adjustHeight, false);
 			this.element.removeEventListener('mousedown', dragSection, false);
 			dragging = false;
 			this.element.querySelectorAll('.crater-section').forEach(section => {
@@ -4311,24 +4863,31 @@ class Crater extends CraterWebParts {
 			if (!currentSection.classList.contains('crater-section')) currentSection = currentSection.getParents('.crater-section');
 			// get the current section being hovered
 			if (!func.isnull(currentSection)) currentSection.dataset.position = func.getPositionInArray(sections, currentSection);
-			//set the position of the section
-
+			//set the position of the section			
 			if (!func.isnull(currentSection)) {
 				//if the left or right of the section is hover 
 				if (event.clientX - 10 <= currentSection.position().left && currentSection.dataset.position != '0') {
 					currentSection.dataset.direction = 'left';
+					currentSection.dataset.orientation = 'X';
 				}
 				else if (event.clientX + 10 >= currentSection.position().right && currentSection.dataset.position != sections.length - 1) {
 					currentSection.dataset.direction = 'right';
+					currentSection.dataset.orientation = 'X';
+				}
+				else if (event.clientY + 10 >= currentSection.position().bottom) {
+					currentSection.dataset.direction = 'bottom';
+					currentSection.dataset.orientation = 'Y';
 				}
 				else {
 					currentSection.css({ cursor: 'auto' });
 					currentSection.dataset.direction = '';
+					currentSection.dataset.orientation = '';
 				}
 
 				if (func.isset(currentSection.dataset.direction) && currentSection.dataset.direction != '') {
-					//check for dragging if bar is hovered                    
-					currentSection.css({ cursor: 'ew-resize' });
+					//check for dragging if bar is hovered         
+					currentSection.dataset.orientation == 'X' ? currentSection.css({ cursor: 'ew-resize' }) : currentSection.css({ cursor: 'ns-resize' });
+
 					this.element.addEventListener('mousedown', dragSection, false);
 					this.element.addEventListener('mouseup', stopDraggingSection, false);
 				}
@@ -4337,7 +4896,7 @@ class Crater extends CraterWebParts {
 
 		this.element.addEventListener('mouseleave', event => {
 			// stop all dragging
-			this.element.addEventListener('mouseup', stopDraggingSection, false);
+			if (!func.isnull(currentSection) && !func.isset(currentSection.dataset.orientation)) this.element.addEventListener('mouseup', stopDraggingSection, false);
 		});
 	}
 
@@ -4364,7 +4923,7 @@ class Crater extends CraterWebParts {
 				children: [
 					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-content-row' }),
 					this.elementModifier.cell({
-						element: 'select', name: 'View', options: ["Tabbed", "Straight"]
+						element: 'select', name: 'Scroll', options: ["Yes", "No"]
 					}),
 				]
 			});
@@ -4398,7 +4957,7 @@ class Crater extends CraterWebParts {
 			this.paneContent.append(this.generatePaneContent({ source: elementContents }));
 
 			let settings = this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'card list-pane', style: { display: 'block' } }, children: [
+				element: 'div', attributes: { class: 'card settings-pane', style: { display: 'block' } }, children: [
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'card-title' }, children: [
 							this.elementModifier.createElement({
@@ -4408,7 +4967,10 @@ class Crater extends CraterWebParts {
 					}),
 					this.elementModifier.cell({
 						element: 'input', name: 'Columns', attributes: { type: 'number', min: 1 }, value: this.sharePoint.properties.pane.content[this.key].settings.columns
-					})
+					}),
+					this.elementModifier.cell({
+						element: 'select', name: 'Scroll', options: ["Yes", "No"]
+					}),
 				]
 			});
 		}
@@ -4427,13 +4989,20 @@ class Crater extends CraterWebParts {
 		this.key = params.element.dataset['key'];
 		this.element = params.element;
 		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content');
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 
 		let sectionRowPanes = this.paneContent.querySelectorAll('.crater-section-row-pane');
-		let sections = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelectorAll('.crater-section');
+		let sections = draftDom.querySelectorAll('.crater-section');
 
-		sectionRowPanes.forEach((element, position) => {
-			element.querySelector('#View-cell').addEventListener('change', event => {
-				sections[position].dataset['view'] = event.target.value;
+		let settingsPane = this.paneContent.querySelector('.settings-pane');
+
+		settingsPane.querySelector('#Scroll-cell').onChanged(scroll => {
+			sections.forEach(section => {
+				if (scroll.toLowerCase() == 'yes') {
+					section.css({ overflowY: 'auto' });
+				} else {
+					section.cssRemove(['overflow-y']);
+				}
 			});
 		});
 
@@ -4466,7 +5035,7 @@ class Crater extends CraterWebParts {
 		let count = sections.length;
 
 		let number = this.sharePoint.properties.pane.content[this.key].settings.columns - count;
-		let newSections = this.createSections({ number, height: '50px' }).querySelectorAll('.crater-section');
+		let newSections = this.createSections({ number, height: '100px' }).querySelectorAll('.crater-section');
 		//copy the current contents of the sections into the newly created sections
 		for (let i = 0; i < newSections.length; i++) {
 			craterSectionsContainer.append(newSections[i]);
@@ -4540,9 +5109,6 @@ class Crater extends CraterWebParts {
 }
 
 class Table extends CraterWebParts {
-
-	//thead sorter, pane 
-	//tbody themes
 
 	public params: any;
 	public elementModifier = new ElementModifier();
@@ -4684,15 +5250,16 @@ class Table extends CraterWebParts {
 			});
 
 			this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'card list-pane update' }, children: [
-					this.elementModifier.createElement({
+				element: 'div', attributes: { class: 'card update-pane' }, children: [
+					{
 						element: 'div', attributes: { class: 'card-title' }, children: [
 							this.elementModifier.createElement({
-								element: 'h2', attributes: { class: 'title' }, text: 'Update'
+								element: 'h2', attributes: { class: 'title' }, text: 'Update Table'
 							})
 						]
-					}),
-					this.elementModifier.createElement({
+					},
+					{ element: 'label', text: "The Data to get should be seperated with a comma[eg. Title, Name]" },
+					{
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
 								element: 'input', name: 'Site', attributes: {}, dataAttributes: { value: this.sharePoint.properties.pane.content[this.key].settings.sourceSite || '' }
@@ -4710,7 +5277,7 @@ class Table extends CraterWebParts {
 								]
 							}
 						]
-					})
+					}
 				]
 			});
 		}
@@ -5109,37 +5676,32 @@ class Table extends CraterWebParts {
 			});
 		});
 
-		this.updateSource();
+		this.updateContent();
 	}
 
-	private updateSource() {
+	private updateContent() {
 
-		let sourceRow = this.paneContent.querySelector('#update-source').getParents('.row');
+		let updatePane = this.paneContent.querySelector('.update-pane').getParents('.row');
 
-		sourceRow.querySelector('#Site-cell').onChanged();
-		sourceRow.querySelector('#List-cell').onChanged();
-
-		let updateButton = this.paneContent.querySelector('#update-source');
+		let updateButton = updatePane.querySelector('#update-source');
 
 		updateButton.addEventListener('click', event => {
-			let link = sourceRow.querySelector('#Site-cell').value;
-			let list = sourceRow.querySelector('#List-cell').value;
-			let data = sourceRow.querySelector('#Data-cell').value;
+			let link = updatePane.querySelector('#Site-cell').value;
+			let list = updatePane.querySelector('#List-cell').value;
+			let data = updatePane.querySelector('#Data-cell').value;
 
 			updateButton.render({
 				element: 'img', attributes: { class: 'crater-icon', src: this.sharePoint.images.loading }
 			});
 
 			this.sharePoint.connection.find({ link, list, data }).then(source => {
+
 				if (Array.isArray(source) && source.length > 0) {
 					//reset the pane and note the changes
 					let newContent = this.render({ source });
-					// console.log(newContent)
-					return;
+					this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-table').innerHTML = newContent.querySelector('.crater-table').innerHTML;
 
-					this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-content').innerHTML = newContent.querySelector('.crater-list-content').innerHTML;
-
-					this.paneContent.querySelector('.list-pane').innerHTML = this.generatePaneContent({ list: newContent.querySelectorAll('.crater-list-content-row') }).innerHTML;
+					this.paneContent.querySelector('.table-pane').innerHTML = this.generatePaneContent({ table: newContent.querySelector('.table') }).innerHTML;
 				}
 				updateButton.innerHTML = 'Update';
 			}).catch((error) => {
@@ -5767,7 +6329,1671 @@ class CountDown extends CraterWebParts {
 	}
 }
 
+class DateList extends CraterWebParts {
+	public params;
+	public element;
+	public key;
+	public paneContent;
+	public elementModifier = new ElementModifier();
+	public monthArray = func.trimMonthArray();
+
+
+	constructor(params) {
+		super({ sharePoint: params.sharePoint });
+		this.sharePoint = params.sharePoint;
+		this.params = params;
+	}
+
+	public render(params) {
+
+		if (!func.isset(params.source)) {
+			params.source = [
+				{
+					day: "19",
+					month: "Aug",
+					title: "DateList Item 1",
+					subtitle: "Lagos Island, Lagos",
+					body: 'Donec ut maximus magna. Quisque id placerat ex. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Cras quis tellus quis orci tempus feugiat ac eu orci.'
+				},
+				{
+					day: "15",
+					month: "jul",
+					title: "DateList Item 2",
+					subtitle: "Lagos Island, Lagos",
+					body: 'Donec ut maximus magna. Quisque id placerat ex. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Cras quis tellus quis orci tempus feugiat ac eu orci.'
+				},
+				{
+					day: "28",
+					month: "oct",
+					title: "DateList Item 3",
+					subtitle: "Lagos Island, Lagos",
+					body: 'Donec ut maximus magna. Quisque id placerat ex. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Cras quis tellus quis orci tempus feugiat ac eu orci.'
+				}
+			];
+		}
+
+		let dateList = this.createKeyedElement({
+			element: 'div', attributes: { class: 'crater-datelist', 'data-type': 'datelist' }, children: [
+				{
+					element: 'div', attributes: { class: 'crater-datelist-title' }, children: [
+						{ element: 'img', attributes: { class: 'crater-datelist-title-imgIcon', src: this.sharePoint.images.async } },
+						{ element: 'span', attributes: { class: 'crater-datelist-title-captionTitle' }, text: 'Date-List' }
+					]
+				},
+				{ element: 'div', attributes: { class: 'crater-datelist-content' } }
+			]
+		});
+
+		let dateListContent = dateList.querySelector(`.crater-datelist-content`);
+
+
+		for (let row of params.source) {
+			dateListContent.makeElement(
+				{
+					element: 'div', attributes: { class: 'crater-datelist-content-item' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'crater-datelist-content-item-date' }, children: [
+								{
+									element: 'div', attributes: { class: 'crater-datelist-content-item-date-day', id: 'Day' }, text: row.day
+								},
+								{ element: 'div', attributes: { class: 'crater-datelist-content-item-date-month', id: 'Month' }, text: row.month.toUpperCase() }
+							]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'crater-datelist-content-item-text' }, children: [
+								{ element: 'div', attributes: { class: 'crater-datelist-content-item-text-main', id: 'mainText' }, text: row.title },
+								{ element: 'div', attributes: { class: 'crater-datelist-content-item-text-subtitle', id: 'subtitle' }, text: row.subtitle },
+								{ element: 'div', attributes: { class: 'crater-datelist-content-item-text-body', id: 'body' }, text: row.body },
+							]
+						})
+					]
+				}
+			);
+		}
+
+		this.key = dateList.dataset.key;
+		return dateList;
+	}
+
+	public rendered(params) {
+		this.element = params.element;
+
+	}
+
+	public setUpPaneContent(params) {
+		let key = params.element.dataset['key'];//create a key variable and set it to the webpart key
+		this.element = this.sharePoint.properties.pane.content[key].draft.dom;//define the declared element to the draft dom content
+		this.paneContent = this.elementModifier.createElement({
+			element: 'div', attributes: { class: 'crater-property-content' }
+		}).monitor(); //monitor the content pane 
+		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		}
+		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		} else {
+			let dateList = this.sharePoint.properties.pane.content[key].draft.dom.querySelector('.crater-datelist-content');
+			let dateListRows = dateList.querySelectorAll('.crater-datelist-content-item');
+			this.paneContent.makeElement({
+				element: 'div', children: [
+					this.elementModifier.createElement(
+						{ element: 'button', attributes: { class: 'btn new-component', style: { display: 'inline-block', borderRadius: '5px' } }, text: 'Add New' }
+					)
+				]
+			});
+
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'title-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							{ element: 'h2', attributes: { class: 'title' }, text: 'Date-List Title Layout' }
+						]
+					}),
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [//create the cells for changing crater event title
+							this.elementModifier.cell({
+								element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: this.element.querySelector('.crater-datelist-title-imgIcon').src }
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'title', value: this.element.querySelector('.crater-datelist-title').textContent
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'backgroundcolor', value: this.element.querySelector('.crater-datelist-title').css()['background-color']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'color', value: this.element.querySelector('.crater-datelist-title').css().color
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'fontsize', value: this.element.querySelector('.crater-datelist-title').css()['font-size']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'height', value: this.element.querySelector('.crater-datelist-title').css()['height'] || ''
+							})
+						]
+					})
+				]
+			});
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'datelist-date-row-pane card' }, children: [
+					{
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'Edit Date-List Dates'
+							}),
+						]
+					},
+					{
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'daySize', value: this.element.querySelector('.crater-datelist-content-item-date-day').css()['font-size']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'monthSize', value: this.element.querySelector('.crater-datelist-content-item-date-month').css()['font-size']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-datelist-content-item-date').css()['font-family']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'dayColor', value: this.element.querySelector('.crater-datelist-content-item-date-day').css()['color']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'monthColor', value: this.element.querySelector('.crater-datelist-content-item-date-month').css()['color']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'toggleDate', options: ['show', 'hide']
+							})
+						]
+					}
+
+				]
+			});
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'datelist-title-row-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'Edit Date-List Title'
+							})
+						]
+					}),
+					{
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-datelist-content-item-text-main').css()['font-size']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-datelist-content-item-text-main').css()['font-family']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'titleColor', value: this.element.querySelector('.crater-datelist-content-item-text-main').css()['color']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'toggleTitle', options: ['show', 'hide']
+							})
+						]
+					}
+				]
+			});
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'datelist-subtitle-row-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'Edit Date-List Subtitle'
+							})
+						]
+					}),
+					{
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-datelist-content-item-text-subtitle').css()['font-size']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-datelist-content-item-text-subtitle').css()['font-family']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'subtitleColor', value: this.element.querySelector('.crater-datelist-content-item-text-subtitle').css().color
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'toggleSubtitle', options: ['show', 'hide']
+							})
+						]
+					}
+				]
+			});
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'datelist-body-row-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'Edit Date-List Body'
+							})
+						]
+					}),
+					{
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-datelist-content-item-text-body').css()['font-size']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-datelist-content-item-text-body').css()['font-family']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'bodyColor', value: this.element.querySelector('.crater-datelist-content-item-text-body').css()['color']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'toggleBody', options: ['show', 'hide']
+							})
+						]
+					}
+				]
+			});
+
+
+			this.paneContent.append(this.generatePaneContent({ list: dateListRows }));
+
+			let updateDateList = this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'card list-pane update' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement(
+								{ element: 'h2', attributes: { class: 'title' }, text: 'Update Date-List' }
+							),
+							this.elementModifier.createElement({
+								element: 'div', attributes: { class: 'row' }, children: [
+									this.elementModifier.cell({
+										element: 'Input', name: 'URL', attributes: {}, dataAttributes: {}
+									}),
+									this.elementModifier.cell({
+										element: 'Input', name: 'List', attributes: {}, dataAttributes: {}
+									}),
+									{
+										element: 'div', attributes: { class: 'crater-center' }, children: [
+											{ element: 'button', attributes: { class: 'btn', id: 'update-datelist', style: { display: 'flex', alignSelf: 'center' } }, text: 'Update Date-List Source' }
+										]
+
+									}
+								]
+							})
+
+						]
+					})
+				]
+			});
+		}
+		return this.paneContent;
+	}
+
+	public generatePaneContent(params) {
+		let dateListPane = this.elementModifier.createElement({
+			element: 'div', attributes: { class: 'card list-pane' }, children: [
+				this.elementModifier.createElement({
+					element: 'div', attributes: { class: 'card-title' }, children: [
+						this.elementModifier.createElement({
+							element: 'h2', attributes: { class: 'title' }, text: 'Date-List Rows'
+						})
+					]
+				}),
+			]
+		});
+
+		for (let i = 0; i < params.list.length; i++) {
+			dateListPane.makeElement({
+				element: 'div',
+				attributes: { class: 'crater-datelist-item-pane row' },
+				children: [
+					this.paneOptions({ options: ['AA', 'AB', 'D'], owner: 'crater-datelist-content-item' }),
+					this.elementModifier.cell({
+						element: 'input', name: 'Day', attribute: { class: 'crater-date' }, value: params.list.day || params.list[i].querySelector('#Day').textContent
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'Month', attribute: { class: 'crater-date' }, value: params.list.month || params.list[i].querySelector('#Month').textContent
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'title', value: params.list.title || params.list[i].querySelector('#mainText').textContent
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'subtitle', value: params.list.subTitle || params.list[i].querySelector('#subtitle').textContent
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'body', value: params.list.body || params.list[i].querySelector('#body').textContent
+					}),
+				]
+			});
+		}
+
+		return dateListPane;
+
+	}
+
+	public listenPaneContent(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		//get the content and all the events
+		let dateList = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-datelist-content');
+		let dateListRow = dateList.querySelectorAll('.crater-datelist-content-item');
+
+		let dateListRowPanePrototype = this.elementModifier.createElement({//create a row on the property pane
+			element: 'div',
+			attributes: { class: 'crater-datelist-item-pane row' },
+			children: [
+				this.paneOptions({ options: ['AA', 'AB', 'D'], owner: 'crater-datelist-content-item' }),
+				this.elementModifier.cell({
+					element: 'input', name: 'Day', attribute: { class: 'crater-date' }, value: ''
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'Month', attribute: { class: 'crater-date' }, value: ''
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'title', value: ''
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'subtitle', value: ''
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'body', value: ''
+				}),
+			]
+		});
+
+
+		let dateListRowDomPrototype = this.createKeyedElement(
+			{
+				element: 'div', attributes: { class: 'crater-datelist-content-item keyed-element' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'crater-datelist-content-item-date' }, children: [
+							{
+								element: 'div', attributes: { class: 'crater-datelist-content-item-date-day', id: 'Day' }, text: ''
+							},
+							{ element: 'div', attributes: { class: 'crater-datelist-content-item-date-month', id: 'Month' }, text: '' }
+						]
+					}),
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'crater-datelist-content-item-text' }, children: [
+							{ element: 'div', attributes: { class: 'crater-datelist-content-item-text-main', id: 'mainText' }, text: '' },
+							{ element: 'div', attributes: { class: 'crater-datelist-content-item-text-subtitle', id: 'subtitle' }, text: '' },
+							{ element: 'div', attributes: { class: 'crater-datelist-content-item-text-body', id: 'body' }, text: '' },
+						]
+					})
+				]
+			}
+		);
+
+
+		let dateRowHandler = (dateRowPane, dateRowDom) => {
+			dateRowPane.addEventListener('mouseover', event => {
+				dateRowPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+			});
+
+			dateRowPane.addEventListener('mouseout', event => {
+				dateRowPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+			});
+
+			// get the values of the newly created row on the property - pane
+			dateRowPane.querySelector('#title-cell').onChanged(value => {
+				dateRowDom.querySelector('.crater-datelist-content-item-text-main').innerHTML = value;
+			});
+
+			dateRowPane.querySelector('#subtitle-cell').onChanged(value => {
+				dateRowDom.querySelector('.crater-datelist-content-item-text-subtitle').innerHTML = value;
+			});
+
+			dateRowPane.querySelector('#body-cell').onChanged(value => {
+				dateRowDom.querySelector('.crater-datelist-content-item-text-body').innerHTML = value;
+			});
+
+			dateRowPane.querySelector('#Day-cell').onChanged(value => {
+				dateRowDom.querySelector('.crater-datelist-content-item-date-day').innerHTML = value;
+			});
+
+			dateRowPane.querySelector('#Month-cell').onChanged(value => {
+				dateRowDom.querySelector('.crater-datelist-content-item-date-month').innerHTML = value;
+			});
+
+			dateRowPane.querySelector('.delete-crater-datelist-content-item').addEventListener('click', event => {
+				dateRowDom.remove();
+				dateRowPane.remove();
+			});
+
+			dateRowPane.querySelector('.add-before-crater-datelist-content-item').addEventListener('click', event => {
+				let newdateRowDom = dateListRowDomPrototype.cloneNode(true);
+				let newdateRowPane = dateListRowPanePrototype.cloneNode(true);
+
+				dateRowDom.before(newdateRowDom);
+				dateRowPane.before(newdateRowPane);
+				dateRowHandler(newdateRowPane, newdateRowDom);
+			});
+
+			dateRowPane.querySelector('.add-after-crater-datelist-content-item').addEventListener('click', event => {
+				let newdateRowDom = dateListRowDomPrototype.cloneNode(true);
+				let newdateRowPane = dateListRowPanePrototype.cloneNode(true);
+
+				dateRowDom.after(newdateRowDom);
+				dateRowPane.after(newdateRowPane);
+
+				dateRowHandler(newdateRowPane, newdateRowDom);
+			});
+		};
+
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+
+		let titlePane = this.paneContent.querySelector('.title-pane');
+		let dateListDateRowPane = this.paneContent.querySelector('.datelist-date-row-pane');
+		let dateListTitleRowPane = this.paneContent.querySelector('.datelist-title-row-pane');
+		let dateListSubtitleRowPane = this.paneContent.querySelector('.datelist-subtitle-row-pane');
+		let dateListBodyRowPane = this.paneContent.querySelector('.datelist-body-row-pane');
+
+		let dateListTitleParent = dateListTitleRowPane.querySelector('#titleColor-cell').parentNode;
+		this.pickColor({ parent: dateListTitleParent, cell: dateListTitleParent.querySelector('#titleColor-cell') }, (color) => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
+				element.css({ color });//get the color of the event font in the draftDom
+			});
+			dateListTitleParent.querySelector('#titleColor-cell').value = color;
+			dateListTitleParent.querySelector('#titleColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+		});
+
+		let dateListSubtitleParent = dateListSubtitleRowPane.querySelector('#subtitleColor-cell').parentNode;
+		this.pickColor({ parent: dateListSubtitleParent, cell: dateListSubtitleParent.querySelector('#subtitleColor-cell') }, (color) => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
+				element.css({ color });//get the color of the event font in the draftDom
+			});
+			dateListSubtitleParent.querySelector('#subtitleColor-cell').value = color;
+			dateListSubtitleParent.querySelector('#subtitleColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+		});
+
+		let dateListBodyParent = dateListBodyRowPane.querySelector('#bodyColor-cell').parentNode;
+		this.pickColor({ parent: dateListBodyParent, cell: dateListBodyParent.querySelector('#bodyColor-cell') }, (color) => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
+				element.css({ color });//get the color of the event font in the draftDom
+			});
+			dateListBodyParent.querySelector('#bodyColor-cell').value = color;
+			dateListBodyParent.querySelector('#bodyColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+		});
+
+		let dateListDayParent = dateListDateRowPane.querySelector('#dayColor-cell').parentNode;
+		this.pickColor({ parent: dateListDayParent, cell: dateListDayParent.querySelector('#dayColor-cell') }, (color) => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-date-day').forEach(element => {
+				element.css({ color });//get the color of the event font in the draftDom
+			});
+			dateListDayParent.querySelector('#dayColor-cell').value = color;
+			dateListDayParent.querySelector('#dayColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+		});
+
+		let dateListMonthParent = dateListDateRowPane.querySelector('#monthColor-cell').parentNode;
+		this.pickColor({ parent: dateListMonthParent, cell: dateListMonthParent.querySelector('#monthColor-cell') }, (color) => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-date-month').forEach(element => {
+				element.css({ color });//get the color of the event font in the draftDom
+			});
+			dateListMonthParent.querySelector('#monthColor-cell').value = color;
+			dateListMonthParent.querySelector('#monthColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+		});
+
+		let iconParent = titlePane.querySelector('#icon-cell').parentNode;
+		this.uploadImage({ parent: iconParent }, (image) => {
+			iconParent.querySelector('#icon-cell').src = image.src;
+			draftDom.querySelector('.crater-datelist-title-imgIcon').src = image.src;
+		});
+
+		titlePane.querySelector('#title-cell').onChanged(value => {
+			draftDom.querySelector('.crater-datelist-title-captionTitle').innerHTML = value;
+		});
+
+		let backgroundColorCell = titlePane.querySelector('#backgroundcolor-cell').parentNode;
+		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
+			draftDom.querySelector('.crater-datelist-title').css({ backgroundColor });
+			backgroundColorCell.querySelector('#backgroundcolor-cell').value = backgroundColor;
+			backgroundColorCell.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor);
+		});
+
+		let colorCell = titlePane.querySelector('#color-cell').parentNode;
+		this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#color-cell') }, (color) => {
+			draftDom.querySelector('.crater-datelist-title').css({ color });
+			colorCell.querySelector('#color-cell').value = color;
+			colorCell.querySelector('#color-cell').setAttribute('value', color);
+		});
+
+
+		titlePane.querySelector('#fontsize-cell').onChanged(value => {
+			draftDom.querySelector('.crater-datelist-title').css({ fontSize: value });
+		});
+
+		titlePane.querySelector('#height-cell').onChanged(value => {
+			draftDom.querySelector('.crater-datelist-title').css({ height: value });
+		});
+
+
+
+		dateListTitleRowPane.querySelector('#fontSize-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
+				element.css({ fontSize: value });
+			});
+		});
+		dateListTitleRowPane.querySelector('#fontFamily-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
+				element.css({ fontFamily: value });
+			});
+		});
+
+		dateListSubtitleRowPane.querySelector('#fontSize-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
+				element.css({ fontSize: value });
+			});
+		});
+		dateListSubtitleRowPane.querySelector('#fontFamily-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
+				element.css({ fontFamily: value });
+			});
+		});
+
+		dateListBodyRowPane.querySelector('#fontSize-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
+				element.css({ fontSize: value });
+			});
+		});
+		dateListBodyRowPane.querySelector('#fontFamily-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
+				element.css({ fontFamily: value });
+			});
+		});
+
+		dateListDateRowPane.querySelector('#daySize-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-date-day').forEach(element => {
+				element.css({ fontSize: value });
+			});
+		});
+		dateListDateRowPane.querySelector('#monthSize-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-date-month').forEach(element => {
+				element.css({ fontSize: value });
+			});
+		});
+
+		dateListDateRowPane.querySelector('#fontFamily-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-datelist-content-item-date').forEach(element => {
+				element.css({ fontFamily: value });
+			});
+		});
+
+		//appends the dom and pane prototypes to the dom and pane when you click add new
+		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+			let newDateRowDom = dateListRowDomPrototype.cloneNode(true);
+			let newDateRowPane = dateListRowPanePrototype.cloneNode(true);
+
+			dateList.append(newDateRowDom);//c
+			this.paneContent.querySelector('.list-pane').append(newDateRowPane);
+			dateRowHandler(newDateRowPane, newDateRowDom);
+		});
+
+		let paneItems = this.paneContent.querySelectorAll('.crater-datelist-item-pane');
+		paneItems.forEach((dateRow, position) => {
+			dateRowHandler(dateRow, dateListRow[position]);
+		});
+
+		let showTitle = dateListTitleRowPane.querySelector('#toggleTitle-cell');
+		showTitle.addEventListener('change', e => {
+
+			switch (showTitle.value.toLowerCase()) {
+				case "hide":
+					draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
+						element.style.visibility = "hidden";
+					});
+					break;
+				case "show":
+					draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
+						element.style.visibility = "visible";
+					});
+					break;
+				default:
+					draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
+						element.style.visibility = "hidden";
+					});
+			}
+		});
+
+		let showSubtitle = dateListSubtitleRowPane.querySelector('#toggleSubtitle-cell');
+		showSubtitle.addEventListener('change', e => {
+
+			switch (showSubtitle.value.toLowerCase()) {
+				case "hide":
+					draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
+						element.style.visibility = "hidden";
+					});
+					break;
+				case "show":
+					draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
+						element.style.visibility = "visible";
+					});
+					break;
+				default:
+					draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
+						element.style.visibility = "hidden";
+					});
+			}
+		});
+
+		let showBody = dateListBodyRowPane.querySelector('#toggleBody-cell');
+		showBody.addEventListener('change', e => {
+
+			switch (showBody.value.toLowerCase()) {
+				case "hide":
+					draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
+						element.style.visibility = "hidden";
+					});
+					break;
+				case "show":
+					draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
+						element.style.visibility = "visible";
+					});
+					break;
+				default:
+					draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
+						element.style.visibility = "hidden";
+					});
+			}
+		});
+
+		let showDate = dateListDateRowPane.querySelector('#toggleDate-cell');
+		showDate.addEventListener('change', e => {
+
+			switch (showDate.value.toLowerCase()) {
+				case "hide":
+					draftDom.querySelectorAll('.crater-datelist-content-item-date').forEach(element => {
+						element.style.visibility = "hidden";
+						console.log('hidden');
+					});
+					break;
+				case "show":
+					draftDom.querySelectorAll('.crater-datelist-content-item-date').forEach(element => {
+						element.style.visibility = "visible";
+						console.log('visible');
+					});
+					break;
+				default:
+					draftDom.querySelectorAll('.crater-datelist-content-item-date').forEach(element => {
+						element.style.visibility = "hidden";
+					});
+			}
+		});
+
+
+		//update the source of the webpart
+		let dateListSourceRow = this.paneContent.querySelector('#update-datelist').getParents('.row');
+
+		dateListSourceRow.querySelector('#URL-cell').onChanged();
+		dateListSourceRow.querySelector('#List-cell').onChanged();
+
+		let updateDateListButton = this.paneContent.querySelector('#update-datelist');
+
+		updateDateListButton.addEventListener('click', event => {
+			let link = dateListSourceRow.querySelector('#URL-cell').value;
+
+			let list = dateListSourceRow.querySelector('#List-cell').value;
+
+			updateDateListButton.render({
+				element: 'img', attributes: { class: 'crater-icon', src: this.sharePoint.images.loading }
+			});
+
+			this.sharePoint.connection.find({ link, list, data: 'Day,Month,Title,Subtitle,Body' }).then(source => {
+				if (Array.isArray(source) && source.length > 0) {
+					//reset the pane and note the changes
+					console.log(source);
+
+					let newContent = this.render({ source });
+					// let newContent = this.generatePaneContent({ list: source });
+					this.paneContent.querySelector('.list-pane').innerHTML = this.generatePaneContent({ list: newContent.querySelectorAll('.crater-datelist-content-item') }).innerHTML;
+
+				}
+				updateDateListButton.innerHTML = 'UPDATED!';
+			}).catch((error) => {
+				console.log(error);
+
+				updateDateListButton.innerHTML = 'UPDATE FAILED';
+			});
+		});
+
+		this.paneContent.addEventListener('mutated', event => {
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+		});
+
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			console.log(draftDom.innerHTML);
+
+			this.element.innerHTML = draftDom.innerHTML;//upate the webpart
+			this.element.css(draftDom.css());
+			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
+		});
+	}
+}
+
+class Map extends CraterWebParts {
+	public key;
+	public element;
+	public params;
+	public paneContent;
+	public elementModifier = new ElementModifier();
+
+	constructor(params) {
+		super({ sharePoint: params.sharePoint });
+		this.sharePoint = params.sharePoint;
+		this.params = params;
+	}
+
+	public render(params) {
+
+		let mapDiv = this.createKeyedElement({
+			element: 'div', attributes: { class: 'crater-map', 'data-type': 'map' }, children: [
+				{ element: 'div', attributes: { class: 'crater-map-div', id: 'crater-map-div' } }
+			]
+		});
+		this.key = mapDiv.dataset.key;
+
+		this.sharePoint.properties.pane.content[this.key].settings = { myMap: { lat: -34.067, lng: 150.067, zoom: 4, markerChecked: true, color: '' } };
+
+		window['initMap'] = this.initMap;
+
+		mapDiv.makeElement({
+			element: 'script', attributes: { defer: '', async: '', src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDdGAHe_9Ghatd4wZjyc3hRdirIQ1ttcv0&callback=initMap' }
+		});
+
+		return mapDiv;
+	}
+
+	public initMap = () => {
+		let mapLocation = {
+			lat: -34.067,
+			lng: 150.067
+		};
+
+		//@ts-ignore
+		let map = new google.maps.Map(document.querySelector('#crater-map-div'), {
+			center: mapLocation,
+			zoom: 4,
+			mapTypeControlOptions: {
+				mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain',
+					'styled_map']
+			}
+		});
+
+		//@ts-ignore
+		var marker = new google.maps.Marker({
+			position: mapLocation,
+			map
+		});
+
+	}
+
+	public rendered(params) {
+	}
+
+	public setUpPaneContent(params) {
+		let key = params.element.dataset['key'];
+		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.paneContent = this.elementModifier.createElement({
+			elemen: 'div', attributes: { class: 'crater-property-content' }
+		}).monitor();
+
+		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		}
+		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		} else {
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'map-style-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'Personalise Map'
+							})
+						]
+					}),
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [
+							{
+								element: 'div', attributes: { class: 'message-note' }, children: [
+									{ element: 'span', text: 'Note: Clear the color input field to reset the map color to default' }
+								]
+							}]
+					}),
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'latitude', value: ''
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'longitude', value: ''
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'zoom', value: ''
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'color', value: ''
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'width', value: this.element.querySelector('#crater-map-div').css()['width']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'height', value: this.element.querySelector('#crater-map-div').css()['height']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'marker', options: ['show', 'hide']
+							})
+						]
+					})
+				]
+			});
+		}
+		return this.paneContent;
+	}
+
+	public generatePaneContent(params) {
+	}
+
+	public listenPaneContent(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+
+		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+
+		let mapPane = this.paneContent.querySelector('.map-style-pane');
+
+		mapPane.querySelector('#latitude-cell').onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].settings.myMap.lat = parseFloat(value);
+		});
+
+		let colorValue = mapPane.querySelector('#color-cell').parentNode;
+		this.pickColor({ parent: colorValue, cell: colorValue.querySelector('#color-cell') }, (color) => {
+
+			colorValue.querySelector('#color-cell').value = color;
+			let hexColor = ColorPicker.rgbToHex(color);
+			colorValue.querySelector('#color-cell').setAttribute('value', hexColor); //set the value of the eventColor cell in the pane to the color
+			this.sharePoint.properties.pane.content[this.key].settings.myMap.color = hexColor;
+		});
+
+		mapPane.querySelector('#longitude-cell').onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].settings.myMap.lng = parseFloat(value);
+		});
+
+		mapPane.querySelector('#zoom-cell').onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].settings.myMap.zoom = parseInt(value);
+		});
+
+		let markerValue = mapPane.querySelector('#marker-cell');
+		markerValue.addEventListener('change', e => {
+			let marker = markerValue.value;
+			switch (marker.toLowerCase()) {
+				case 'show':
+					this.sharePoint.properties.pane.content[this.key].settings.myMap.markerChecked = true;
+					break;
+				case 'hide':
+					this.sharePoint.properties.pane.content[this.key].settings.myMap.markerChecked = false;
+					break;
+			}
+		});
+
+		mapPane.querySelector('#width-cell').onChanged(value => {
+			draftDom.querySelector('#crater-map-div').css({ width: value });
+			this.sharePoint.properties.pane.content[this.key].settings.myMap.width = value;
+		});
+
+		mapPane.querySelector('#height-cell').onChanged(value => {
+			draftDom.querySelector('#crater-map-div').css({ height: value });
+			this.sharePoint.properties.pane.content[this.key].settings.myMap.height = value;
+		});
+
+		this.paneContent.addEventListener('mutated', event => {
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+		});
+
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			const mapColor = this.sharePoint.properties.pane.content[this.key].settings.myMap.color;
+			let mapStyles = [
+				{ elementType: 'geometry.stroke', stylers: [{ color: mapColor }, { lightness: 0 }] },
+				{ elementType: 'labels.text.fill', stylers: [{ color: mapColor }, { lightness: 0 }] },
+				{ elementType: 'labels.text.stroke', stylers: [{ color: '#f9f9f9' }] },
+				{ featureType: 'water', elementType: 'geometry.fill', stylers: [{ color: mapColor }, { lightness: 80 }] },
+				{ featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: mapColor }, { lightness: 0 }] },
+				{ featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#f9f9f9' }] },
+				{ featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: mapColor }, { lightness: 80 }] },
+				{ featureType: 'landscape', elementType: 'geometry.fill', stylers: [{ color: mapColor }, { lightness: 95 }] }
+			];
+
+
+			let initMap = () => {
+				let newMap = {
+					lat: this.sharePoint.properties.pane.content[this.key].settings.myMap.lat,
+					lng: this.sharePoint.properties.pane.content[this.key].settings.myMap.lng
+				};
+
+				const styles = (mapColor !== '') ? mapStyles : '';
+
+				//@ts-ignore
+				let map = new google.maps.Map(this.element.querySelector('#crater-map-div'), {
+					center: newMap,
+					zoom: this.sharePoint.properties.pane.content[this.key].settings.myMap.zoom,
+					styles
+				});
+
+				if (this.sharePoint.properties.pane.content[this.key].settings.myMap.markerChecked) {
+					//@ts-ignore
+					let marker = new google.maps.Marker({
+						position: newMap,
+						map
+					});
+				}
+			};
+
+			window['initMap'] = initMap;
+
+			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
+			this.element.querySelector('#crater-map-div').innerHTML = '';
+			this.element.removeChild(this.element.querySelector('script'));
+			this.element.makeElement({
+				element: 'script', attributes: { defer: '', async: '', src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDdGAHe_9Ghatd4wZjyc3hRdirIQ1ttcv0&callback=initMap' }
+			});
+
+			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+
+			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+		});
+
+	}
+}
+
+class Instagram extends CraterWebParts {
+	public params;
+	public element;
+	public key;
+	public paneContent;
+	public elementModifier = new ElementModifier();
+	public defaultURL = 'https://www.instagram.com/p/B0Qyddphpht/';
+	public endpoint;
+	public displayed = false;
+
+	constructor(params) {
+		super({ sharePoint: params.sharePoint });
+		this.sharePoint = params.sharePoint;
+		this.params = params;
+	}
+
+	public render(params?) {
+		let instagramDiv = this.createKeyedElement({
+			element: 'div', attributes: { class: 'crater-instagram', 'data-type': 'instagram' }, children: [
+				{
+					element: 'div', attributes: { class: 'crater-instagram-error' }, children: [
+						{ element: 'p', text: 'Are you sure that URL is valid? please enter a URL shortcode' }
+					]
+				},
+				{ element: 'div', attributes: { class: 'crater-instagram-content' } }
+			]
+		});
+
+		this.sharePoint.properties.pane.content[instagramDiv.dataset.key].settings = { myInstagram: {} };
+		this.key = instagramDiv.dataset.key;
+		this.element = instagramDiv;
+		return instagramDiv;
+	}
+
+	public getEmbed(params?) {
+		let width = this.element.getBoundingClientRect().width;
+		window.onerror = (message, url, line, column, error) => {
+			console.log(message, url, line, column, error);
+		};
+		let fetchHtml: any = new Promise((resolve, reject) => {
+			let urlPoint = 'https://api.instagram.com/oembed?url=' + this.defaultURL + `&amp;maxwidth=${width}&amp;minwidth=${320}&ampomitscript=true`;
+			if (func.isset(params)) {
+				urlPoint = 'https://api.instagram.com/oembed?url=' + params;
+			}
+
+			let getData = fetch(urlPoint);
+			resolve(getData);
+			reject(new Error('couldn\'t fetch data'));
+		});
+
+		fetchHtml
+			.then(response => {
+				return response.json();
+			})
+			.then(responseData => {
+				if (this.displayed) {
+					let instaDiv = this.sharePoint.app.querySelector('.crater-instagram');
+					instaDiv.removeChild(instaDiv.querySelector('.crater-instagram-content'));
+					let child = this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'crater-instagram-content' }
+					});
+					instaDiv.appendChild(child);
+					this.renderInstagramPost(responseData.html);
+
+				} else {
+					this.renderInstagramPost(responseData.html);
+					this.displayed = true;
+				}
+			}).catch(error => {
+				let errorMessage = this.sharePoint.app.querySelector('.crater-instagram-error');
+				errorMessage.style.display = 'block';
+			});
+	}
+
+	public renderInstagramPost(params?) {
+		this.element = this.sharePoint.app.querySelector('.crater-instagram');
+		let errorMessage = this.sharePoint.app.querySelector('.crater-instagram-error');
+		errorMessage.style.display = 'none';
+		this.key = this.element.dataset['key'];
+		let display = params;
+		let instaContent = this.element.querySelector('.crater-instagram-content');
+		instaContent.innerHTML = '';
+
+		let embedScript = document.createElement('script');
+		embedScript.setAttribute('src', '//www.instagram.com/embed.js');
+		embedScript.setAttribute('async', '');
+		instaContent.appendChild(embedScript);
+		instaContent.innerHTML += display;
+		embedScript.addEventListener('load', e => {
+			//@ts-ignore
+			instgrm.Embeds.process();
+		});
+
+	}
+
+	public rendered(params) {
+		this.element = params.element;
+		this.key = this.element.dataset.key;
+		this.getEmbed();
+	}
+
+	public setUpPaneContent(params) {
+		let key = params.element.dataset['key'];
+		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.paneContent = this.elementModifier.createElement({
+			elemen: 'div', attributes: { class: 'crater-property-content' }
+		});
+
+		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		}
+		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		} else {
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'instagram-pane' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'Edit Instagram Properties'
+							})
+						]
+					}),
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'postUrl', value: this.defaultURL
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'hideCaption', options: ['show', 'hide']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'width', attributes: { placeholder: 'Please enter a width' }, value: this.element.querySelector('.crater-instagram-content').css()['height'] || ''
+							})
+						]
+					})
+				]
+			});
+
+		}
+		return this.paneContent;
+	}
+
+	public generatePaneContent(params) {
+
+	}
+
+	public listenPaneContent(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+
+		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+
+		let instagramPane = this.paneContent.querySelector('.instagram-pane');
+		let postUrl = instagramPane.querySelector('#postUrl-cell');
+		postUrl.onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL = value;
+			this.defaultURL = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL;
+			let finalWidth = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaWidth || '&amp;minwidth=320&amp;maxwidth=320';
+			const finalHide = (this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaCaption) ? '&amp;hidecaption=true' : '';
+
+			this.sharePoint.properties.pane.content[this.key].draft.newEndPoint = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL + `&amp;omitscript=true${finalHide}${finalWidth}`;
+		});
+
+		let hideCaption = instagramPane.querySelector('#hideCaption-cell');
+		hideCaption.addEventListener('change', e => {
+			let finalWidth = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaWidth || '&amp;minwidth=320&amp;maxwidth=320';
+			let finalURL = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL || this.defaultURL;
+			switch (hideCaption.value.toLowerCase()) {
+				case 'hide':
+					this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaCaption = true;
+					this.sharePoint.properties.pane.content[this.key].draft.newEndPoint = finalURL + `&amp;omitscript=true&amp;hidecaption=true${finalWidth}`;
+					break;
+				case 'show':
+					this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaCaption = false;
+					this.sharePoint.properties.pane.content[this.key].draft.newEndPoint = finalURL + `&amp;omitscript=true${finalWidth}`;
+					break;
+			}
+		});
+
+		let changeWidth = instagramPane.querySelector('#width-cell');
+		changeWidth.onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaWidth = `&amp;minwidth=${value}&amp;maxwidth=${value}`;
+			let finalURL = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL || this.defaultURL;
+			const finalHide = (this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaCaption) ? '&amp;hidecaption=true' : '';
+
+			this.sharePoint.properties.pane.content[this.key].draft.newEndPoint = finalURL + `&amp;omitscript=true${finalHide}${this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaWidth}`;
+
+		});
+
+
+		this.paneContent.addEventListener('mutated', event => {
+			// this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+		});
+
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			this.getEmbed(this.sharePoint.properties.pane.content[this.key].draft.newEndPoint);
+			this.element.innerHTML = draftDom.innerHTML;//upate the webpart
+			this.element.css(draftDom.css());
+		});
+	}
+}
+
+class YouTube extends CraterWebParts {
+	public params;
+	public element;
+	public key;
+	public paneContent;
+	public elementModifier = new ElementModifier();
+	public player;
+
+	constructor(params) {
+		super({ sharePoint: params.sharePoint });
+		this.sharePoint = params.sharePoint;
+		this.params = params;
+	}
+
+	public render(params) {
+
+		let youtube = this.createKeyedElement({
+			element: 'div', attributes: { class: 'crater-youtube', 'data-type': 'youtube' }, children: [
+				{
+					element: 'div', attributes: { class: 'crater-youtube-contents' }, children: [
+						{
+							element: 'div', attributes: { class: 'crater-iframe' }, children: [
+								{ element: 'iframe', attributes: { id: 'player', type: 'text/html', width: '640', height: '390', src: `https://www.youtube.com/embed/M7lc1UVf-VE?origin=${location.href}&autoplay=1&enablejsapi=1&widgetid=1`, frameborder: '0' } }
+							]
+						}
+					]
+				}
+			]
+		});
+
+		this.key = youtube.dataset.key;
+		this.sharePoint.properties.pane.content[this.key].settings = { myYoutube: { defaultVideo: 'M7lc1UVf-VE', width: '640', height: '390' } };
+
+		let youtubeContent = youtube.querySelector('.crater-youtube-contents');
+		youtubeContent.makeElement({
+			element: 'script', attributes: { src: 'https://www.youtube.com/iframe_api' }
+		});
+
+		return youtube;
+	}
+
+	public rendered(params) { }
+
+	public setUpPaneContent(params) {
+		let key = params.element.dataset['key'];
+		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.paneContent = this.elementModifier.createElement({
+			elemen: 'div', attributes: { class: 'crater-property-content' }
+		}).monitor();
+
+		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		}
+		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		} else {
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'youtube-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'Customise Youtube'
+							})
+						]
+					}),
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [
+							{
+								element: 'div', attributes: { class: 'message-note' }, children: [
+									{ element: 'span', text: 'Note: The Video ID is in this format "M7lc1UVf-VE" ' }
+								]
+							}]
+					}),
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'videoId', value: this.sharePoint.properties.pane.content[key].settings.myYoutube.defaultVideo
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'width', value: this.sharePoint.properties.pane.content[key].settings.myYoutube.width
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'height', value: this.sharePoint.properties.pane.content[key].settings.myYoutube.height
+							})
+						]
+					})
+				]
+			});
+		}
+		return this.paneContent;
+	}
+
+	public generatePaneContent(params) {
+
+	}
+
+	public listenPaneContent(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+
+		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+
+		let youtubePane = this.paneContent.querySelector('.youtube-pane');
+
+		youtubePane.querySelector('#videoId-cell').onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].settings.myYoutube.defaultVideo = value;
+		});
+
+		youtubePane.querySelector('#width-cell').onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].settings.myYoutube.width = value;
+		});
+
+		youtubePane.querySelector('#height-cell').onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].settings.myYoutube.height = value;
+		});
+
+		this.paneContent.addEventListener('mutated', event => {
+			// this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+		});
+
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+
+			let draftDomIframe = draftDom.querySelector('.crater-iframe');
+
+			draftDomIframe.innerHTML = '';
+
+			draftDomIframe.makeElement({
+				element: 'iframe', attributes: { id: 'player2', type: 'text/html', width: this.sharePoint.properties.pane.content[this.key].settings.myYoutube.width, height: this.sharePoint.properties.pane.content[this.key].settings.myYoutube.height, src: `https://www.youtube.com/embed/${this.sharePoint.properties.pane.content[this.key].settings.myYoutube.defaultVideo}?origin=${location.href}&autoplay=1&enablejsapi=1&widgetid=1`, frameborder: '0' }
+			});
+
+
+			console.log(draftDom);
+			this.element.css(draftDom.css());
+			// this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
+			this.element.innerHTML = draftDom.innerHTML;//upate the webpart
+		});
+
+	}
+}
+
+class Facebook extends CraterWebParts {
+	private params: any;
+	public key: any;
+	public elementModifier = new ElementModifier();
+	public pageURL: any = `https://www.facebook.com/ipisolutionsnigerialtd`;
+	public newURL: any;
+	public element: any;
+	public paneContent: any;
+
+	constructor(params) {
+		super({ sharePoint: params.sharePoint });
+		this.sharePoint = params.sharePoint;
+		this.params = params;
+	}
+
+	public render(params) {
+		if (!func.isset(params.url)) params.url = 'https://facebook.com/ipisolutions';
+
+		let facebookDiv = this.createKeyedElement({
+			element: 'div', attributes: { class: 'crater-facebook crater-component', 'data-type': 'facebook' }
+		});
+
+		this.sharePoint.properties.pane.content[facebookDiv.dataset.key].settings.url = params.url;
+
+		return facebookDiv;
+	}
+
+	public rendered(params) {
+		this.element = params.element;
+
+		if (!func.isnull(this.element.querySelector('.crater-facebook-content'))) this.element.querySelector('.crater-facebook-content').remove();
+
+		let url = this.sharePoint.properties.pane.content[this.element.dataset.key].settings.url;
+
+		let facebookContent = this.elementModifier.createElement({
+			element: 'div', attributes: { class: "crater-facebook-content" }, children: [
+				{ element: 'div', attributes: { id: 'fb-root' } },
+				{
+					element: 'script', attributes: { src: 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v5.0&appId=541045216450969&autoLogAppEvents=1', async: 'false', defer: true, crossorigin: 'anonymous' }
+				},
+				{
+					element: 'div', attributes: {
+						class: 'fb-page',
+						'data-href': url, 'data-tabs': 'timeline,messages,events', 'data-width': '', 'data-height': '', 'data-small-header': 'false', 'data-adapt-container-width': 'true', 'data-hide-cover': "false", 'data-show-facepile': "true"
+					}
+				}
+			]
+		});
+
+		this.element.append(facebookContent);
+	}
+
+	public setUpPaneContent(params) {
+		this.key = params.element.dataset['key'];
+		this.element = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		this.paneContent = this.elementModifier.createElement({
+			element: 'div', attributes: { class: 'crater-property-content' }
+		});
+
+		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+
+		}
+		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		} else {
+			// console.log(params)
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'title-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' },
+						children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: "title" }, text: 'Page'
+							})
+						]
+					}),
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' },
+						children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'pageUrl',
+								value:
+									//this.defaultURL
+									this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.fb-page ').dataset.href
+							})
+						]
+					})
+				]
+			});
+
+		}
+
+		return this.paneContent;
+	}
+
+	public generatePaneContent(params) { }
+
+	public listenPaneContent(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		this.paneContent = this.sharePoint.app.querySelector(".crater-property-content").monitor();
+
+		let pageUrl = this.paneContent.querySelector('#pageUrl-cell');
+		pageUrl.onChanged();
+
+		this.paneContent.addEventListener('mutated', event => {
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+		});
+
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
+
+			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+
+			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
+
+			this.sharePoint.properties.pane.content[this.key].settings.url = pageUrl.value;
+
+		});
+	}
+}
+
+class BeforeAfter extends CraterWebParts {
+	public params: any;
+	public elementModifier = new ElementModifier();
+	public paneContent: any;
+	public element: any;
+	private key: any;
+
+	constructor(params) {
+		super({ sharePoint: params.sharePoint });
+		this.sharePoint = params.sharePoint;
+		this.params = params;
+
+	}
+
+	public render(params) {
+		let beforeAfterDiv = this.createKeyedElement({
+			element: 'div', attributes: { class: 'crater-beforeAfter crater-component', 'data-type': 'beforeafter' }, children: [
+				this.elementModifier.createElement({
+					element: 'div', attributes: { class: 'crater-beforeAfter-contents' }, children: [
+						{
+							element: 'img', attributes: { class: 'crater-beforeImage', src: "http://egegorgulu.com/assets/img/beforeafter/before.jpg" }
+						},
+
+						{
+							element: 'div', attributes: { class: 'crater-after' }, children: [
+								{
+									element: 'img', attributes: { class: 'crater-afterImage', src: "http://egegorgulu.com/assets/img/beforeafter/after.jpg" }
+								}
+							]
+						},
+						{
+							element: 'span', attributes: { class: 'crater-handle' }
+						}
+					]
+				})
+			]
+		});
+
+		return beforeAfterDiv;
+	}
+
+	public rendered(params) {
+		this.element = params.element;
+		const slider = this.element.querySelector('.crater-beforeAfter-contents').querySelector('.crater-handle');
+		let isDown = false;
+		let resizeDiv = this.element.querySelector('.crater-beforeAfter-contents').querySelector('.crater-after');
+		let containerWidth = this.element.querySelector('.crater-beforeAfter-contents').offsetWidth + 'px';
+		this.element.querySelector('.crater-after img').css({ "width": containerWidth });
+
+		this.drags(slider, resizeDiv, this.element.querySelector('.crater-beforeAfter-contents'));
+	}
+
+	private drags(dragElement, resizeElement, container): any {
+		//initialize the dragging event on mousedown
+		dragElement.addEventListener('mousedown', elementDown => {
+
+			dragElement.classList.add('crater-draggable');
+			resizeElement.classList.add('crater-resizable');
+			let startX = elementDown.pageX;
+			//get the initial position
+			let dragWidth = dragElement.clientWidth,
+				posX = dragElement.offsetLeft + dragWidth - startX,
+				containerOffset = container.offsetLeft,
+				containerWidth = container.clientWidth;
+			// Set limits
+			let minLeft = containerOffset + 10;
+			let maxLeft = containerOffset + containerWidth - dragWidth - 10;
+
+			dragElement.parentNode.addEventListener('mousemove', elementMoved => {
+				let moveX = elementMoved.pageX;
+				let leftValue = moveX + posX - dragWidth;
+
+				// Prevent going off limits
+				if (leftValue < minLeft) {
+					leftValue = minLeft;
+				} else if (leftValue > maxLeft) {
+					leftValue = maxLeft;
+				}
+				// Translate the handle's left value to masked divs width.
+				var widthValue = (leftValue + dragWidth / 2 - containerOffset) * 100 / containerWidth + '%';
+				// Set the new values for the slider and the handle. 
+				// Bind mouseup events to stop dragging.
+
+				let draggable = container.querySelector('.crater-draggable');
+
+				if (!func.isnull(draggable)) draggable.css({ 'left': widthValue });
+				container.addEventListener('mouseup', function () {
+					this.classList.remove('crater-draggable');
+					resizeElement.classList.remove('crater-resizable');
+				});
+
+				let resizable = container.querySelector('.crater-resizable');
+				if (!func.isnull(resizable)) resizable.css({ 'width': widthValue });
+			});
+			container.addEventListener('mouseup',  () => {
+				dragElement.classList.remove('crater-draggable');
+				resizeElement.classList.remove('crater-resizable');
+			});
+			elementDown.preventDefault();
+		});
+		dragElement.addEventListener('mouseup', elementUp => {
+			dragElement.classList.remove('crater-draggable');
+			resizeElement.classList.remove('crater-resizable');
+		});
+	}
+
+	public setUpPaneContent(params) {
+		let key = params.element.dataset['key'];
+		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.paneContent = this.elementModifier.createElement({
+			element: 'div', attributes: { class: 'crater-property-content' }
+		}).monitor();
+		if (this.sharePoint.properties.pane.content[key].draft.pane.content! = "") {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		}
+		else if (this.sharePoint.properties.pane.content[key].content != "") {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		}
+		else {
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'title-pane card' }, children: [
+					{
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							{ element: 'h2', attributes: { class: 'title' }, text: 'Settings' }
+						]
+					},
+					{
+						element: 'div', attributes: { class: 'row' },
+						children: [
+							this.elementModifier.cell({
+								element: "img", name: "before",
+								dataAttributes: {
+									style: { width: '400px', height: '400px' },
+									src: this.element.querySelector('.beforeAfter-contents').querySelector('.beforeImage').src
+								}
+							}),
+							this.elementModifier.cell({
+								element: 'img',
+								name: 'after',
+								dataAttributes: {
+									style: { width: '400px', height: '400px' },
+									src: this.element.querySelector('.beforeAfter-contents').querySelector('.crater-after').querySelector('.afterImage').src
+								}
+							})
+						]
+					}
+				]
+			});
+		}
+		return this.paneContent;
+	}
+
+	public listenPaneContent(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+
+		let afterCell = this.paneContent.querySelector('#after-cell').parentNode;
+		this.uploadImage({ parent: afterCell }, (image) => {
+			afterCell.querySelector('#after-cell').src = image.src;
+			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.beforeAfter-contents').querySelector('.crater-after').querySelector('.afterImage').src = image.src;
+		});
+
+		let beforeCell = this.paneContent.querySelector('#before-cell').parentNode;
+		this.uploadImage({ parent: beforeCell }, (image) => {
+			beforeCell.querySelector('#before-cell').src = image.src;
+			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.beforeAfter-contents').querySelector('.beforeImage').src = image.src;
+		});
+
+		this.paneContent.addEventListener('mutated', event => {
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+		});
+
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+
+			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+		});
+	}
+}
+
 {
+	CraterWebParts.prototype['facebook'] = params => {
+		let facebook = new Facebook({ sharePoint: params.sharePoint });
+		return facebook[params.action](params);
+	};
+
+	CraterWebParts.prototype['beforeafter'] = params => {
+		let beforeafter = new BeforeAfter({ sharePoint: params.sharePoint });
+		return beforeafter[params.action](params);
+	};
+
+	CraterWebParts.prototype['map'] = params => {
+		let map = new Map({ sharePoint: params.sharePoint });
+		return map[params.action](params);
+	};
+
+	CraterWebParts.prototype['datelist'] = params => {
+		let datelist = new DateList({ sharePoint: params.sharePoint });
+		return datelist[params.action](params);
+	};
+
+	CraterWebParts.prototype['instagram'] = params => {
+		let instagram = new Instagram({ sharePoint: params.sharePoint });
+		return instagram[params.action](params);
+	};
+
+	CraterWebParts.prototype['carousel'] = params => {
+		let carousel = new Carousel({ sharePoint: params.sharePoint });
+		return carousel[params.action](params);
+	};
+
 	CraterWebParts.prototype['events'] = params => {
 		let events = new Events({ sharePoint: params.sharePoint });
 		return events[params.action](params);

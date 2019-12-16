@@ -41,12 +41,6 @@
 }
 
 .crater-slider .crater-top-right {
-    z-index: 2;
-    position: absolute;
-    top: 0;
-    right: 0;
-    margin: 1em;
-    padding: .5em;
     visibility: hidden;
 }
 
@@ -56,6 +50,7 @@
     animation-duration: .5s;
     color: black;
     background-color: white;
+    border: 1px solid black;
 }
 
 .crater-slider .crater-arrow {

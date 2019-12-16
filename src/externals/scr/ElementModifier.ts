@@ -871,7 +871,7 @@ function prepareFrameWork(): void {
         }
         else if (attribute == '#') {
             while (parent) {
-                if (func.isset(parent.id) && parent.id != name.slice(1)) {
+                if (func.isset(parent.id) && parent.id == name.slice(1)) {
                     break;
                 }
                 parent = parent.parentNode;

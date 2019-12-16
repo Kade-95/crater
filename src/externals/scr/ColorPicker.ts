@@ -144,11 +144,12 @@ class ColorPicker {
         this.canvas.remove();
     }
 
-    private rgbToHex(color) {
-        let hex = color.match(/\d+/g).map(x => {
-            return parseInt(x).toString(16);
-        });
-        return '#' + hex.join('').toUpperCase();
+    public static rgbToHex(rgb) {
+        rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+        return (rgb && rgb.length === 4) ? "#" +
+            ("0" + parseInt(rgb[1], 10).toString(16)).slice(-2) +
+            ("0" + parseInt(rgb[2], 10).toString(16)).slice(-2) +
+            ("0" + parseInt(rgb[3], 10).toString(16)).slice(-2) : '';
     }
 }
 

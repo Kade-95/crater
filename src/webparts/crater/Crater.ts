@@ -90,8 +90,8 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 					let element = event.target;
 
 					if (!(element.classList.contains('crater-display-panel') || element.getParents('.crater-display-panel'))) {
-						this.app.querySelectorAll('.crater-display-panel').forEach(element => {
-							element.remove();
+						this.app.querySelectorAll('.crater-display-panel').forEach(displayPanel => {
+							displayPanel.remove();
 						});
 					}
 
@@ -194,7 +194,7 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 
 	public displayPanel(selected) {
 
-		let webparts = ['Panel', 'List', 'Slider', 'Counter', 'Tiles', 'News', 'Table', 'TextArea', 'Icons', 'Button', 'Count Down', 'Tab', 'Events'];
+		let webparts = ['Panel', 'List', 'Slider', 'Counter', 'Tiles', 'News', 'Table', 'TextArea', 'Icons', 'Button', 'Count Down', 'Tab', 'Events', 'Carousel', 'Map', 'DateList', 'Instagram', 'Facebook', 'BeforeAfter'];
 
 		this.displayPanelWindow = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-display-panel' }
