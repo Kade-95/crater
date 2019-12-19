@@ -46,7 +46,8 @@
 
 .crater .crater-component {
     text-align: center;
-    display: block;
+    display: flex;
+    flex-direction: column;
     position: relative;
     min-height: 50px;
 }

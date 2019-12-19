@@ -5,7 +5,6 @@ import { CraterWebParts } from "./CraterWebParts";
 import { ColorPicker } from "./ColorPicker";
 import { Connection } from "./Connection";
 
-require('./../styles/table.css');
 require('./../styles/containers.css');
 require('./../styles/editwindow.css');
 require('./../styles/displayPanel.css');

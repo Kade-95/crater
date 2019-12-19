@@ -24,6 +24,9 @@ class PropertyPane {
     }
 
     public render(element): any {
+        // this.sharePoint.app.querySelectorAll('.webpart-options').forEach(option => {
+        //     option.hide();
+        // });
         this.element = element;
 
         let key = this.element.dataset['key'];

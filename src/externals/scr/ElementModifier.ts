@@ -9,6 +9,79 @@ class ElementModifier {
         prepareFrameWork();
     }
 
+    public dropDown(params) {
+        let mDrop = this.createElement({
+            element: 'span', attributes: params.attributes, children: [
+                {
+                    element: 'span', attributes: { id: 'drop-control', style: { display: 'flex' } }, children: [
+                        { element: 'input', attributes: params.dataAttributes },
+                        {
+                            element: 'span', attributes: {
+                                style: {
+                                    cursor: 'pointer',
+                                    transform: 'rotate(225deg)',
+                                    margin: '.5em',
+                                    borderTop: '2px solid black',
+                                    borderLeft: '2px solid black',
+                                    width: '.5em',
+                                    height: '.5em',
+                                    display: 'flex'
+                                }, id: 'drop'
+                            }
+                        }
+                    ]
+                },
+                {
+                    element: 'span', attributes: { id: 'drop-contents', style: { backgroundColor: 'white', display: 'none' } }, children: params.contents
+                }
+            ]
+        });
+
+        for (let child of mDrop.querySelector('#drop-contents').childNodes) {
+            child.classList.add('drop-content');
+            if (!child.hasAttribute('value')) child.setAttribute('value', child.textContent);
+            child.css({ cursor: 'pointer' });
+            child.addEventListener('mouseenter', event => {
+                child.css({ backgroundColor: 'lightgray' })
+            });
+
+            child.addEventListener('mouseleave', event => {
+                child.cssRemove(['background-color'])
+            });
+        }
+
+        mDrop.css({
+            border: '2px solid black',
+            display: 'grid',
+        });
+
+        let dropDownListener = () => {
+            let drop = mDrop.querySelector('#drop');
+
+            // mDrop.monitor().onChanged(value => {
+            //     mDrop.setAttribute('value', mDrop.querySelector('#drop-control').querySelector('input').value);                
+            // });
+
+            drop.addEventListener('click', event => {
+                mDrop.querySelector('#drop-contents').toggle();
+            });
+
+            mDrop.querySelector('#drop-contents').addEventListener('click', event => {
+                let clicked = event.target;
+                if (!clicked.classList.contains('drop-content')) clicked = clicked.getParents('.drop-content');
+
+                if (!func.isnull(clicked)) {
+                    mDrop.querySelector('#drop-control').querySelector('input').value = clicked.getAttribute('value') || ''
+                    mDrop.querySelector('#drop-control').querySelector('input').setAttribute('value', clicked.getAttribute('value') || '');
+                }
+            });
+        }
+
+        dropDownListener();
+
+        return mDrop;
+    }
+
     //Import image as string64
     public importImage(params, callBack) {
         params.attributes = func.isset(params.attributes) ? params.attributes : {};
@@ -17,10 +90,29 @@ class ElementModifier {
         });
 
         //Upload as form
+
+        let allImages = [];
+        let contents = [];
+
+        for (let image of this.sharepoint.app.querySelectorAll('img')) {
+            if (allImages.indexOf(image.src) == -1) {
+                allImages.push(image.src);
+                contents.push({
+                    element: 'p', attributes: { value: image.src }, children: [
+                        { element: 'img', attributes: { class: 'crater-icon', src: image.src } },
+                        { element: 'a', text: image.src.slice(0, 15) }
+                    ]
+                });
+            }
+        }
+
+        let imageSelector = this.dropDown({
+            attributes: { class: 'crater-image-selector' }, dataAttributes: { id: params.name, value: params.value || '' }, contents
+        });
+
         let link = this.createElement({
-            element: 'span', children: [
-                { element: 'label', text: 'Link' },
-                { element: 'input', attributes: { id: `${params.name}-cell` } },
+            element: 'span', attributes: { style: { display: 'grid' } }, children: [
+                imageSelector,
                 { element: 'button', attributes: { id: `submit`, class: 'small-btn' }, text: 'Change' },
             ]
         });
@@ -41,11 +133,13 @@ class ElementModifier {
         params.attributes.style.minHeight = '10px';
         params.attributes.style.position = 'relative';
 
-        params.parent.makeElement({
+        let selectionView = params.parent.makeElement({
             element: 'span', attributes: params.attributes, children: [
                 closeButton, link, upload
             ]
         });
+
+        selectionView.css({ display: 'grid', gridGap: '0.5em', padding: '0.5em' });
 
         upload.querySelector(`#${params.name}-cell`).addEventListener('change', event => {
             this.imageToJson(upload.querySelector(`#${params.name}-cell`).files[0], (file) => {
@@ -53,8 +147,9 @@ class ElementModifier {
             });
         });
 
-        link.querySelector(`#submit`).addEventListener('click', event => {
-            callBack({ src: link.querySelector(`#${params.name}-cell`).value });
+        link.querySelector(`#submit`).addEventListener('click', event => {  
+            let value = link.querySelector(`#${params.name}`).value;          
+            if(!func.isSpaceString(value)) callBack({ src: link.querySelector(`#${params.name}`).value });
         });
     }
 
@@ -854,6 +949,10 @@ function prepareFrameWork(): void {
         });
 
         this.addEventListener('change', (event) => {
+            updateMe(event);
+        });
+
+        this.addEventListener('mutated', event=>{
             updateMe(event);
         });
     };

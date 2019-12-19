@@ -22,6 +22,7 @@ require('./../styles/map.css');
 require('./../styles/datelist.css');
 require('./../styles/instagram.css');
 require('./../styles/beforeafter.css');
+require('./../styles/table.css');
 require('./../../../node_modules/froala-editor/css/froala_editor.pkgd.min.css');
 
 class CraterWebParts {
@@ -31,7 +32,6 @@ class CraterWebParts {
 	constructor(params) {
 		this.sharePoint = params.sharePoint;
 	}
-
 	//create the pane-options component
 	public paneOptions(params) {
 		//create the options element
@@ -3307,7 +3307,7 @@ class List extends CraterWebParts {
 			children: [
 				this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-list-content-row' }),
 				this.elementModifier.cell({
-					element: 'input', name: 'Image', value: this.sharePoint.images.append
+					element: 'img', name: 'Image', dataAttributes: {src: this.sharePoint.images.append, class: 'crater-icon'}
 				}),
 				this.elementModifier.cell({
 					element: 'input', name: 'Title', value: 'title'
@@ -4726,7 +4726,6 @@ class Crater extends CraterWebParts {
 		});
 		this.key = this.element.dataset['key'];
 		this.sharePoint.properties.pane.content[this.element.dataset['key']].settings.columns = 1;
-		this.resetSections({ resetWidth: true });
 		return this.element;
 	}
 
@@ -4735,6 +4734,7 @@ class Crater extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset.key;
 		this.params = params;
+
 		this.resetSections({ resetWidth: params.resetWidth });
 		this.showOptions(this.element);
 		let sections = this.element.querySelectorAll('section.crater-section');
@@ -4789,8 +4789,6 @@ class Crater extends CraterWebParts {
 				//update the section and siblings width 
 				currentSection.css({ width: myWidth + 'px' });
 				currentSibling.css({ width: mySiblingWidth + 'px' });
-				console.log(this.widths);
-
 
 				craterSectionsContainer.css({ gridTemplateColumns: func.stringReplace(this.widths.toString(), ',', ' ') });
 			}
@@ -5044,45 +5042,14 @@ class Crater extends CraterWebParts {
 		// reset count
 		this.widths = [];
 		count = craterSectionsContainer.querySelectorAll('.crater-section').length;
+		
 		craterSectionsContainer.css({ gridTemplateColumns: `repeat(${count}, 1fr` });
 		craterSectionsContainer.querySelectorAll('.crater-section').forEach(section => {
-			this.sharePoint.properties.pane.content[section.dataset.key].settings.view = section.dataset.view;
-			if (func.isset(section.dataset.view) && section.dataset.view == 'Tabbed') {
-				section.classList.add('tab');
-				let sectionMenu = section.querySelector('.crater-section-menu');
-				let sectionContent = section.querySelector('.crater-section-content');
-
-				if (func.isnull(sectionMenu)) {
-					sectionMenu = this.elementModifier.createElement({
-						element: 'ul', attributes: { class: 'crater-section-menu' }
-					});
-					section.prepend(sectionMenu);
-				}
-
-				for (let keyedElement of sectionContent.querySelectorAll('.keyed-element')) {
-					let hasMenu = false;
-					for (let li of sectionMenu.querySelectorAll('li')) {
-						hasMenu = (func.isset(li.dataset.owner) && li.dataset.owner == keyedElement.dataset.key);
-						if (hasMenu) break;
-					}
-					if (!hasMenu) {
-						sectionMenu.makeElement(({
-							element: 'li', text: 'Tab', attributes: { 'data-owner': keyedElement.dataset.key }
-						}));
-					}
-				}
-
-				sectionMenu.querySelectorAll('li').forEach(li => {
-					li.css({ width: (100 / sectionMenu.querySelectorAll('li').length) + '%' });
-				});
-			}
-			else {
-				section.classList.remove('tab');
-			}
-
 			//section has been rendered
-			this[section.dataset.type]({ action: 'rendered', element: section, sharePoint: this.sharePoint });
-			section.css({ width: this.element.position().width / count + 'px' });
+			this[section.dataset.type]({ action: 'rendered', element: section, sharePoint: this.sharePoint });			
+			if (func.isset(params.resetWidth)){
+				section.css({ width: this.element.position().width / count + 'px' });
+			}
 			this.widths.push(section.position().width + 'px');
 		});
 	}
@@ -5792,6 +5759,12 @@ class Panel extends CraterWebParts {
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'height', value: this.element.querySelector('.crater-panel-title').css()['height']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'width', value: this.element.querySelector('.crater-panel-title').css()['width']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'position', options: ['flex-start', 'flex-end', 'Center']
 							})
 						]
 					})
@@ -5901,29 +5874,39 @@ class Panel extends CraterWebParts {
 			});
 		};
 
-		this.paneContent.querySelector('.title-pane').querySelector('#height-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title-icon').src = value;
+		let titlePane = this.paneContent.querySelector('.title-pane');
+
+		titlePane.querySelector('#height-cell').onChanged(height => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({height});
 		});
 
-		this.paneContent.querySelector('.title-pane').querySelector('#title-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').innerHTML = value;
+		titlePane.querySelector('#width-cell').onChanged(width => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({width});
 		});
 
-		let backgroundColorCell = this.paneContent.querySelector('.title-pane').querySelector('#backgroundcolor-cell').parentNode;
+		titlePane.querySelector('#position-cell').onChanged(alignSelf => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({alignSelf});
+		});
+
+		titlePane.querySelector('#title-cell').onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').innerText = value;
+		});
+
+		let backgroundColorCell = titlePane.querySelector('#backgroundcolor-cell').parentNode;
 		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
 			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({ backgroundColor });
 			backgroundColorCell.querySelector('#backgroundcolor-cell').value = backgroundColor;
 			backgroundColorCell.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor);
 		});
 
-		let colorCell = this.paneContent.querySelector('.title-pane').querySelector('#color-cell').parentNode;
+		let colorCell = titlePane.querySelector('#color-cell').parentNode;
 		this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#color-cell') }, (color) => {
 			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({ color });
 			colorCell.querySelector('#color-cell').value = color;
 			colorCell.querySelector('#color-cell').setAttribute('value', color);
 		});
 
-		this.paneContent.querySelector('.title-pane').querySelector('#fontsize-cell').onChanged(value => {
+		titlePane.querySelector('#fontsize-cell').onChanged(value => {
 			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({ fontSize: value });
 		});
 
@@ -7873,7 +7856,7 @@ class BeforeAfter extends CraterWebParts {
 				let resizable = container.querySelector('.crater-resizable');
 				if (!func.isnull(resizable)) resizable.css({ 'width': widthValue });
 			});
-			container.addEventListener('mouseup',  () => {
+			container.addEventListener('mouseup', () => {
 				dragElement.classList.remove('crater-draggable');
 				resizeElement.classList.remove('crater-resizable');
 			});
