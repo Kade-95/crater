@@ -184,6 +184,10 @@ class PropertyPane {
             let width = { width: 'Width', minWidth: 'Minimium Width', maxWidth: 'Maximium Width' };
             let widthBlock = this.sharePoint.craterWebparts.createStyleBlock({ children: width, title: "Width", element: this.element });
             this.paneStyle.append(widthBlock);
+
+            let display = { display: 'Display', gridTemplateColumns: 'Columns', gridTemplateRows: 'Rows' };
+            let displayBlock = this.sharePoint.craterWebparts.createStyleBlock({ children: display, title: "Display", element: this.element });
+            this.paneStyle.append(displayBlock);
         }
 
         this.editor.innerHTML = '';

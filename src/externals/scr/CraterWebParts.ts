@@ -3307,7 +3307,7 @@ class List extends CraterWebParts {
 			children: [
 				this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-list-content-row' }),
 				this.elementModifier.cell({
-					element: 'img', name: 'Image', dataAttributes: {src: this.sharePoint.images.append, class: 'crater-icon'}
+					element: 'img', name: 'Image', dataAttributes: { src: this.sharePoint.images.append, class: 'crater-icon' }
 				}),
 				this.elementModifier.cell({
 					element: 'input', name: 'Title', value: 'title'
@@ -4726,6 +4726,8 @@ class Crater extends CraterWebParts {
 		});
 		this.key = this.element.dataset['key'];
 		this.sharePoint.properties.pane.content[this.element.dataset['key']].settings.columns = 1;
+		this.sharePoint.properties.pane.content[this.element.dataset['key']].settings.columnsSizes = '1fr';
+		this.sharePoint.properties.pane.content[this.element.dataset['key']].settings.widths = [];
 		return this.element;
 	}
 
@@ -4784,13 +4786,13 @@ class Crater extends CraterWebParts {
 
 				if (myWidth <= 50 || mySiblingWidth <= 50) return;
 
-				this.widths[func.getPositionInArray(sections, currentSection)] = myWidth + 'px';
-				this.widths[func.getPositionInArray(sections, currentSibling)] = mySiblingWidth + 'px';
-				//update the section and siblings width 
-				currentSection.css({ width: myWidth + 'px' });
-				currentSibling.css({ width: mySiblingWidth + 'px' });
+				this.sharePoint.properties.pane.content[this.key].settings.widths[sections.indexOf(currentSection)] = myWidth + 'px';
 
-				craterSectionsContainer.css({ gridTemplateColumns: func.stringReplace(this.widths.toString(), ',', ' ') });
+				this.sharePoint.properties.pane.content[this.key].settings.widths[sections.indexOf(currentSibling)] = mySiblingWidth + 'px';
+				
+				this.sharePoint.properties.pane.content[this.key].settings.columnsSizes = func.stringReplace(this.sharePoint.properties.pane.content[this.key].settings.widths.toString(), ',', ' ');
+
+				craterSectionsContainer.css({ gridTemplateColumns: this.sharePoint.properties.pane.content[this.key].settings.columnsSizes });
 			}
 		};
 
@@ -4964,8 +4966,13 @@ class Crater extends CraterWebParts {
 						]
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Columns', attributes: { type: 'number', min: 1 }, value: this.sharePoint.properties.pane.content[this.key].settings.columns
+						element: 'input', name: 'Columns', value: this.sharePoint.properties.pane.content[this.key].settings.columns
 					}),
+
+					this.elementModifier.cell({
+						element: 'input', name: 'Columns Sizes', value: this.sharePoint.properties.pane.content[this.key].settings.columnsSizes || ''
+					}),
+
 					this.elementModifier.cell({
 						element: 'select', name: 'Scroll', options: ["Yes", "No"]
 					}),
@@ -4975,6 +4982,8 @@ class Crater extends CraterWebParts {
 
 		// upload the settings
 		this.paneContent.querySelector('#Columns-cell').value = this.sharePoint.properties.pane.content[this.key].settings.columns;
+
+		this.paneContent.querySelector('#Columns-Sizes-cell').value = this.sharePoint.properties.pane.content[this.key].settings.columnsSizes;
 
 		let contents = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-sections-container').querySelectorAll('.crater-section');
 
@@ -4993,6 +5002,8 @@ class Crater extends CraterWebParts {
 		let sections = draftDom.querySelectorAll('.crater-section');
 
 		let settingsPane = this.paneContent.querySelector('.settings-pane');
+
+		settingsPane.querySelector('#Columns-Sizes-cell').onChanged();
 
 		settingsPane.querySelector('#Scroll-cell').onChanged(scroll => {
 			sections.forEach(section => {
@@ -5014,6 +5025,8 @@ class Crater extends CraterWebParts {
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+
+			this.sharePoint.properties.pane.content[this.key].settings.columnsSizes = settingsPane.querySelector('#Columns-Sizes-cell').value;
 
 			if (this.sharePoint.properties.pane.content[this.key].settings.columns < this.paneContent.querySelector('#Columns-cell').value) {
 				this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.querySelector('#Columns-cell').value;
@@ -5040,18 +5053,18 @@ class Crater extends CraterWebParts {
 		}
 
 		// reset count
-		this.widths = [];
 		count = craterSectionsContainer.querySelectorAll('.crater-section').length;
-		
+
 		craterSectionsContainer.css({ gridTemplateColumns: `repeat(${count}, 1fr` });
-		craterSectionsContainer.querySelectorAll('.crater-section').forEach(section => {
+		craterSectionsContainer.querySelectorAll('.crater-section').forEach((section, position) => {
 			//section has been rendered
-			this[section.dataset.type]({ action: 'rendered', element: section, sharePoint: this.sharePoint });			
-			if (func.isset(params.resetWidth)){
-				section.css({ width: this.element.position().width / count + 'px' });
-			}
-			this.widths.push(section.position().width + 'px');
+			this[section.dataset.type]({ action: 'rendered', element: section, sharePoint: this.sharePoint });
+			section.css({width: '100%'});
+
+			this.sharePoint.properties.pane.content[this.key].settings.widths[position] = section.position().width + 'px';
 		});
+
+		craterSectionsContainer.css({ gridTemplateColumns: this.sharePoint.properties.pane.content[this.key].settings.columnsSizes });
 	}
 
 	public createSections(params) {
@@ -5877,15 +5890,15 @@ class Panel extends CraterWebParts {
 		let titlePane = this.paneContent.querySelector('.title-pane');
 
 		titlePane.querySelector('#height-cell').onChanged(height => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({height});
+			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({ height });
 		});
 
 		titlePane.querySelector('#width-cell').onChanged(width => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({width});
+			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({ width });
 		});
 
 		titlePane.querySelector('#position-cell').onChanged(alignSelf => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({alignSelf});
+			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({ alignSelf });
 		});
 
 		titlePane.querySelector('#title-cell').onChanged(value => {

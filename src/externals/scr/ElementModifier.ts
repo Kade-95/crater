@@ -42,11 +42,11 @@ class ElementModifier {
             if (!child.hasAttribute('value')) child.setAttribute('value', child.textContent);
             child.css({ cursor: 'pointer' });
             child.addEventListener('mouseenter', event => {
-                child.css({ backgroundColor: 'lightgray' })
+                child.css({ backgroundColor: 'lightgray' });
             });
 
             child.addEventListener('mouseleave', event => {
-                child.cssRemove(['background-color'])
+                child.cssRemove(['background-color']);
             });
         }
 
@@ -71,11 +71,11 @@ class ElementModifier {
                 if (!clicked.classList.contains('drop-content')) clicked = clicked.getParents('.drop-content');
 
                 if (!func.isnull(clicked)) {
-                    mDrop.querySelector('#drop-control').querySelector('input').value = clicked.getAttribute('value') || ''
+                    mDrop.querySelector('#drop-control').querySelector('input').value = clicked.getAttribute('value') || '';
                     mDrop.querySelector('#drop-control').querySelector('input').setAttribute('value', clicked.getAttribute('value') || '');
                 }
             });
-        }
+        };
 
         dropDownListener();
 
@@ -147,9 +147,9 @@ class ElementModifier {
             });
         });
 
-        link.querySelector(`#submit`).addEventListener('click', event => {  
-            let value = link.querySelector(`#${params.name}`).value;          
-            if(!func.isSpaceString(value)) callBack({ src: link.querySelector(`#${params.name}`).value });
+        link.querySelector(`#submit`).addEventListener('click', event => {
+            let value = link.querySelector(`#${params.name}`).value;
+            if (!func.isSpaceString(value)) callBack({ src: link.querySelector(`#${params.name}`).value });
         });
     }
 
@@ -524,6 +524,20 @@ class ElementModifier {
 
 function prepareFrameWork(): void {
     //Framework with JsDom
+
+    NodeList.prototype['indexOf'] = function (element) {
+        for (let i in this) {
+            if (this[i] == element) return i;
+        }
+        return -1;
+    }
+
+    Element.prototype['indexOf'] = function (element) {
+        for (let i in Array(this.children)) {
+            if (this.children[i] == element) return i;
+        }
+        return -1;
+    };
 
     Element.prototype['setBackgroundImage'] = function (url) {
         if (url.indexOf('data:image/png;base64,') != -1) {
@@ -952,7 +966,7 @@ function prepareFrameWork(): void {
             updateMe(event);
         });
 
-        this.addEventListener('mutated', event=>{
+        this.addEventListener('mutated', event => {
             updateMe(event);
         });
     };
