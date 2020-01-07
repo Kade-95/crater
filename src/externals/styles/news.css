@@ -2,15 +2,18 @@
     color: var(--secondary-color);
     background-color: var(--lighter-primary-color);
     color: white;
-    display: flex;
+    /* display: flex;
     justify-content: center;
     align-items: center;
-    flex-direction: row;
+    flex-direction: row; */
+}
+
+.crater-ticker-content{
+    display: grid;
+    grid-template-columns: 30% 70%;
 }
 
 .crater-ticker-title {
-    width: 30%;
-    float: left;
     background-color: var(--light-primary-color);
     box-shadow: 1px 1px 2px var(--lighter-accient-color);
     height: inherit;
@@ -21,8 +24,6 @@
 }
 
 .crater-ticker-news-container {
-    width: 70%;
-    float: right;
     min-height: 50px;
     display: flex;
     justify-content: left;

@@ -4369,22 +4369,27 @@ class News extends CraterWebParts {
 
 		let news = this.createKeyedElement({ element: 'div', attributes: { class: 'crater-ticker crater-component', 'data-type': 'news' } });
 		let title = news.makeElement({
-			element: 'div', attributes: { class: 'crater-ticker-title' }, children: [
+			element: 'div', attributes: { class: 'crater-ticker-content' }, children: [
 				{
-					element: 'span', attributes: { class: 'crater-ticker-title-text' }, text: 'Company Name'
+					element: 'div', attributes: { class: 'crater-ticker-title' }, children: [
+						{
+							element: 'span', attributes: { class: 'crater-ticker-title-text' }, text: 'Company Name'
+						},
+						{
+							element: 'span', attributes: { class: 'crater-ticker-controller' }, children: [
+								{ element: 'a', attributes: { class: 'crater-arrow crater-up-arrow' } },
+								{ element: 'a', attributes: { class: 'crater-arrow crater-down-arrow' } }
+							]
+						}
+					]
 				},
 				{
-					element: 'span', attributes: { class: 'crater-ticker-controller' }, children: [
-						{ element: 'a', attributes: { class: 'crater-arrow crater-up-arrow' } },
-						{ element: 'a', attributes: { class: 'crater-arrow crater-down-arrow' } }
-					]
+					element: 'div', attributes: { class: 'crater-ticker-news-container' }
 				}
 			]
 		});
 
-		let newsContainer = news.makeElement({
-			element: 'div', attributes: { class: 'crater-ticker-news-container' }
-		});
+		let newsContainer = news.querySelector('.crater-ticker-news-container');
 
 		this.sharePoint.properties.pane.content[news.dataset['key']].settings.duration = 10000;
 		this.sharePoint.properties.pane.content[news.dataset['key']].settings.animationType = 'Fade';
@@ -4408,7 +4413,7 @@ class News extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 
 		let news = this.element.querySelectorAll('.crater-ticker-news'),
-			action = this.sharePoint.properties.pane.content[this.key].settings.animationType.toLowerCase();
+			action = this.sharePoint.properties.pane.content[this.key].settings.animationType.toLowerCase();		
 
 		if (news.length < 2) return;
 
@@ -4424,7 +4429,7 @@ class News extends CraterWebParts {
 			}
 		}
 
-		let runAnimation = () => {
+		let runAnimation = () => {			
 			if (key < 0) key = news.length - 1;
 			if (key >= news.length) key = 0;
 			if (action == 'fade') {
@@ -4572,8 +4577,6 @@ class News extends CraterWebParts {
 			});
 		}
 
-		// this.paneContent.querySelector(`#Animation-cell [value="${this.sharePoint.properties.pane.content[this.key].settings.animationType}"]`).selected = true;
-
 		return this.paneContent;
 	}
 
@@ -4581,8 +4584,9 @@ class News extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		let domDraft = this.sharePoint.properties.pane.content[this.key].draft.dom;
 
-		let tickerNewsContainer = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-ticker-news-container');
+		let tickerNewsContainer = domDraft.querySelector('.crater-ticker-news-container');
 
 		let news = tickerNewsContainer.querySelectorAll('.crater-ticker-news');
 
@@ -4789,7 +4793,7 @@ class Crater extends CraterWebParts {
 				this.sharePoint.properties.pane.content[this.key].settings.widths[sections.indexOf(currentSection)] = myWidth + 'px';
 
 				this.sharePoint.properties.pane.content[this.key].settings.widths[sections.indexOf(currentSibling)] = mySiblingWidth + 'px';
-				
+
 				this.sharePoint.properties.pane.content[this.key].settings.columnsSizes = func.stringReplace(this.sharePoint.properties.pane.content[this.key].settings.widths.toString(), ',', ' ');
 
 				craterSectionsContainer.css({ gridTemplateColumns: this.sharePoint.properties.pane.content[this.key].settings.columnsSizes });
@@ -5059,7 +5063,7 @@ class Crater extends CraterWebParts {
 		craterSectionsContainer.querySelectorAll('.crater-section').forEach((section, position) => {
 			//section has been rendered
 			this[section.dataset.type]({ action: 'rendered', element: section, sharePoint: this.sharePoint });
-			section.css({width: '100%'});
+			section.css({ width: '100%' });
 
 			this.sharePoint.properties.pane.content[this.key].settings.widths[position] = section.position().width + 'px';
 		});
@@ -5924,6 +5928,7 @@ class Panel extends CraterWebParts {
 		});
 
 		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+			console.log('h')
 			this.paneContent.append(
 				this.sharePoint.displayPanel(webpart => {
 					let newPanelContent = this.sharePoint.appendWebpart(panelContents, webpart.dataset.webpart);
