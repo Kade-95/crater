@@ -198,10 +198,11 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 	public displayPanel(selected) {
 
 		let webparts = ['Panel', 'List', 'Slider', 'Counter', 'Tiles', 'News', 'Table', 'TextArea', 'Icons', 'Button', 'Count Down', 'Tab', 'Events', 'Carousel', 'Map', 'DateList', 'Instagram', 'Facebook', 'BeforeAfter'];
+		
 
 		this.displayPanelWindow = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-display-panel' }
-		});
+		});		
 
 		//search box 
 		this.displayPanelWindow.makeElement({

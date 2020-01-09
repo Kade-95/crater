@@ -301,7 +301,7 @@ class CraterWebParts {
 					element: 'img', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-icon crater-style-attr' }, name: params.children[i], value, src: this.sharePoint.images.append
 				}));
 			}
-			else if(i == 'fontFamily'){
+			else if (i == 'fontFamily') {
 				blockRow.append(this.elementModifier.cell({
 					element: 'input', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value, list: func.fontStyles
 				}));
@@ -4418,7 +4418,7 @@ class News extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 
 		let news = this.element.querySelectorAll('.crater-ticker-news'),
-			action = this.sharePoint.properties.pane.content[this.key].settings.animationType.toLowerCase();		
+			action = this.sharePoint.properties.pane.content[this.key].settings.animationType.toLowerCase();
 
 		if (news.length < 2) return;
 
@@ -4434,7 +4434,7 @@ class News extends CraterWebParts {
 			}
 		}
 
-		let runAnimation = () => {			
+		let runAnimation = () => {
 			if (key < 0) key = news.length - 1;
 			if (key >= news.length) key = 0;
 			if (action == 'fade') {
@@ -5933,15 +5933,16 @@ class Panel extends CraterWebParts {
 		});
 
 		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
-			this.paneContent.append(
-				this.sharePoint.displayPanel(webpart => {
-					let newPanelContent = this.sharePoint.appendWebpart(panelContents, webpart.dataset.webpart);
-					let newPanelContentRow = panelContentPanePrototype.cloneNode(true);
-					panelContentPane.append(newPanelContentRow);
 
-					panelContentRowHandler(newPanelContentRow, newPanelContent);
-				})
-			);
+			let displayWindow = this.sharePoint.displayPanel(webpart => {
+				let newPanelContent = this.sharePoint.appendWebpart(panelContents, webpart.dataset.webpart);
+				let newPanelContentRow = panelContentPanePrototype.cloneNode(true);
+				panelContentPane.append(newPanelContentRow);
+
+				panelContentRowHandler(newPanelContentRow, newPanelContent);
+			});
+
+			this.paneContent.makeElement({element: displayWindow.outerHTML});
 		});
 
 		this.paneContent.querySelectorAll('.crater-panel-content-row-pane').forEach((panelContent, position) => {
