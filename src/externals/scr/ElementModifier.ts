@@ -454,6 +454,14 @@ class ElementModifier {
         cell.classList.add('cell');
 
         if (func.isset(params.text)) data.text = params.text;
+
+        if(func.isset(params.list)){
+            cell.makeElement({
+                element: 'list', attributes: {id: `${id}-list`}, options: params.list
+            });
+
+            data.list = `${id}-list`;
+        }
         return cell;
     }
 
@@ -530,7 +538,7 @@ function prepareFrameWork(): void {
             if (this[i] == element) return i;
         }
         return -1;
-    }
+    };
 
     Element.prototype['indexOf'] = function (element) {
         for (let i in Array(this.children)) {

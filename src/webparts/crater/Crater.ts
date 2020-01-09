@@ -131,6 +131,9 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 									//if element is a section
 									element.getParents('data-key').remove();
 									this.properties.pane.content[this.domContent.dataset['key']].settings.columns -= 1;
+									let columns = this.properties.pane.content[this.domContent.dataset['key']].settings.columns;
+
+									this.properties.pane.content[this.domContent.dataset['key']].settings.columnsSizes = `repeat(${columns} 1fr)`;
 									this.craterWebparts['crater']({ action: 'rendered', element: this.domContent, sharePoint: this, resetWidth: true });
 								}
 								else {

@@ -301,6 +301,11 @@ class CraterWebParts {
 					element: 'img', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-icon crater-style-attr' }, name: params.children[i], value, src: this.sharePoint.images.append
 				}));
 			}
+			else if(i == 'fontFamily'){
+				blockRow.append(this.elementModifier.cell({
+					element: 'input', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value, list: func.fontStyles
+				}));
+			}
 			else {
 				blockRow.append(this.elementModifier.cell({
 					element: 'input', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value
@@ -5928,7 +5933,6 @@ class Panel extends CraterWebParts {
 		});
 
 		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
-			console.log('h')
 			this.paneContent.append(
 				this.sharePoint.displayPanel(webpart => {
 					let newPanelContent = this.sharePoint.appendWebpart(panelContents, webpart.dataset.webpart);
@@ -6168,10 +6172,10 @@ class CountDown extends CraterWebParts {
 								element: 'input', name: 'Time', dataAttributes: { type: 'time' }
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Boarder',
+								element: 'input', name: 'Border',
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'BoarderRadius',
+								element: 'input', name: 'BorderRadius',
 							}),
 						]
 					})
@@ -6257,8 +6261,8 @@ class CountDown extends CraterWebParts {
 
 		let settingsDate = settingsPane.querySelector('#Date-cell');
 		let settingsTime = settingsPane.querySelector('#Time-cell');
-		let settingsBorder = settingsPane.querySelector('#Boarder-cell');
-		let settingsBoarderRadius = settingsPane.querySelector('#BoarderRadius-cell');
+		let settingsBorder = settingsPane.querySelector('#Border-cell');
+		let settingsBorderRadius = settingsPane.querySelector('#BorderRadius-cell');
 
 		settingsDate.onChanged(date => {
 			this.sharePoint.properties.pane.content[this.key].draft.dom.dataset.date = func.dateValue(date);
@@ -6276,7 +6280,7 @@ class CountDown extends CraterWebParts {
 			});
 		});
 
-		settingsBoarderRadius.onChanged(borderRadius => {
+		settingsBorderRadius.onChanged(borderRadius => {
 			draftDom.querySelectorAll('.crater-countdown-block').forEach(element => {
 				element.css({ borderRadius });
 			});

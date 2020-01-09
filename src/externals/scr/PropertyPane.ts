@@ -164,7 +164,7 @@ class PropertyPane {
             let borderRadiusBlock = this.sharePoint.craterWebparts.createStyleBlock({ children: borderRadius, title: "Border Radius", element: this.element, options: { sync: true } });
             this.paneStyle.append(borderRadiusBlock);
 
-            let fonts = { fontSize: 'Font Size', fontWeight: 'Boldness', fontStyle: 'Font Style', fontFamily: 'Font Family', color: 'Font Color' };
+            let fonts = { fontSize: 'Font Size', fontWeight: 'Boldness', fontFamily: 'Font Style', color: 'Font Color' };
             let fontBlock = this.sharePoint.craterWebparts.createStyleBlock({ children: fonts, title: "fonts", element: this.element });
             this.paneStyle.append(fontBlock);
 
