@@ -4,6 +4,7 @@ class PropertyPane {
     public sharePoint: any;
     public paneContent: any;
     public paneStyle: any;
+    public paneConnection: any;
     public elementModifier: any;
     public element: any;
     public editor: any;
@@ -20,6 +21,10 @@ class PropertyPane {
         this.paneStyle = this.elementModifier.createElement({
             element: 'div',
             attributes: { class: 'crater-property-style' }
+        }).monitor();
+        this.paneConnection = this.elementModifier.createElement({
+            element: 'div',
+            attributes: { class: 'crater-property-connection' }
         }).monitor();
     }
 
@@ -45,11 +50,17 @@ class PropertyPane {
             }
         });
 
+        let content = [
+            { name: 'Content', owner: 'Content' },
+            { name: 'Styles', owner: 'Styles' },
+        ];
+
+        if (func.isset(this.element.dataset.connectible)) {
+            content.push({ name: 'Connection', owner: 'Connection' });
+        }
+
         let menus = this.elementModifier.menu({
-            content: [
-                { name: 'Content', owner: 'Content' },
-                { name: 'Styles', owner: 'Styles' }
-            ],
+            content,
             padding: '1em 0em'
         });
 
@@ -68,15 +79,26 @@ class PropertyPane {
 
         editWindow.appendChild(this.editor);
 
-        menus.querySelectorAll('.crater-menu-item').forEach(item => {
-            item.addEventListener('click', event => {
-                if (item.dataset.owner == 'Content') {
-                    this.setUpContent(key);
-                }
-                else if (item.dataset.owner == 'Styles') {
-                    this.setUpStyle(key);
-                }
+        menus.addEventListener('click', event => {
+            let item = event.target;
+            if (!item.classList.contains('crater-menu-item')) item = item.getParents('.crater-menu-item');
+            if (func.isnull(item)) return;
+
+            if (item.dataset.owner == 'Content') {
+                this.setUpContent(key);
+            }
+            else if (item.dataset.owner == 'Styles') {
+                this.setUpStyle(key);
+            }
+            else if (item.dataset.owner == 'Connection') {
+                this.setUpConnection(key);
+            }
+
+            menus.querySelectorAll('.crater-menu-item').forEach(mItem => {
+                mItem.cssRemove(['background-color']);
             });
+
+            item.css({ backgroundColor: `var(--lighter-primary-color)` });
         });
 
         editWindow.makeElement({
@@ -116,22 +138,201 @@ class PropertyPane {
 
     private setUpContent(key): any {
         // get webpart
-        let type = this.element.dataset['type'];
-
         if (this.sharePoint.properties.pane.content[key].draft.html == '') {
             this.sharePoint.properties.pane.content[key].draft.dom = this.element.cloneNode(true);
             this.sharePoint.properties.pane.content[key].draft.html = this.sharePoint.properties.pane.content[key].draft.dom.outerHTML;
-        } else {
+        } 
+        else {
             this.sharePoint.properties.pane.content[key].draft.dom = this.elementModifier.createElement(this.sharePoint.properties.pane.content[key].draft.html);
         }
 
-        this.editor.innerHTML = '';
-        this.editor.append(this.craterWebparts[type]({ action: 'setUpPaneContent', element: this.element, sharePoint: this.sharePoint }));
+        let draftDom = this.sharePoint.properties.pane.content[key].draft.dom;
+        let type = draftDom.dataset.type;
 
-        this.craterWebparts[type]({ action: 'listenPaneContent', element: this.element, sharePoint: this.sharePoint });
+        this.editor.innerHTML = '';
+        this.editor.append(this.craterWebparts[type]({ action: 'setUpPaneContent', element: this.element, draft: draftDom, sharePoint: this.sharePoint }));
+        
+        this.craterWebparts[type]({ action: 'listenPaneContent', element: this.element, draft: draftDom, sharePoint: this.sharePoint });
 
         this.editor.querySelectorAll('.crater-color-picker').forEach(picker => {
             picker.remove();
+        });
+    }
+
+    private setUpConnection(key): any {
+        // get webpart
+        let type = this.element.dataset.type;
+        let metaData = [];
+
+        this.paneConnection = this.elementModifier.createElement({
+            element: 'div',
+            attributes: { class: 'crater-property-connection' },
+        }).monitor();
+
+        let getDisplayOptions = (type) => {
+            if (type == 'Same Site') {
+                return this.elementModifier.createForm({
+                    title: 'Same Site Connection', attributes: { id: 'connection-form', class: 'form' },
+                    contents: {
+                        list: { element: 'input', attributes: { id: 'connection-list', name: 'List' } },
+                    },
+                    buttons: {
+                        submit: { element: 'button', attributes: { id: 'create-connection', class: 'btn' }, text: 'Submit' },
+                    }
+                });
+            }
+            else if (type == 'Other Sharepoint Site') {
+                return this.elementModifier.createForm({
+                    title: 'Another SharePoint Site Connection', attributes: { id: 'connection-form', class: 'form' },
+                    contents: {
+                        link: { element: 'input', attributes: { id: 'connection-link', name: 'Link' } },
+                        list: { element: 'input', attributes: { id: 'connection-list', name: 'List' } },
+                    },
+                    buttons: {
+                        submit: { element: 'button', attributes: { id: 'create-connection', class: 'btn' }, text: 'Submit' },
+                    }
+                });
+            }
+            else if (type == 'RSS Feed') {
+                return this.elementModifier.createForm({
+                    title: 'RSS Feed Connection', attributes: { id: 'connection-form', class: 'form' },
+                    contents: {
+                        link: { element: 'input', attributes: { id: 'connection-link', name: 'Link' } },
+                        count: { element: 'input', attributes: { id: 'connection-count', name: 'Count', type: 'number', min: 1 } }
+                    },
+                    buttons: {
+                        submit: { element: 'button', attributes: { id: 'create-connection', class: 'btn' }, text: 'Submit' },
+                    }
+                });
+            }
+        };
+
+        if (this.sharePoint.properties.pane.content[key].draft.pane.connection != '') {
+            this.paneConnection.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.connection;
+        }
+        else if (this.sharePoint.properties.pane.content[key].styles != '') {
+            this.paneConnection.innerHTML = this.sharePoint.properties.pane.content[key].connection;
+        }
+        else {
+            let update = this.craterWebparts[type]({ action: 'update', element: this.element, sharePoint: this.sharePoint });
+
+            this.paneConnection.makeElement({
+                element: 'div', attributes: { class: 'crater-connection-content' }, children: [
+                    { element: 'section', text: 'Type' },
+                    { element: 'section', text: 'Get' }
+                ]
+            });
+        }
+
+        let update = this.craterWebparts[type]({ action: 'update', element: this.element, sharePoint: this.sharePoint, options: [] });
+
+        this.paneConnection.innerHTML = '';
+        this.paneConnection.makeElement({
+            element: 'div', attributes: { class: 'crater-connection-content' }, children: [
+                {
+                    element: 'section', attributes: { class: 'crater-connection-try' }, children: [
+                        this.elementModifier.cell({ element: 'select', name: 'Type', options: ['Same Site', 'Other Sharepoint Site', 'RSS Feed'] }),
+                        { element: 'div', attributes: { id: 'crater-connection-type-option' } }
+                    ]
+                },
+                {
+                    element: 'section', attributes: { class: 'crater-connection-get' }, children: [
+                        update
+                    ]
+                }
+            ]
+        });
+
+        let getWindow = this.paneConnection.querySelector('.crater-connection-get');
+
+        this.paneConnection.querySelector('#Type-cell').onChanged(value => {
+            this.paneConnection.querySelector('#crater-connection-type-option').innerHTML = '';
+            this.paneConnection.querySelector('#crater-connection-type-option').makeElement({ element: getDisplayOptions(value) });
+        });
+
+        this.paneConnection.addEventListener('click', event => {
+            let target = event.target;
+
+            let fetchData = (link, list, form, formError) => {
+                if (!this.elementModifier.validateForm(form)) {
+                    formError.textContent = 'Form not filled correctly';
+                    return;
+                }
+                this.sharePoint.connection.find({ link, list, data: '' }).then(source => {
+                    metaData = func.getObjectArrayKeys(source);
+                    update = this.craterWebparts[type]({ action: 'update', element: this.element, sharePoint: this.sharePoint, options: metaData, source });
+                    getWindow.innerHTML = '';
+                    getWindow.append(update);
+
+                    formError.textContent = 'Connected';
+                });
+            };
+
+            if (target.id == 'create-connection') {
+                event.preventDefault();
+                let form = target.getParents('.form');
+                let formError = form.querySelector('.form-error');
+                formError.css({ display: 'unset' });
+                formError.textContent = 'Connecting...';
+
+                let connectionType = this.paneConnection.querySelector('#Type-cell').value;
+                if (connectionType == 'Same Site') {
+                    let link = location.origin;
+                    let list = this.paneConnection.querySelector('#connection-list').value;
+                    fetchData(link, list, form, formError);
+                }
+                else if (connectionType == 'Other Sharepoint Site') {
+                    let link = this.paneConnection.querySelector('#connection-link').value;
+                    let list = this.paneConnection.querySelector('#connection-list').value;
+                    fetchData(link, list, form, formError);
+                }
+                else if (connectionType == 'RSS Feed') {
+
+                    if (!this.elementModifier.validateForm(form)) {
+                        formError.textContent = 'Form not filled correctly';
+                        return;
+                    }
+
+                    let url = `https://cors-anywhere.herokuapp.com/` + this.paneConnection.querySelector('#connection-link').value;
+                    let count = this.paneConnection.querySelector('#connection-count').value;
+
+                    this.sharePoint.connection.ajax({ method: 'GET', url }).then(result => {
+                        formError.textContent = 'Connected';
+                        let domParser = new DOMParser();
+                        let doc = domParser.parseFromString(result, 'text/xml');
+                        let items: any = doc.querySelectorAll('item');
+
+                        if (items.length == 0) {
+                            items = doc.querySelectorAll('entry');
+                        }
+
+                        let source = [];
+                        for (let i = 0; i < items.length; i++) {
+                            if (i == count) break;
+                            let item = items[i];
+
+                            let row = {};
+                            let content = item.childNodes;
+                            for (let j = 0; j < content.length; j++) {
+                                row[content[j].nodeName] = content[j].textContent;
+                            }
+                            source.push(row);
+                        }
+                        metaData = func.getObjectArrayKeys(source);
+                        update = this.craterWebparts[type]({ action: 'update', element: this.element, sharePoint: this.sharePoint, options: metaData, source });
+                        getWindow.innerHTML = '';
+                        getWindow.append(update);
+                    });
+                }
+            }
+        });
+
+        this.editor.innerHTML = '';
+        this.editor.append(this.paneConnection);
+
+        this.paneConnection.addEventListener('mutated', event => {
+            this.sharePoint.properties.pane.content[key].draft.pane.connection = this.paneConnection.innerHTML;
+            this.sharePoint.properties.pane.content[key].draft.html = this.sharePoint.properties.pane.content[key].draft.dom.outerHTML;
         });
     }
 

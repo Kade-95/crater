@@ -14,9 +14,32 @@ class Func {
 	public subjectList = ['Mathematics', 'English', 'Physics', 'Chemistry', 'Biology', 'Agriculture', 'Literature', 'History'].sort();
 	public subjectLevels = ['General', 'Senior', 'Science', 'Arts', 'Junior'];
 	public fontStyles = ['Arial', 'Times New Roman', 'Helvetica', 'Times', 'Courier New', 'Verdana', 'Courier', 'Arial Narrow', 'Candara', 'Geneva', 'Calibri', 'Optima', 'Cambria', 'Garamond', 'Perpetua', 'Monaco', 'Didot', 'Brush Script MT', 'Lucida Bright', 'Copperplate', 'Serif', 'San-Serif', 'Georgia', 'Segoe UI'];
+	public pixelSizes = ['1px', '2px', '3px', '4px', '5px', '6px', '7px', '8px', '9px', '10px', '20px', '30px', '40px', '50px', '60px', '70px', '80px', '90px', '100px'];
+	public colors = ['Red', 'Green', 'Blue', 'Yellow', 'Black', 'White', 'Purple', 'Violet', 'Indigo', 'Orange'];
 
 	constructor() {
 
+	}
+
+	public extractFromJsonArray(meta, source){
+		let keys: any = Object.keys(meta);
+		// @ts-ignore
+		let values: any = Object.values(meta);
+		let eSource = [];
+		if (func.isset(source)) {
+			for (let obj of source) {
+				let object = {};
+				eSource.push(object);
+
+				for (let i in keys) {
+					// @ts-ignore					
+					if (Object.keys(obj).includes(values[i])) {
+						object[keys[i]] = obj[values[i]];
+					}
+				}
+			}
+			return eSource;
+		}
 	}
 
 	public trimMonthArray() {
@@ -136,7 +159,7 @@ class Func {
 
 	public isNumber(value) {
 		for (var x in value) {
-			if (!this.isDigit(value[x])) {
+			if (!this.isDigit(value[x]) && value[x] != '.') {
 				return false;
 			}
 		}
@@ -468,6 +491,19 @@ class Func {
 		return Object.keys(object).length;
 	}
 
+	public getObjectArrayKeys(array) {
+		let keys: any = [];
+		for (let object of array) {
+			for (let i of Object.keys(object)) {
+				if (!keys.includes(i)) {
+					keys.push(i);
+				}
+			}
+		}
+
+		return keys;
+	}
+
 	public dateWithToday(date) {
 		var today = Math.floor(this.dateValue(this.today()));
 		let dateValue = Math.floor(this.dateValue(date));
@@ -491,6 +527,19 @@ class Func {
 		var day = new Number(this.isDayValid(date));
 
 		return day + ' ' + this.months[month - 1] + ', ' + year;
+	}
+
+	public copyFormData(formData) {
+		let myFormData: any = {};
+		try {
+			for (let [key, value] of formData.entries()) {
+				myFormData[key] = value;
+			}
+		} catch (error) {
+			console.log(formData.serializeArray());
+			return null;
+		}
+		return myFormData;
 	}
 
 	public isSpaceString(value) {

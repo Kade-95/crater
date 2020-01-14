@@ -88,11 +88,10 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 			if (!func.isnull(this.domContent)) {
 				this.app.addEventListener('click', event => {
 					let element = event.target;
-
-					if (!(element.classList.contains('crater-display-panel') || element.getParents('.crater-display-panel'))) {
-						this.app.querySelectorAll('.crater-display-panel').forEach(displayPanel => {
+					if (!(element.classList.contains('crater-display-panel') || element.getParents('.crater-display-panel') || element.classList.contains('new-component'))) {
+						for (let displayPanel of this.app.querySelectorAll('.crater-display-panel')) {
 							displayPanel.remove();
-						});
+						}
 					}
 
 					if (this.inEditMode()) { //check if in edit mode
@@ -198,11 +197,10 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 	public displayPanel(selected) {
 
 		let webparts = ['Panel', 'List', 'Slider', 'Counter', 'Tiles', 'News', 'Table', 'TextArea', 'Icons', 'Button', 'Count Down', 'Tab', 'Events', 'Carousel', 'Map', 'DateList', 'Instagram', 'Facebook', 'BeforeAfter'];
-		
 
 		this.displayPanelWindow = this.elementModifier.createElement({
-			element: 'div', attributes: { class: 'crater-display-panel' }
-		});		
+			element: 'div', attributes: { class: 'crater-display-panel' }, text: 'Display'
+		});
 
 		//search box 
 		this.displayPanelWindow.makeElement({

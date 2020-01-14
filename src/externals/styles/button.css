@@ -4,7 +4,9 @@
 }
 
 .crater-button-content{
-    
+    display: flex;
+    justify-content: space-evenly;
+    padding: 1em;
 }
 
 .crater-button-single{

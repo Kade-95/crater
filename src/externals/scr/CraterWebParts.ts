@@ -2,6 +2,8 @@ import { ElementModifier, func, ColorPicker, Connection } from '.';
 import FroalaEditor from 'froala-editor';
 import 'froala-editor/js/plugins/align.min.js';
 
+require('./../styles/connection.css');
+require('./../styles/form.css');
 require('./../styles/events.css');
 require('./../styles/list.css');
 require('./../styles/slider.css');
@@ -28,6 +30,9 @@ require('./../../../node_modules/froala-editor/css/froala_editor.pkgd.min.css');
 class CraterWebParts {
 	public elementModifier = new ElementModifier();
 	public sharePoint: any;
+	public connectable: any = [
+		'list', 'slider', 'counter', 'tiles', 'news', 'table', 'icons', 'button', 'countdown', 'events', 'carousel', 'dateList'
+	];
 
 	constructor(params) {
 		this.sharePoint = params.sharePoint;
@@ -218,7 +223,8 @@ class CraterWebParts {
 		params.attributes['data-key'] = key;
 		if (!func.isset(params.attributes['data-type'])) params.attributes['data-type'] = 'sample';
 
-		this.sharePoint.properties.pane.content[key] = { content: '', styles: '', settings: {}, sync: {}, draft: { dom: '', html: '', pane: { content: '', styles: '' } } };
+		this.sharePoint.properties.pane.content[key] = { content: '', styles: '', connection: '', settings: {}, sync: {}, draft: { dom: '', html: '', pane: { content: '', styles: '', connection: '' } } };
+
 		if (!func.isset(params.options)) params.options = ['Edit', 'Delete'];
 
 		let options = this.webPartOptions({ options: params.options, title: params.attributes['data-type'] });
@@ -240,6 +246,9 @@ class CraterWebParts {
 		}
 
 		element.classList.add('keyed-element');
+		if (this.connectable.includes(params.attributes['data-type'].toLowerCase())) {
+			element.dataset.connectible = 'true';
+		}
 
 		return element;
 	}
@@ -302,8 +311,9 @@ class CraterWebParts {
 				}));
 			}
 			else if (i == 'fontFamily') {
+				let list = func.fontStyles;
 				blockRow.append(this.elementModifier.cell({
-					element: 'input', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value, list: func.fontStyles
+					element: 'input', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value, list
 				}));
 			}
 			else {
@@ -1522,7 +1532,22 @@ class Button extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 
-		let button = this.element.querySelectorAll('.crater-button-content');
+		let buttons = this.element.querySelectorAll('.crater-button-single');
+
+		let imageDisplay = this.sharePoint.properties.pane.content[this.key].settings.imageDisplay;
+		let imageSize = this.sharePoint.properties.pane.content[this.key].settings.imageSize;
+		let fontSize = this.sharePoint.properties.pane.content[this.key].settings.fontSize;
+		let fontFamily = this.sharePoint.properties.pane.content[this.key].settings.fontFamily;
+		let width = this.sharePoint.properties.pane.content[this.key].settings.width;
+		let height = this.sharePoint.properties.pane.content[this.key].settings.height;
+
+		buttons.forEach(button => {
+			button.css({ height, width });
+			button.querySelector('.crater-button-text').css({ fontSize, fontFamily });
+			button.querySelector('.crater-button-icon').css({ width: imageSize });
+			if (imageDisplay == 'No') button.querySelector('.crater-button-icon').hide();
+			else button.querySelector('.crater-button-icon').show();
+		});
 	}
 
 	//set up Button Pane content
@@ -1603,13 +1628,22 @@ class Button extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'ImageSize',
+								element: 'input', name: 'Image Size',
 							}),
 							this.elementModifier.cell({
-								element: 'select', name: 'ImageDisplay', options: ['Yes', 'No']
+								element: 'select', name: 'Image Display', options: ['Yes', 'No']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'FontSize'
+								element: 'input', name: 'Font Size'
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Font Family'
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Width'
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Height'
 							})
 						]
 					})
@@ -1741,27 +1775,19 @@ class Button extends CraterWebParts {
 		});
 
 		let settingsPane = this.paneContent.querySelector('.settings-pane');
-		settingsPane.querySelector('#FontSize-cell').onChanged(fontSize => {
-			texts.forEach(single => {
-				single.css({ fontSize });
-			});
-		});
+
+		settingsPane.querySelector('#Font-Size-cell').onChanged();
+
+		settingsPane.querySelector('#Font-Family-cell').onChanged();
+
+		settingsPane.querySelector('#Width-cell').onChanged();
+
+		settingsPane.querySelector('#Height-cell').onChanged();
 
 		//set the display of the button
-		settingsPane.querySelector('#ImageDisplay-cell').onChanged(value => {
-			console.log(value);
+		settingsPane.querySelector('#Image-Display-cell').onChanged();
 
-			icons.forEach(single => {
-				if (value == 'No') single.hide();
-				else single.show();
-			});
-		});
-
-		settingsPane.querySelector('#ImageSize-cell').onChanged(width => {
-			icons.forEach(single => {
-				single.css({ width });
-			});
-		});
+		settingsPane.querySelector('#Image-Size-cell').onChanged();
 
 		// on panecontent changed set the state
 		this.paneContent.addEventListener('mutated', event => {
@@ -1774,6 +1800,13 @@ class Button extends CraterWebParts {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+
+			this.sharePoint.properties.pane.content[this.key].settings.ImageSize = settingsPane.querySelector('#Image-Size-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.imageDisplay = settingsPane.querySelector('#Image-Display-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.fontSize = settingsPane.querySelector('#Font-Size-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.fontFamily = settingsPane.querySelector('#Font-Family-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.width = settingsPane.querySelector('#Width-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.height = settingsPane.querySelector('#Height-cell').value;
 		});
 	}
 }
@@ -2127,6 +2160,19 @@ class TextArea extends CraterWebParts {
 		this.paneContent.querySelector('textarea').innerHTML = this.element.querySelector('.crater-textarea-content').innerHTML;
 		//Set the text editor
 		let fr = new FroalaEditor('textarea#' + this.key);
+
+		let remover = setInterval(() => {
+			this.paneContent.childNodes.forEach(child => {
+				if (child.classList.contains('fr-box')) {
+					child.childNodes.forEach(pikin => {
+						if (pikin.classList.contains('second-toolbar')) {
+							pikin.innerHTML = '';
+							clearInterval(remover);
+						}
+					});
+				}
+			});
+		}, 1);
 
 		this.paneContent.addEventListener('mutated', event => {
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
@@ -3216,6 +3262,9 @@ class List extends CraterWebParts {
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'height', value: this.element.querySelector('.crater-list-title').css()['height'] || ''
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'Show', options: ['Yes', 'No']
 							})
 						]
 					})
@@ -3301,13 +3350,16 @@ class List extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
-		let peopleList = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-content');
+
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+
+		let peopleList = draftDom.querySelector('.crater-list-content');
 		let peopleListRows = peopleList.querySelectorAll('.crater-list-content-row');
 
 		let listRowPrototype = this.elementModifier.createElement({
 			element: 'div',
 			attributes: {
-				style: { border: '1px solid #bbbbbb', margin: '.5em 0em' }, class: 'crater-list-row-pane'
+				class: 'crater-list-row-pane row'
 			},
 			children: [
 				this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-list-content-row' }),
@@ -3327,7 +3379,7 @@ class List extends CraterWebParts {
 		});
 
 		let peopleContentRowPrototype = this.createKeyedElement({
-			element: 'div', attributes: { class: 'crater-list-content-row keyed-element' }, children: [
+			element: 'div', attributes: { class: 'crater-list-content-row' }, children: [
 				this.elementModifier.createElement({ element: 'img', attributes: { class: 'crater-list-content-row-image', id: 'image', src: this.sharePoint.images.append, alt: 'DP' } }),
 				this.elementModifier.createElement({
 					element: 'div', attributes: { class: 'crater-list-content-row-details' }, children: [
@@ -3403,6 +3455,14 @@ class List extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-title').innerHTML = value;
 		});
 
+		titlePane.querySelector('#Show-cell').onChanged(value => {
+			if (value == 'No') {
+				this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-title').hide();
+			} else {
+				this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-title').show();
+			}
+		});
+
 		let backgroundColorCell = titlePane.querySelector('#backgroundcolor-cell').parentNode;
 		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
 			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-title').css({ backgroundColor });
@@ -3439,53 +3499,72 @@ class List extends CraterWebParts {
 			listRowHandler(listRow, peopleListRows[position]);
 		});
 
-		//update the source of the webpart
-		this.updateContent();
-
 		this.paneContent.addEventListener('mutated', event => {
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
+			this.element.innerHTML = draftDom.innerHTML;
 
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.element.css(draftDom.css());
 
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 		});
 	}
 
-	private updateContent() {
-		let sourceRow = this.paneContent.querySelector('#update-source').getParents('.row');
+	public update(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		this.paneContent = this.setUpPaneContent(params);
 
-		sourceRow.querySelector('#Site-cell').onChanged();
-		sourceRow.querySelector('#List-cell').onChanged();
+		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
 
-		let updateButton = this.paneContent.querySelector('#update-source');
-
-		updateButton.addEventListener('click', event => {
-			let link = sourceRow.querySelector('#Site-cell').value;
-			let list = sourceRow.querySelector('#List-cell').value;
-
-			updateButton.render({
-				element: 'img', attributes: { class: 'crater-icon', src: this.sharePoint.images.loading }
-			});
-
-			this.sharePoint.connection.find({ link, list, data: 'Title,Job,Link,Image' }).then(source => {
-				if (Array.isArray(source) && source.length > 0) {
-					//reset the pane and note the changes
-					let newContent = this.render({ source });
-					this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-content').innerHTML = newContent.querySelector('.crater-list-content').innerHTML;
-
-					this.paneContent.querySelector('.list-pane').innerHTML = this.generatePaneContent({ list: newContent.querySelectorAll('.crater-list-content-row') }).innerHTML;
-				}
-				updateButton.innerHTML = 'Update';
-			}).catch((error) => {
-				updateButton.innerHTML = 'Update';
-			});
-
+		let updateWindow = this.elementModifier.createForm({
+			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
+			contents: {
+				image: { element: 'select', attributes: { id: 'meta-data-image', name: 'Image' }, options: params.options },
+				title: { element: 'select', attributes: { id: 'meta-data-title', name: 'Title' }, options: params.options },
+				job: { element: 'select', attributes: { id: 'meta-data-job', name: 'Job' }, options: params.options },
+				link: { element: 'select', attributes: { id: 'meta-data-link', name: 'Link' }, options: params.options }
+			},
+			buttons: {
+				submit: { element: 'button', attributes: { id: 'update-element', class: 'btn' }, text: 'Update' },
+			}
 		});
+
+		let data: any = {};
+		let source: any;
+		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+			event.preventDefault();
+			data.image = updateWindow.querySelector('#meta-data-image').value;
+			data.title = updateWindow.querySelector('#meta-data-title').value;
+			data.job = updateWindow.querySelector('#meta-data-job').value;
+			data.link = updateWindow.querySelector('#meta-data-link').value;
+			source = func.extractFromJsonArray(data, params.source);
+
+			let newContent = this.render({ source });
+			draftDom.querySelector('.crater-list-content').innerHTML = newContent.querySelector('.crater-list-content').innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+
+			this.paneContent.querySelector('.list-pane').innerHTML = this.generatePaneContent({ list: newContent.querySelectorAll('.crater-list-content-row') }).innerHTML;
+
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+		});
+
+
+		if (!func.isnull(paneConnection)) {
+			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+				this.element.innerHTML = draftDom.innerHTML;
+
+				this.element.css(draftDom.css());
+
+				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			});
+		}
+
+		return updateWindow;
 	}
 }
 
@@ -3563,8 +3642,7 @@ class Tiles extends CraterWebParts {
 		//if not upto 3 make it to match parents width
 		let tiles = this.element.querySelectorAll('.crater-tiles-content-column');
 		let length: number = tiles.length;
-		let columnCount = length;
-		let lastRow = false;
+		let currentContent;
 
 		//fetch the settings
 		this.columns = this.sharePoint.properties.pane.content[this.key].settings.columns / 1;
@@ -3575,28 +3653,39 @@ class Tiles extends CraterWebParts {
 
 		this.height = this.element.css().height;
 
+		this.element.querySelectorAll('.crater-tiles-content').forEach(content => {
+			content.remove();
+		});
+
 		//set dimension properties and get height
 		for (let i = 0; i < length; i++) {
 			let tile = tiles[i];
-			lastRow = columnCount > this.columns;
-			columnCount--;
 
-			let width = (100 / this.columns - (5 / this.columns)) + '%',
-				margin = (5 / this.columns) / 2 + '%';
+			if (i % this.columns == 0) {
+				let columns = this.columns;
 
-			if (lastRow && length % this.columns != 0) {
-				margin = (5 / (length % this.columns)) / 2 + '%';
-				width = (100 / (length % this.columns) - 5 / (length % this.columns)) + '%';
+				if (this.columns > length - i) {
+					columns = length - i;
+				}
+
+				currentContent = this.element.makeElement({ element: 'div', attributes: { class: 'crater-tiles-content', style: { 'gridTemplateColumns': `repeat(${columns}, 1fr)` } } });
 			}
 
-			tile.css({ width, margin });
-
+			currentContent.append(tile);
 			//set tile background position [left, right, center]
 			let tileBackground: any = {};
 			tile.querySelector('.crater-tiles-content-column-image').cssRemove(['margin-left']);
 			tile.querySelector('.crater-tiles-content-column-image').cssRemove(['margin-right']);
 
-			tileBackground[`margin-${func.trem(this.backgroundPosition)}`] = 'auto';
+			let getPosition = position => {
+				if (position == 'left') return 'right';
+				else if (position == 'right') return 'left';
+				else return position;
+			};
+
+			let direction = getPosition(func.trem(this.backgroundPosition).toLowerCase());
+
+			tileBackground[`margin-${direction}`] = 'auto';
 			tileBackground.width = this.backgroundWidth;
 			tileBackground.height = this.backgroundHeight;
 
@@ -3608,6 +3697,8 @@ class Tiles extends CraterWebParts {
 			//set height to the height of the longest tile
 			this.height = this.height || tile.position().height;
 		}
+
+		this.element.css({ gridTemplateRows: `repeat(${Math.ceil(length / this.columns)}, '1fr)`, height: this.height });
 
 		this.height = func.isset(this.sharePoint.properties.pane.content[this.key].settings.height)
 			? this.sharePoint.properties.pane.content[this.key].settings.height
@@ -3689,7 +3780,7 @@ class Tiles extends CraterWebParts {
 								element: 'input', name: 'BackgroundHeight', value: this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight || ''
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'BackgroundPosition', value: this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition || ''
+								element: 'select', name: 'BackgroundPosition', options: ['Left', 'Right', 'Center']
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'Height', value: this.sharePoint.properties.pane.content[this.key].settings.height || ''
@@ -3987,8 +4078,8 @@ class Counter extends CraterWebParts {
 
 		let counters = this.element.querySelectorAll('.crater-counter-content-column');
 		let length = counters.length;
-		let columnCount = length;
-		let lastRow = false;
+		let currentContent;
+
 		this.columns = this.sharePoint.properties.pane.content[this.key].settings.columns / 1;
 		this.duration = this.sharePoint.properties.pane.content[this.key].settings.duration / 1;
 		this.backgroundPosition = this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition;
@@ -3997,28 +4088,35 @@ class Counter extends CraterWebParts {
 
 		this.height = this.element.css().height;
 
+		this.element.querySelectorAll('.crater-counter-content').forEach(content => {
+			content.remove();
+		});
+
 		//set the dimensions and get the height
 		for (let i = 0; i < length; i++) {
 			let counter = counters[i];
-			lastRow = columnCount > this.columns;
-			columnCount--;
 
-			let width = (100 / this.columns - (5 / this.columns)) + '%',
-				margin = (5 / this.columns) / 2 + '%';
+			if (i % this.columns == 0) {
+				let columns = this.columns;
 
-			if (lastRow && length % this.columns != 0) {
-				margin = (5 / (length % this.columns)) / 2 + '%';
-				width = (100 / (length % this.columns) - 5 / (length % this.columns)) + '%';
+				if (this.columns > length - i) {
+					columns = length - i;
+				}
+
+				currentContent = this.element.makeElement({ element: 'div', attributes: { class: 'crater-counter-content', style: { 'gridTemplateColumns': `repeat(${columns}, 1fr)` } } });
 			}
 
-			counter.css({ width, margin });
+			currentContent.append(counter);
+			counter.querySelector('.crater-counter-content-column-image').css({ height: this.backgroundHeight, width: this.backgroundWidth });
 
-			let counterBackground: any = {};
+			if (this.backgroundPosition != 'Right') {
+				counter.querySelector('.crater-counter-content-column-image').css({ gridColumnStart: 1, gridRowStart: 1 });
+				counter.querySelector('.crater-counter-content-column-details').css({ gridColumnStart: 2, gridRowStart: 1 });
 
-			counterBackground.backgroundSize = this.backgroundWidth + this.backgroundHeight;
-			counterBackground.backgroundPosition = this.backgroundPosition;
-
-			counter.css(counterBackground);
+			} else {
+				counter.querySelector('.crater-counter-content-column-image').css({ gridColumnStart: 2, gridRowStart: 1 });
+				counter.querySelector('.crater-counter-content-column-details').css({ gridColumnStart: 1, gridRowStart: 1 });
+			}
 
 			let count = counter.querySelector('#count').dataset['count'];
 
@@ -4037,6 +4135,8 @@ class Counter extends CraterWebParts {
 				this.height = counter.position().height;
 			}
 		}
+
+		this.element.css({ gridTemplateRows: `repeat(${Math.ceil(length / this.columns)}, '1fr)`, height: this.height });
 
 		this.height = func.isset(this.sharePoint.properties.pane.content[this.key].settings.height)
 			? this.sharePoint.properties.pane.content[this.key].settings.height
@@ -4102,7 +4202,7 @@ class Counter extends CraterWebParts {
 								element: 'input', name: 'BackgroundHeight', value: this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight || ''
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'BackgroundPosition', value: this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition || ''
+								element: 'select', name: 'BackgroundPosition', options: ['Left', 'Right']
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'Height', value: this.sharePoint.properties.pane.content[this.key].settings.height || ''
@@ -4334,11 +4434,17 @@ class Counter extends CraterWebParts {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+
 			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.querySelector('#Duration-cell').value;
+
 			this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.querySelector('#Columns-cell').value;
+
 			this.sharePoint.properties.pane.content[this.key].settings.height = this.paneContent.querySelector('#Height-cell').value;
+
 			this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth = this.paneContent.querySelector('#BackgroundWidth-cell').value;
+
 			this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight = this.paneContent.querySelector('#BackgroundHeight-cell').value;
+
 			this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition = this.paneContent.querySelector('#BackgroundPosition-cell').value;
 
 			this.element.querySelectorAll('.crater-counter-content-column').forEach((element, position) => {
@@ -5112,7 +5218,6 @@ class Table extends CraterWebParts {
 	}
 
 	public render(params) {
-
 		let sample = { name: 'Person Two', job: 'Manager', age: '30', salary: '2000000' };
 		let tableContainer = this.createKeyedElement({ element: 'div', attributes: { class: 'crater-table-container crater-component', 'data-type': 'table' } });
 
@@ -5128,6 +5233,8 @@ class Table extends CraterWebParts {
 		});
 
 		table.classList.add('crater-table');
+
+		this.sharePoint.properties.pane.content[tableContainer.dataset.key].settings.sorting = {};
 
 		tableContainer.append(table);
 		return tableContainer;
@@ -5169,16 +5276,19 @@ class Table extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'fontsize', attributes: { type: 'number', min: 1 }, value: ''
+								element: 'input', name: 'fontsize'
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', attributes: { type: 'number', min: 1 }, value: ''
+								element: 'input', name: 'color'
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'backgroundcolor', attributes: { type: 'number', min: 1 }, value: ''
+								element: 'input', name: 'backgroundcolor'
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'height', attributes: { type: 'number', min: 1 }, value: ''
+								element: 'input', name: 'height'
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'show', options: ['Yes', 'No']
 							})
 						]
 					})
@@ -5293,11 +5403,25 @@ class Table extends CraterWebParts {
 			]
 		});
 
+		if (func.isset(params.header)) {
+			tablePane.querySelector('thead').innerHTML = params.header;
+		}
+
 		tablePane.querySelector('thead').querySelectorAll('th').forEach(th => {
 			th.css({ position: 'relative' });
+			let order = this.sharePoint.properties.pane.content[this.key].settings.sorting[th.dataset.name] == 1 ? 'crater-up-arrow' : 'crater-down-arrow';
+
 			let data = this.elementModifier.createElement({
-				element: 'input', attributes: { value: th.textContent }
+				element: 'span', attributes: { style: { width: '100%', display: 'grid', gridTemplateColumns: '80% 20%', gridGap: '1em', } }, children: [
+					{
+						element: 'input', attributes: { value: th.textContent }
+					},
+					{
+						element: 'div', attributes: { class: `crater-table-sorter crater-arrow ${order}`, style: { width: '10px', height: '10px', visibility: 'hidden' } }
+					}
+				]
 			});
+
 			th.innerHTML = '';
 			th.makeElement({
 				element: this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-table-content-column' })
@@ -5322,8 +5446,8 @@ class Table extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
-
-		let table = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('table');
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let table = draftDom.querySelector('table');
 		let tableBody = table.querySelector('tbody');
 
 		let tableRows = tableBody.querySelectorAll('tr');
@@ -5376,10 +5500,32 @@ class Table extends CraterWebParts {
 		let tableHeadHandler = (thPane, thDom) => {
 			thPane.addEventListener('mouseover', event => {
 				thPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				thPane.querySelector('.crater-table-sorter').css({ visibility: 'visible' });
 			});
 
 			thPane.addEventListener('mouseout', event => {
 				thPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				thPane.querySelector('.crater-table-sorter').css({ visibility: 'hidden' });
+			});
+
+			thPane.querySelector('.crater-table-sorter').addEventListener('click', event => {
+				let order = thPane.querySelector('.crater-table-sorter').classList.contains('crater-up-arrow') ? -1 : 1;
+				let name = thPane.dataset.name.split('crater-table-data-')[1];
+				let data = this.elementModifier.sortTable(table, name, order);
+				let newContent = this.render({ source: data });
+
+				this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-table').innerHTML = newContent.querySelector('.crater-table').innerHTML;
+
+				thPane.querySelector('.crater-table-sorter').classList.toggle('crater-up-arrow');
+				thPane.querySelector('.crater-table-sorter').classList.toggle('crater-down-arrow');
+
+				this.sharePoint.properties.pane.content[this.key].settings.sorting[thPane.dataset.name] = order;
+
+				this.paneContent.querySelector('.table-pane').innerHTML = this.generatePaneContent({ table: newContent.querySelector('.table') }).innerHTML;
+
+				this.paneContent.querySelector('thead').querySelectorAll('th').forEach((_thPane, position) => {
+					tableHeadHandler(_thPane, table.querySelector('thead').querySelectorAll('th')[position]);
+				});
 			});
 
 			thPane.querySelector('input').onChanged(value => {
@@ -5588,6 +5734,14 @@ class Table extends CraterWebParts {
 			});
 		});
 
+		tableHeaderSettings.querySelector('#show-cell').onChanged(value => {
+			if (value == 'No') {
+				table.querySelector('thead').hide();
+			} else {
+				table.querySelector('thead').show();
+			}
+		});
+
 		let headerColorCell = tableHeaderSettings.querySelector('#color-cell').parentNode;
 		this.pickColor({ parent: headerColorCell, cell: headerColorCell.querySelector('#color-cell') }, (color) => {
 			table.querySelectorAll('th').forEach(th => {
@@ -5689,7 +5843,7 @@ class Table extends CraterWebParts {
 					//reset the pane and note the changes
 					let newContent = this.render({ source });
 					this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-table').innerHTML = newContent.querySelector('.crater-table').innerHTML;
-
+					this.sharePoint.properties.pane.content[this.key].settings.sorting = {};
 					this.paneContent.querySelector('.table-pane').innerHTML = this.generatePaneContent({ table: newContent.querySelector('.table') }).innerHTML;
 				}
 				updateButton.innerHTML = 'Update';
@@ -5934,15 +6088,17 @@ class Panel extends CraterWebParts {
 
 		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
 
-			let displayWindow = this.sharePoint.displayPanel(webpart => {
+			this.sharePoint.app.querySelectorAll('.crater-display-panel').forEach(panel => {
+				panel.remove();
+			});
+
+			this.paneContent.append(this.sharePoint.displayPanel(webpart => {
 				let newPanelContent = this.sharePoint.appendWebpart(panelContents, webpart.dataset.webpart);
 				let newPanelContentRow = panelContentPanePrototype.cloneNode(true);
 				panelContentPane.append(newPanelContentRow);
 
 				panelContentRowHandler(newPanelContentRow, newPanelContent);
-			});
-
-			this.paneContent.makeElement({element: displayWindow.outerHTML});
+			}));
 		});
 
 		this.paneContent.querySelectorAll('.crater-panel-content-row-pane').forEach((panelContent, position) => {

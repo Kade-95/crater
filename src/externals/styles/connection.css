@@ -1,0 +1,37 @@
+.crater-property-connection{
+    display: flex;
+    height: inherit;
+    width: 100%;
+}
+
+.crater-connection-content{
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    height: inherit;
+}
+
+.crater-connection-try{
+    padding: 1em;
+    display: grid;
+    text-align: center;
+    grid-gap: 1.5em;
+    grid-template-rows: repeat(3, min-content);
+    border-right: 0px solid black;
+    border-bottom: 1px solid black;
+}
+
+.crater-connection-try-option{
+    text-align: center;
+}
+
+@media(min-width: 700px){
+    .crater-connection-content{
+        grid-template-columns: 60% 40%;
+    }
+
+    .crater-connection-try{
+        border-right: 1px solid black;
+        border-bottom: 0px solid black;
+    }
+}

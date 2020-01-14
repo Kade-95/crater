@@ -234,7 +234,6 @@ class ElementModifier {
         }
     }
 
-    //validate textarea element
     public validateFormTextarea(element) {
         if (element.value == '') {
             return false;
@@ -242,38 +241,33 @@ class ElementModifier {
         return true;
     }
 
-    //validate input element
     public validateFormInput(element) {
         var type = element.getAttribute('type');
         var value = element.value;
-        //check for file input
         if (type == 'file' && value == '') {
             return false;
         }
-        //check for text input
         else if (type == 'text' || func.isnull(type)) {
             return !func.isSpaceString(value);
         }
         else if (type == 'date') {
-            //check for date input
-            if (func.hasString(element.className, 'future')) {//future date
+            if (func.hasString(element.className, 'future')) {
                 return func.isDate(value);
             } else {
                 return func.isDateValid(value);
             }
         }
-        else if (type == 'email') {//check for email input
+        else if (type == 'email') {
             return func.isEmail(value);
         }
-        else if (type == 'number') {//check for number input
+        else if (type == 'number') {
             return func.isNumber(value);
         }
-        else if (type == 'password') {//check for password input
+        else if (type == 'password') {
             return func.isPasswordValid(value);
         }
     }
 
-    //validate select element
     public validateFormSelect(element) {
         if (element.value == 0 || element.value == 'null') {
             return false;
@@ -281,18 +275,19 @@ class ElementModifier {
         return true;
     }
 
-    //validate form
     public validateForm(form, nodeNames) {
-        if (!func.isset(nodeNames)) nodeNames = 'INPUT, SELECT, TEXTAREA';//set the elements to validate
+        if (!func.isset(nodeNames)) nodeNames = 'INPUT, SELECT, TEXTAREA';
         var final = true,
             nodeName = '',
             elementValue = true,
             prototype = null;
         form.querySelectorAll(nodeNames).forEach(element => {
             nodeName = element.nodeName;
-            prototype = element.getParents('#content_prototype').id;
-            if (prototype == 'content_prototype') {
-                elementValue = true;
+            if (!func.isnull(element.getParents('#content_prototype'))) {
+                prototype = element.getParents('#content_prototype').id;
+                if (prototype == 'content_prototype') {
+                    elementValue = true;
+                }
             }
             else if (nodeName == 'INPUT') {
                 elementValue = this.validateFormInput(element);
@@ -310,34 +305,36 @@ class ElementModifier {
 
     //create form component
     public createForm(params) {
-        var form = this.createElement({ element: 'form', attributes: params.attributes });
-        var title = this.createElement({ element: 'h3', attributes: { class: 'title' }, text: params.title });//set the form title
-        form.append(title);
-
-        if (func.isset(params.parent)) params.parent.append(form);//append for to parent if any
-
-        var note;
-        Object.keys(params.content).map(key => {//create and append form children
-            //set the note about the data
-            note = (func.isset(params.content[key].note)) ? `(${params.content[key].note})` : '';
-
-            var div = this.createElement({ element: 'div' });//create a data layer
-
-            if (params.content[key].element == 'input' || params.content[key].element == 'select' || params.content[key].element == 'textarea') {//check if child should get data
-                if (key != 'rememberMe') div.makeElement({ element: 'label', text: key + note, attachment: 'append' });//check if child is remember me box
-            }
-            var components = { element: params.content[key].element, attributes: params.content[key].attributes, attachment: 'append' };//set the properties of the layer data
-            if (func.isset(params.content[key].options)) {
-                //set the options properties if available
-                components['options'] = params.content[key].options;
-            }
-
-            var element = div.makeElement(components);//add the data to the layer
-
-            if (func.isset(params.content[key].text)) element.append(params.content[key].text);//set the text if available
-            if (key == 'rememberMe') div.append('Remember Me');//set remember-me if it is
-            form.append(div);//append layer to the form
+        var form = this.createElement({
+            element: params.element || 'form', attributes: params.attributes, children: [
+                { element: 'h3', attributes: { class: 'form-title' }, text: params.title },
+                { element: 'section', attributes: { class: 'form-contents', style: { gridTemplateColumns: `repeat(${params.columns}, 1fr)` } } },
+                { element: 'section', attributes: { class: 'form-buttons' } },
+            ]
         });
+
+        if (func.isset(params.parent)) params.parent.append(form);
+        var note;
+        let formContents = form.querySelector('.form-contents');
+
+        for (let key in params.contents) {
+            note = (func.isset(params.contents[key].note)) ? `(${params.contents[key].note})` : '';
+            let block = formContents.makeElement({
+                element: 'div', attributes: { class: 'form-single-content' }, children: [
+                    { element: 'label', text: key.toLowerCase(), attributes: { class: 'form-label', for: key.toLowerCase() } }
+                ]
+            });
+
+            block.makeElement(params.contents[key]).classList.add('form-data');
+            if (func.isset(params.contents[key].note)) block.makeElement({ element: 'span', text: params.contents[key].note, attributes: { class: 'form-note' } });
+        }
+
+        for (let key in params.buttons) {
+            form.querySelector('.form-buttons').makeElement(params.buttons[key]);
+        }
+
+        form.makeElement({ element: 'span', attributes: { class: 'form-error' }, state: { name: 'error', owner: `#${form.id}` } });
+
         return form;
     }
 
@@ -383,6 +380,57 @@ class ElementModifier {
         }
 
         return table;
+    }
+
+    public getTableData(table) {
+        let header = table.querySelector('thead');
+        let body = table.querySelector('tbody');
+
+        let data = [];
+        let heads = [];
+        if (!func.isnull(header)) {
+            for (let head of header.querySelectorAll('th')) {
+                heads.push(head.textContent);
+            }
+        }
+
+        let rows = body.querySelectorAll('tr');
+
+        for (let row of rows) {
+            let line = {};
+            data.push(line);
+            row = row.querySelectorAll('td');
+            for (let i in row) {
+                // @ts-ignore
+                if (!isNaN(i)) {
+                    line[heads[i] || i] = row[i].textContent;
+                }
+            }
+        }
+
+        return data;
+    }
+
+    public sortTable(table, by?, direction?) {
+        let data = this.getTableData(table);
+
+        data.sort((a, b) => {
+            a = a[by];
+            b = b[by];
+
+            if (func.isNumber(a) && func.isNumber(b)) {
+                a = a / 1;
+                b = b / 1;
+            }
+
+            if (direction > -1) {
+                return a > b ? 1 : -1;
+            }
+            else {
+                return a > b ? -1 : 1;
+            }
+        });
+        return data;
     }
 
     //create options component
@@ -455,12 +503,12 @@ class ElementModifier {
 
         if (func.isset(params.text)) data.text = params.text;
 
-        if(func.isset(params.list)){
+        if (func.isset(params.list)) {
             cell.makeElement({
-                element: 'list', attributes: {id: `${id}-list`}, options: params.list
+                element: 'datalist', attributes: { id: `${id}-list` }, options: params.list.sort()
             });
 
-            data.list = `${id}-list`;
+            data.setAttribute('list', `${id}-list`);
         }
         return cell;
     }
@@ -539,6 +587,27 @@ function prepareFrameWork(): void {
         }
         return -1;
     };
+
+    Element.prototype['getMostOccurredNode'] = function () {
+        let children = this.childNodes;
+        let frequency = {};
+        for (let child of children) {
+            let nodeName = child.nodeName;
+            if (!func.isset(frequency[nodeName])) frequency[nodeName] = 0;
+            else frequency[nodeName]++;
+        }
+
+        let mostOccurred;
+        let occurrance = 0;
+        for (let name in frequency) {
+            if (frequency[name] > occurrance) {
+                occurrance = frequency[name];
+                mostOccurred = name;
+            }
+        }
+
+        return mostOccurred;
+    }
 
     Element.prototype['indexOf'] = function (element) {
         for (let i in Array(this.children)) {

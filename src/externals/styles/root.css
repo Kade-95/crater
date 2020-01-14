@@ -49,7 +49,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    min-height: 50px;
+    height: min-content;
 }
 
 .crater-sections-container{

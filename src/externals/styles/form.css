@@ -1,0 +1,110 @@
+.form {
+    margin: 3em .5em;
+    text-align: center;
+    justify-self: center;
+    display: grid;
+    grid-row-gap: 1em;
+    grid-template-rows: repeat(4, min-content);
+}
+
+.form-title {
+    font-weight: 300;
+    letter-spacing: .05em;
+    font-size: 1em;
+    text-align: center;
+    background-color: var(--dark-accient-color);
+    color: var(--secondary-color);
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 1em;
+}
+
+.form-contents{
+    display: grid;
+    grid-column-gap: 0.5em;
+}
+
+.form-buttons{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-content: center;
+}
+
+.form-single-content{
+    display: grid;
+    padding: .5em;
+}
+
+.form input:focus, .form select:focus, .form textarea:focus {
+    border-color: black;
+}
+
+.form-label {
+    color: #666666;
+    text-transform: capitalize;
+    text-align: justify;
+}
+
+.form-note{
+    color: #999999;
+    font-size: .7em;
+}
+
+.form-single-content input, .form-single-content select {
+    border: 1px solid var(--light-accient-color);
+    border-radius: 5px;
+    text-align: center;
+    min-width: unset;
+    min-height: 50px;
+}
+
+.form-row{
+    position: relative;
+    display: grid;
+    border: 1px solid black;
+    grid-gap: .5em;
+}
+
+.form-row-contents{
+    display: grid;
+    grid-gap: .5em;
+}
+
+.form .cell-label{
+    font-size: .9em;
+}
+
+.form .cell-data{
+    outline: none;
+    border: none;
+    min-height: 20px;
+}
+
+.form-single-content textarea {
+    border-radius: 10px;
+    padding: .3em .1em;
+    text-align: justify;
+    border: 1px solid var(--light-accient-color);
+}
+
+.form-error{
+    display: none;
+    background-color: green;
+    color: white;
+    font-size: 1em;
+    padding: 1em;
+}
+
+@media(min-width: 700px) {
+    .form {
+        box-shadow: 3px 3px 30px var(--light-accient-color);
+    }
+    .form:hover {
+        box-shadow: 3px 3px 30px 1px var(--light-primary-color);
+    }
+    .form #remember-me {
+        width: 20px;
+        height: 20px;
+    }
+}

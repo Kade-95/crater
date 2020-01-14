@@ -1,9 +1,14 @@
 .crater-tiles {
-
+    align-items: center;
 }
 
 .crater-tiles-content {
-    text-align: left;
+    width: 100%;
+    text-align: center;
+    display: grid;
+    justify-content: space-around;
+    grid-gap: 10px;
+    margin: 0.5em;
 }
 
 .crater-tiles-content-column {
@@ -11,8 +16,6 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    width: 31.3%;
-    margin: 1%;
     background-color: #333333;
     position: relative;
     min-height: 100px;
@@ -27,9 +30,9 @@
     box-shadow: var(--primary-shadow);
 }
 
-.crater-tiles-content-column-image{
-    width: 50%;
-    height: inherit;
+.crater-tiles-content-column-image {
+    width: 100px;
+    height: 100px;
 }
 
 .crater-tiles-content-column-details {
