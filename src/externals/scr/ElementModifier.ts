@@ -607,7 +607,7 @@ function prepareFrameWork(): void {
         }
 
         return mostOccurred;
-    }
+    };
 
     Element.prototype['indexOf'] = function (element) {
         for (let i in Array(this.children)) {

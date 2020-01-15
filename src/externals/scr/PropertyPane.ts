@@ -169,8 +169,8 @@ class PropertyPane {
             attributes: { class: 'crater-property-connection' },
         }).monitor();
 
-        let getDisplayOptions = (type) => {
-            if (type == 'Same Site') {
+        let getDisplayOptions = (connectionType) => {
+            if (connectionType == 'Same Site') {
                 return this.elementModifier.createForm({
                     title: 'Same Site Connection', attributes: { id: 'connection-form', class: 'form' },
                     contents: {
@@ -181,7 +181,7 @@ class PropertyPane {
                     }
                 });
             }
-            else if (type == 'Other Sharepoint Site') {
+            else if (connectionType == 'Other Sharepoint Site') {
                 return this.elementModifier.createForm({
                     title: 'Another SharePoint Site Connection', attributes: { id: 'connection-form', class: 'form' },
                     contents: {
@@ -193,7 +193,7 @@ class PropertyPane {
                     }
                 });
             }
-            else if (type == 'RSS Feed') {
+            else if (connectionType == 'RSS Feed') {
                 return this.elementModifier.createForm({
                     title: 'RSS Feed Connection', attributes: { id: 'connection-form', class: 'form' },
                     contents: {
@@ -318,7 +318,7 @@ class PropertyPane {
                             }
                             source.push(row);
                         }
-                        metaData = func.getObjectArrayKeys(source);
+                        metaData = func.getObjectArrayKeys(source);                        
                         update = this.craterWebparts[type]({ action: 'update', element: this.element, sharePoint: this.sharePoint, options: metaData, source });
                         getWindow.innerHTML = '';
                         getWindow.append(update);

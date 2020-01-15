@@ -26,7 +26,7 @@ class Func {
 		// @ts-ignore
 		let values: any = Object.values(meta);
 		let eSource = [];
-		if (func.isset(source)) {
+		if (this.isset(source)) {
 			for (let obj of source) {
 				let object = {};
 				eSource.push(object);
