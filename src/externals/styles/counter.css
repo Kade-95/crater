@@ -8,7 +8,6 @@
     display: grid;
     justify-content: space-around;
     grid-gap: 10px;
-    margin: 0.5em;
 }
 
 .crater-counter-content-column {

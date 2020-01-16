@@ -3895,7 +3895,7 @@ class Tiles extends CraterWebParts {
 				]
 			});
 
-			this.paneContent.append(this.generatePaneContent(tiles));
+			this.paneContent.append(this.generatePaneContent({tiles}));
 
 			let settingsPane = this.paneContent.makeElement({
 				element: 'div', attributes: { class: 'card settings-pane' }, children: [
@@ -5525,9 +5525,8 @@ class Crater extends CraterWebParts {
 
 		for (let i = 0; i < params.number; i++) {
 			//create the sections as keyed elements
-
 			let element = this.createKeyedElement({
-				element: 'section', attributes: { class: 'crater-section', 'data-type': 'section', style: { minHeight: params.height } }, options: ['Append', 'Edit', 'Delete'], type: 'crater-section', alignOptions: 'right', children: [
+				element: 'section', attributes: { class: 'crater-section', 'data-type': 'section', style: {minHeight: params.height} }, options: ['Append', 'Edit', 'Delete'], type: 'crater-section', alignOptions: 'right', children: [
 					{ element: 'div', attributes: { class: 'crater-section-content' } }
 				]
 			});

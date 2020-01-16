@@ -46,7 +46,6 @@
 
 .crater .crater-component {
     text-align: center;
-    /* display: flex; */
     flex-direction: column;
     position: relative;
     min-height: min-content;
@@ -55,6 +54,7 @@
 .crater-sections-container{
     display: grid;
     grid-template-columns: repeat(1, 1fr);
+    min-height: min-content;
 }
 
 .crater .crater-icon {
