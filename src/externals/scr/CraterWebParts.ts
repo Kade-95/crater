@@ -27,8 +27,6 @@ require('./../styles/beforeafter.css');
 require('./../styles/table.css');
 require('./../../../node_modules/froala-editor/css/froala_editor.pkgd.min.css');
 
-// 'list', 'slider', 'counter', 'tiles', 'news', 'table', 'icons', 'button', 'countdown', 'events', 'carousel', 'dateList'
-
 class CraterWebParts {
 	public elementModifier = new ElementModifier();
 	public sharePoint: any;
@@ -1957,7 +1955,7 @@ class Icons extends CraterWebParts {
 				]
 			});
 
-			this.paneContent.append(this.generatePaneContent({icons}));
+			this.paneContent.append(this.generatePaneContent({ icons }));
 
 			let settingsPane = this.paneContent.makeElement({
 				element: 'div', attributes: { class: 'card settings-pane' }, children: [
@@ -2164,7 +2162,7 @@ class Icons extends CraterWebParts {
 			draftDom.querySelector('.crater-icons-content').innerHTML = newContent.querySelector('.crater-icons-content').innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
 
-			this.paneContent.querySelector('.counter-pane').innerHTML = this.generatePaneContent({icons: newContent.querySelectorAll('.crater-icons-icon')}).innerHTML;
+			this.paneContent.querySelector('.counter-pane').innerHTML = this.generatePaneContent({ icons: newContent.querySelectorAll('.crater-icons-icon') }).innerHTML;
 
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
@@ -4777,12 +4775,20 @@ class News extends CraterWebParts {
 		this.startSlide();
 		this.element.querySelector('.crater-ticker-title').css({ height: this.element.position().height + 'px' });
 
-		this.element.addEventListener('click', event=>{
-			if(event.target.classList.contains('crater-ticker-news')){
+		this.element.addEventListener('click', event => {
+			if (event.target.classList.contains('crater-ticker-news')) {
 				event.preventDefault();
 				let source = event.target.href;
-				console.log(source);
-								
+				let openAt = this.sharePoint.properties.pane.content[this.key].settings.view;
+				if (openAt.toLowerCase() == 'pop up') {
+					this.element.append(this.elementModifier.popUp({ source, close: this.sharePoint.images.close }));
+				}
+				else if (openAt.toLowerCase() == 'new window') {
+					window.open(source);
+				}
+				else {
+					window.open(source, '_self');
+				}
 			}
 		});
 	}
@@ -4901,7 +4907,7 @@ class News extends CraterWebParts {
 
 			let news = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelectorAll('.crater-ticker-news');
 
-			this.paneContent.append(this.generatePaneContent({ news }))
+			this.paneContent.append(this.generatePaneContent({ news }));
 
 			this.paneContent.makeElement({
 				element: 'div', attributes: { class: 'card', style: { margin: '1em', display: 'block' } }, sync: true, children: [
@@ -4920,7 +4926,10 @@ class News extends CraterWebParts {
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'Animation', options: ['Fade', 'Swipe', 'Slide'], value: this.sharePoint.properties.pane.content[this.key].settings.animationType
-							})
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'View', options: ['Same Window', 'New Window', 'Pop Up'], value: this.sharePoint.properties.pane.content[this.key].settings.view
+							}),
 						]
 					})
 				]
@@ -5040,6 +5049,7 @@ class News extends CraterWebParts {
 
 		this.paneContent.querySelector('#Animation-cell').onChanged();
 		this.paneContent.querySelector('#Duration-cell').onChanged();
+		this.paneContent.querySelector('#View-cell').onChanged();
 
 		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
 			let newSlide = newsPrototype.cloneNode(true);
@@ -5088,6 +5098,7 @@ class News extends CraterWebParts {
 
 			this.sharePoint.properties.pane.content[this.key].settings.animationType = this.paneContent.querySelector('#Animation-cell').value;
 
+			this.sharePoint.properties.pane.content[this.key].settings.view = this.paneContent.querySelector('#View-cell').value;
 		});
 	}
 
@@ -5561,7 +5572,6 @@ class Table extends CraterWebParts {
 
 		this.sharePoint.properties.pane.content[tableContainer.dataset.key].settings.sorting = this.sharePoint.properties.pane.content[tableContainer.dataset.key].settings.sorting || {};
 		this.sharePoint.properties.pane.content[tableContainer.dataset.key].settings.headers = [];
-		;
 
 		let headers = table.querySelectorAll('th');
 		for (let i = 0; i < headers.length; i++) {
@@ -6181,7 +6191,7 @@ class Table extends CraterWebParts {
 
 			for (let i in names) {
 				names[i] = func.trem(names[i]);
-				contents[names[i]] = { element: 'select', attributes: { id: 'meta-data-' + names[i], name: func.capitalize(names[i]) }, options: params.options }
+				contents[names[i]] = { element: 'select', attributes: { id: 'meta-data-' + names[i], name: func.capitalize(names[i]) }, options: params.options };
 			}
 
 			this.sharePoint.properties.pane.content[this.key].settings.headers = names;
@@ -6197,7 +6207,7 @@ class Table extends CraterWebParts {
 			let data: any = {};
 			let source: any;
 
-			updateWindow.querySelector('#update-element').addEventListener('click', event => {
+			updateWindow.querySelector('#update-element').addEventListener('click', updateEvent => {
 				event.preventDefault();
 				let formData = updateWindow.querySelectorAll('.form-data');
 
@@ -6219,7 +6229,7 @@ class Table extends CraterWebParts {
 
 			let parent = metaWindow.parentNode;
 			parent.innerHTML = '';
-			parent.append(metaWindow, updateWindow)
+			parent.append(metaWindow, updateWindow);
 		});
 
 		if (!func.isnull(paneConnection)) {
@@ -6955,13 +6965,12 @@ class DateList extends CraterWebParts {
 			);
 		}
 
-		this.key = dateList.dataset.key;
+		this.key = this.key || dateList.dataset.key;
 		return dateList;
 	}
 
 	public rendered(params) {
 		this.element = params.element;
-
 	}
 
 	public setUpPaneContent(params) {
@@ -7013,6 +7022,9 @@ class DateList extends CraterWebParts {
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'height', value: this.element.querySelector('.crater-datelist-title').css()['height'] || ''
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'toggleTitle', options: ['show', 'hide']
 							})
 						]
 					})
@@ -7140,42 +7152,13 @@ class DateList extends CraterWebParts {
 
 
 			this.paneContent.append(this.generatePaneContent({ list: dateListRows }));
-
-			let updateDateList = this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'card list-pane update' }, children: [
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'card-title' }, children: [
-							this.elementModifier.createElement(
-								{ element: 'h2', attributes: { class: 'title' }, text: 'Update Date-List' }
-							),
-							this.elementModifier.createElement({
-								element: 'div', attributes: { class: 'row' }, children: [
-									this.elementModifier.cell({
-										element: 'Input', name: 'URL', attributes: {}, dataAttributes: {}
-									}),
-									this.elementModifier.cell({
-										element: 'Input', name: 'List', attributes: {}, dataAttributes: {}
-									}),
-									{
-										element: 'div', attributes: { class: 'crater-center' }, children: [
-											{ element: 'button', attributes: { class: 'btn', id: 'update-datelist', style: { display: 'flex', alignSelf: 'center' } }, text: 'Update Date-List Source' }
-										]
-
-									}
-								]
-							})
-
-						]
-					})
-				]
-			});
 		}
 		return this.paneContent;
 	}
 
 	public generatePaneContent(params) {
 		let dateListPane = this.elementModifier.createElement({
-			element: 'div', attributes: { class: 'card list-pane' }, children: [
+			element: 'div', attributes: { class: 'card datelist-pane' }, children: [
 				this.elementModifier.createElement({
 					element: 'div', attributes: { class: 'card-title' }, children: [
 						this.elementModifier.createElement({
@@ -7193,19 +7176,19 @@ class DateList extends CraterWebParts {
 				children: [
 					this.paneOptions({ options: ['AA', 'AB', 'D'], owner: 'crater-datelist-content-item' }),
 					this.elementModifier.cell({
-						element: 'input', name: 'Day', attribute: { class: 'crater-date' }, value: params.list.day || params.list[i].querySelector('#Day').textContent
+						element: 'input', name: 'Day', attribute: { class: 'crater-date' }, value: params.list[i].querySelector('#Day').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Month', attribute: { class: 'crater-date' }, value: params.list.month || params.list[i].querySelector('#Month').textContent
+						element: 'input', name: 'Month', attribute: { class: 'crater-date' }, value: params.list[i].querySelector('#Month').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'title', value: params.list.title || params.list[i].querySelector('#mainText').textContent
+						element: 'input', name: 'title', value: params.list[i].querySelector('#mainText').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'subtitle', value: params.list.subTitle || params.list[i].querySelector('#subtitle').textContent
+						element: 'input', name: 'subtitle', value: params.list[i].querySelector('#subtitle').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'body', value: params.list.body || params.list[i].querySelector('#body').textContent
+						element: 'input', name: 'body', value: params.list[i].querySelector('#body').textContent
 					}),
 				]
 			});
@@ -7268,7 +7251,6 @@ class DateList extends CraterWebParts {
 				]
 			}
 		);
-
 
 		let dateRowHandler = (dateRowPane, dateRowDom) => {
 			dateRowPane.addEventListener('mouseover', event => {
@@ -7469,7 +7451,7 @@ class DateList extends CraterWebParts {
 			let newDateRowPane = dateListRowPanePrototype.cloneNode(true);
 
 			dateList.append(newDateRowDom);//c
-			this.paneContent.querySelector('.list-pane').append(newDateRowPane);
+			this.paneContent.querySelector('.datelist-pane').append(newDateRowPane);
 			dateRowHandler(newDateRowPane, newDateRowDom);
 		});
 
@@ -7478,23 +7460,44 @@ class DateList extends CraterWebParts {
 			dateRowHandler(dateRow, dateListRow[position]);
 		});
 
+		let showHeader = titlePane.querySelector('#toggleTitle-cell');
+		showHeader.addEventListener('change', e => {
+
+			switch (showHeader.value.toLowerCase()) {
+				case "hide":
+					draftDom.querySelectorAll('.crater-datelist-title').forEach(element => {
+						element.style.display = "none";
+					});
+					break;
+				case "show":
+					draftDom.querySelectorAll('.crater-datelist-title').forEach(element => {
+						element.style.display = "grid";
+					});
+					break;
+				default:
+					draftDom.querySelectorAll('.crater-datelist-title').forEach(element => {
+						element.style.display = "none";
+					});
+			}
+		});
+
 		let showTitle = dateListTitleRowPane.querySelector('#toggleTitle-cell');
 		showTitle.addEventListener('change', e => {
 
 			switch (showTitle.value.toLowerCase()) {
 				case "hide":
 					draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
-						element.style.visibility = "hidden";
+						element.style.display = "none";
 					});
 					break;
 				case "show":
 					draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
-						element.style.visibility = "visible";
+						element.style.display = "block";
 					});
 					break;
 				default:
 					draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
-						element.style.visibility = "hidden";
+						element.style.display = "none";
 					});
 			}
 		});
@@ -7505,17 +7508,17 @@ class DateList extends CraterWebParts {
 			switch (showSubtitle.value.toLowerCase()) {
 				case "hide":
 					draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
-						element.style.visibility = "hidden";
+						element.style.display = "none";
 					});
 					break;
 				case "show":
 					draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
-						element.style.visibility = "visible";
+						element.style.display = "block";
 					});
 					break;
 				default:
 					draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
-						element.style.visibility = "hidden";
+						element.style.display = "none";
 					});
 			}
 		});
@@ -7526,17 +7529,17 @@ class DateList extends CraterWebParts {
 			switch (showBody.value.toLowerCase()) {
 				case "hide":
 					draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
-						element.style.visibility = "hidden";
+						element.style.display = "none";
 					});
 					break;
 				case "show":
 					draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
-						element.style.visibility = "visible";
+						element.style.display = "block";
 					});
 					break;
 				default:
 					draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
-						element.style.visibility = "hidden";
+						element.style.display = "none";
 					});
 			}
 		});
@@ -7548,13 +7551,11 @@ class DateList extends CraterWebParts {
 				case "hide":
 					draftDom.querySelectorAll('.crater-datelist-content-item-date').forEach(element => {
 						element.style.visibility = "hidden";
-						console.log('hidden');
 					});
 					break;
 				case "show":
 					draftDom.querySelectorAll('.crater-datelist-content-item-date').forEach(element => {
 						element.style.visibility = "visible";
-						console.log('visible');
 					});
 					break;
 				default:
@@ -7564,54 +7565,71 @@ class DateList extends CraterWebParts {
 			}
 		});
 
-
-		//update the source of the webpart
-		let dateListSourceRow = this.paneContent.querySelector('#update-datelist').getParents('.row');
-
-		dateListSourceRow.querySelector('#URL-cell').onChanged();
-		dateListSourceRow.querySelector('#List-cell').onChanged();
-
-		let updateDateListButton = this.paneContent.querySelector('#update-datelist');
-
-		updateDateListButton.addEventListener('click', event => {
-			let link = dateListSourceRow.querySelector('#URL-cell').value;
-
-			let list = dateListSourceRow.querySelector('#List-cell').value;
-
-			updateDateListButton.render({
-				element: 'img', attributes: { class: 'crater-icon', src: this.sharePoint.images.loading }
-			});
-
-			this.sharePoint.connection.find({ link, list, data: 'Day,Month,Title,Subtitle,Body' }).then(source => {
-				if (Array.isArray(source) && source.length > 0) {
-					//reset the pane and note the changes
-					console.log(source);
-
-					let newContent = this.render({ source });
-					// let newContent = this.generatePaneContent({ list: source });
-					this.paneContent.querySelector('.list-pane').innerHTML = this.generatePaneContent({ list: newContent.querySelectorAll('.crater-datelist-content-item') }).innerHTML;
-
-				}
-				updateDateListButton.innerHTML = 'UPDATED!';
-			}).catch((error) => {
-				console.log(error);
-
-				updateDateListButton.innerHTML = 'UPDATE FAILED';
-			});
-		});
-
 		this.paneContent.addEventListener('mutated', event => {
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
-			console.log(draftDom.innerHTML);
-
 			this.element.innerHTML = draftDom.innerHTML;//upate the webpart
 			this.element.css(draftDom.css());
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
+
 		});
+	}
+
+	public update(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		this.paneContent = this.setUpPaneContent(params);
+
+		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+
+		let updateWindow = this.elementModifier.createForm({
+			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
+			contents: {
+				day: { element: 'select', attributes: { id: 'meta-data-day', name: 'Day' }, options: params.options },
+				month: { element: 'select', attributes: { id: 'meta-data-month', name: 'Month' }, options: params.options },
+				title: { element: 'select', attributes: { id: 'meta-data-title', name: 'Title' }, options: params.options },
+				subtitle: { element: 'select', attributes: { id: 'meta-data-subtitle', name: 'Subtitle' }, options: params.options },
+				body: { element: 'select', attributes: { id: 'meta-data-body', name: 'Body' }, options: params.options }
+			},
+			buttons: {
+				submit: { element: 'button', attributes: { id: 'update-element', class: 'btn' }, text: 'Update' },
+			}
+		});
+
+		let data: any = {};
+		let source: any;
+		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+			event.preventDefault();
+			data.day = updateWindow.querySelector('#meta-data-day').value;
+			data.month = updateWindow.querySelector('#meta-data-month').value;
+			data.title = updateWindow.querySelector('#meta-data-title').value;
+			data.subtitle = updateWindow.querySelector('#meta-data-subtitle').value;
+			data.body = updateWindow.querySelector('#meta-data-body').value;
+			source = func.extractFromJsonArray(data, params.source);
+
+			let newContent = this.render({ source });
+			draftDom.querySelector('.crater-datelist-content').innerHTML = newContent.querySelector('.crater-datelist-content').innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+			this.paneContent.querySelector('.datelist-pane').innerHTML = this.generatePaneContent({ list: newContent.querySelectorAll('.crater-datelist-content-item') }).innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+		});
+
+
+		if (!func.isnull(paneConnection)) {
+			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+				this.element.innerHTML = draftDom.innerHTML;
+
+				this.element.css(draftDom.css());
+
+				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			});
+		}
+
+		return updateWindow;
 	}
 }
 
@@ -8088,7 +8106,7 @@ class YouTube extends CraterWebParts {
 		});
 
 		this.key = youtube.dataset.key;
-		this.sharePoint.properties.pane.content[this.key].settings = { myYoutube: { defaultVideo: 'M7lc1UVf-VE', width: '640', height: '390' } };
+		this.sharePoint.properties.pane.content[this.key].settings = { myYoutube: { defaultVideo: 'https://www.youtube.com/embed/M7lc1UVf-VE', width: '640', height: '390' } };
 
 		let youtubeContent = youtube.querySelector('.crater-youtube-contents');
 		youtubeContent.makeElement({
@@ -8126,14 +8144,14 @@ class YouTube extends CraterWebParts {
 						element: 'div', attributes: { class: 'row' }, children: [
 							{
 								element: 'div', attributes: { class: 'message-note' }, children: [
-									{ element: 'span', text: 'Note: The Video ID is in this format "M7lc1UVf-VE" ' }
+									{ element: 'span', attributes: { id: 'videoURL', style: { color: 'green' } }, text: `Note: The Video URL is in this format "https://youtu.be/SHoBUYvsjsc"` },
 								]
 							}]
 					}),
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'videoId', value: this.sharePoint.properties.pane.content[key].settings.myYoutube.defaultVideo
+								element: 'input', name: 'videoURL', value: this.sharePoint.properties.pane.content[key].settings.myYoutube.defaultVideo
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'width', value: this.sharePoint.properties.pane.content[key].settings.myYoutube.width
@@ -8162,8 +8180,18 @@ class YouTube extends CraterWebParts {
 
 		let youtubePane = this.paneContent.querySelector('.youtube-pane');
 
-		youtubePane.querySelector('#videoId-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].settings.myYoutube.defaultVideo = value;
+		youtubePane.querySelector('#videoURL-cell').onChanged(value => {
+			if (value.indexOf('.be/') !== -1) {
+				youtubePane.querySelector('#videoURL').style.color = 'green';
+				youtubePane.querySelector('#videoURL').textContent = 'Valid URL';
+				let afterEmbed = value.split('.be/')[1];
+				let newValue = 'https://www.youtube.com/embed/' + afterEmbed;
+				this.sharePoint.properties.pane.content[this.key].settings.myYoutube.defaultVideo = newValue;
+			} else {
+				youtubePane.querySelector('#videoURL').style.color = 'red';
+				youtubePane.querySelector('#videoURL').textContent = 'Invalid Video URL. Please right click on the video to get the video URL';
+			}
+
 		});
 
 		youtubePane.querySelector('#width-cell').onChanged(value => {
@@ -8186,7 +8214,7 @@ class YouTube extends CraterWebParts {
 			draftDomIframe.innerHTML = '';
 
 			draftDomIframe.makeElement({
-				element: 'iframe', attributes: { id: 'player2', type: 'text/html', width: this.sharePoint.properties.pane.content[this.key].settings.myYoutube.width, height: this.sharePoint.properties.pane.content[this.key].settings.myYoutube.height, src: `https://www.youtube.com/embed/${this.sharePoint.properties.pane.content[this.key].settings.myYoutube.defaultVideo}?origin=${location.href}&autoplay=1&enablejsapi=1&widgetid=1`, frameborder: '0' }
+				element: 'iframe', attributes: { id: 'player2', type: 'text/html', width: this.sharePoint.properties.pane.content[this.key].settings.myYoutube.width, height: this.sharePoint.properties.pane.content[this.key].settings.myYoutube.height, src: `${this.sharePoint.properties.pane.content[this.key].settings.myYoutube.defaultVideo}?origin=${location.href}&autoplay=1&enablejsapi=1&widgetid=1`, frameborder: '0' }
 			});
 
 
@@ -8508,6 +8536,11 @@ class BeforeAfter extends CraterWebParts {
 }
 
 {
+	CraterWebParts.prototype['youtube'] = params => {
+		let youtube = new YouTube({ sharePoint: params.sharePoint });
+		return youtube[params.action](params);
+	};
+
 	CraterWebParts.prototype['facebook'] = params => {
 		let facebook = new Facebook({ sharePoint: params.sharePoint });
 		return facebook[params.action](params);

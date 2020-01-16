@@ -582,7 +582,7 @@ class ElementModifier {
             element: 'div', attributes: { class: 'crater-pop-up' }, children: [
                 {
                     element: 'span', children: [
-                        { element: 'img', attributes: { src: this.sharepoint.images.close, class: 'close-crater-pop-up' } }
+                        { element: 'img', attributes: { src: params.close, class: 'crater-close-pop-up' } }
                     ]
                 },
                 {

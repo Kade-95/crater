@@ -150,6 +150,7 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 						}
 					}
 				});
+				this.initializeCrater();
 				this.onWindowResized();
 			}
 		}
@@ -159,10 +160,6 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 
 	private onWindowResized() {
 		//remove all editwindows 
-		this.app.querySelectorAll('.crater-edit-window').forEach(element => {
-			element.remove();
-		});
-
 		window.onresize = () => {
 			//reset the size of the editwindow to match the size of the screen
 			let editWindow = this.app.querySelector('.crater-edit-window');
@@ -176,6 +173,15 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 				});
 			}
 		};
+	}
+
+	private initializeCrater() {
+		this.app.querySelectorAll('.crater-edit-window').forEach(element => {
+			element.remove();
+		});
+		this.app.querySelectorAll('.crater-pop-up').forEach(element => {
+			element.remove();
+		});
 	}
 
 	public appendWebpart(parent, webpart) {
@@ -196,7 +202,7 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 
 	public displayPanel(selected) {
 
-		let webparts = ['Panel', 'List', 'Slider', 'Counter', 'Tiles', 'News', 'Table', 'TextArea', 'Icons', 'Button', 'Count Down', 'Tab', 'Events', 'Carousel', 'Map', 'DateList', 'Instagram', 'Facebook', 'BeforeAfter'];
+		let webparts = ['Panel', 'List', 'Slider', 'Counter', 'Tiles', 'News', 'Table', 'TextArea', 'Icons', 'Button', 'Count Down', 'Tab', 'Events', 'Carousel', 'Map', 'DateList', 'Instagram', 'Facebook', 'BeforeAfter', 'Youtube'];
 
 		this.displayPanelWindow = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-display-panel' }, text: 'Display'

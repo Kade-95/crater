@@ -9,6 +9,7 @@ class PropertyPane {
     public element: any;
     public editor: any;
     public craterWebparts: any;
+    public currentWindow: any;
 
     constructor(params) {
         this.sharePoint = params.sharePoint;
@@ -84,13 +85,16 @@ class PropertyPane {
             if (!item.classList.contains('crater-menu-item')) item = item.getParents('.crater-menu-item');
             if (func.isnull(item)) return;
 
-            if (item.dataset.owner == 'Content') {
+            if (item.dataset.owner == 'Content' && this.currentWindow != 'Content') {
+                this.currentWindow = 'Content';
                 this.setUpContent(key);
             }
-            else if (item.dataset.owner == 'Styles') {
+            else if (item.dataset.owner == 'Styles' && this.currentWindow != 'Styles') {
+                this.currentWindow = 'Styles';
                 this.setUpStyle(key);
             }
-            else if (item.dataset.owner == 'Connection') {
+            else if (item.dataset.owner == 'Connection' && this.currentWindow != 'Connection') {
+                this.currentWindow = 'Connection';
                 this.setUpConnection(key);
             }
 
@@ -141,7 +145,7 @@ class PropertyPane {
         if (this.sharePoint.properties.pane.content[key].draft.html == '') {
             this.sharePoint.properties.pane.content[key].draft.dom = this.element.cloneNode(true);
             this.sharePoint.properties.pane.content[key].draft.html = this.sharePoint.properties.pane.content[key].draft.dom.outerHTML;
-        } 
+        }
         else {
             this.sharePoint.properties.pane.content[key].draft.dom = this.elementModifier.createElement(this.sharePoint.properties.pane.content[key].draft.html);
         }
@@ -151,7 +155,7 @@ class PropertyPane {
 
         this.editor.innerHTML = '';
         this.editor.append(this.craterWebparts[type]({ action: 'setUpPaneContent', element: this.element, draft: draftDom, sharePoint: this.sharePoint }));
-        
+
         this.craterWebparts[type]({ action: 'listenPaneContent', element: this.element, draft: draftDom, sharePoint: this.sharePoint });
 
         this.editor.querySelectorAll('.crater-color-picker').forEach(picker => {
@@ -163,6 +167,8 @@ class PropertyPane {
         // get webpart
         let type = this.element.dataset.type;
         let metaData = [];
+
+        let update = this.craterWebparts[type]({ action: 'update', element: this.element, sharePoint: this.sharePoint, options: [] });
 
         this.paneConnection = this.elementModifier.createElement({
             element: 'div',
@@ -214,34 +220,22 @@ class PropertyPane {
             this.paneConnection.innerHTML = this.sharePoint.properties.pane.content[key].connection;
         }
         else {
-            let update = this.craterWebparts[type]({ action: 'update', element: this.element, sharePoint: this.sharePoint });
-
             this.paneConnection.makeElement({
                 element: 'div', attributes: { class: 'crater-connection-content' }, children: [
-                    { element: 'section', text: 'Type' },
-                    { element: 'section', text: 'Get' }
+                    {
+                        element: 'section', attributes: { class: 'crater-connection-try' }, children: [
+                            this.elementModifier.cell({ element: 'select', name: 'Type', options: ['Same Site', 'Other Sharepoint Site', 'RSS Feed'] }),
+                            { element: 'div', attributes: { id: 'crater-connection-type-option' } }
+                        ]
+                    },
+                    {
+                        element: 'section', attributes: { class: 'crater-connection-get' }, children: [
+                            update
+                        ]
+                    }
                 ]
             });
         }
-
-        let update = this.craterWebparts[type]({ action: 'update', element: this.element, sharePoint: this.sharePoint, options: [] });
-
-        this.paneConnection.innerHTML = '';
-        this.paneConnection.makeElement({
-            element: 'div', attributes: { class: 'crater-connection-content' }, children: [
-                {
-                    element: 'section', attributes: { class: 'crater-connection-try' }, children: [
-                        this.elementModifier.cell({ element: 'select', name: 'Type', options: ['Same Site', 'Other Sharepoint Site', 'RSS Feed'] }),
-                        { element: 'div', attributes: { id: 'crater-connection-type-option' } }
-                    ]
-                },
-                {
-                    element: 'section', attributes: { class: 'crater-connection-get' }, children: [
-                        update
-                    ]
-                }
-            ]
-        });
 
         let getWindow = this.paneConnection.querySelector('.crater-connection-get');
 
@@ -249,6 +243,8 @@ class PropertyPane {
             this.paneConnection.querySelector('#crater-connection-type-option').innerHTML = '';
             this.paneConnection.querySelector('#crater-connection-type-option').makeElement({ element: getDisplayOptions(value) });
         });
+
+        this.paneConnection.querySelector('.form-error').innerHTML = '';
 
         this.paneConnection.addEventListener('click', event => {
             let target = event.target;
@@ -318,7 +314,7 @@ class PropertyPane {
                             }
                             source.push(row);
                         }
-                        metaData = func.getObjectArrayKeys(source);                        
+                        metaData = func.getObjectArrayKeys(source);
                         update = this.craterWebparts[type]({ action: 'update', element: this.element, sharePoint: this.sharePoint, options: metaData, source });
                         getWindow.innerHTML = '';
                         getWindow.append(update);
