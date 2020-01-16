@@ -3895,7 +3895,7 @@ class Tiles extends CraterWebParts {
 				]
 			});
 
-			this.paneContent.append(this.generatePaneContent({tiles}));
+			this.paneContent.append(this.generatePaneContent({ tiles }));
 
 			let settingsPane = this.paneContent.makeElement({
 				element: 'div', attributes: { class: 'card settings-pane' }, children: [
@@ -5456,6 +5456,11 @@ class Crater extends CraterWebParts {
 
 		settingsPane.querySelector('#Columns-Sizes-cell').onChanged();
 
+		settingsPane.querySelector('#Columns-cell').onChanged(value => {
+			settingsPane.querySelector('#Columns-Sizes-cell').setAttribute('value', `repeat(${value}, 1fr)`);
+			settingsPane.querySelector('#Columns-Sizes-cell').value = `repeat(${value}, 1fr)`;
+		});
+
 		settingsPane.querySelector('#Scroll-cell').onChanged(scroll => {
 			sections.forEach(section => {
 				if (scroll.toLowerCase() == 'yes') {
@@ -5482,6 +5487,7 @@ class Crater extends CraterWebParts {
 			if (this.sharePoint.properties.pane.content[this.key].settings.columns < this.paneContent.querySelector('#Columns-cell').value) {
 				this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.querySelector('#Columns-cell').value;
 				this.sharePoint.properties.pane.content[this.key].settings.resetWidth = true;
+
 				this.resetSections({ resetWidth: true });
 			}
 			else if (this.sharePoint.properties.pane.content[this.key].settings.columns > this.paneContent.querySelector('#Columns-cell').value) { //check if the columns is less than current
@@ -5526,7 +5532,7 @@ class Crater extends CraterWebParts {
 		for (let i = 0; i < params.number; i++) {
 			//create the sections as keyed elements
 			let element = this.createKeyedElement({
-				element: 'section', attributes: { class: 'crater-section', 'data-type': 'section', style: {minHeight: params.height} }, options: ['Append', 'Edit', 'Delete'], type: 'crater-section', alignOptions: 'right', children: [
+				element: 'section', attributes: { class: 'crater-section', 'data-type': 'section', style: { minHeight: params.height } }, options: ['Append', 'Edit', 'Delete'], type: 'crater-section', alignOptions: 'right', children: [
 					{ element: 'div', attributes: { class: 'crater-section-content' } }
 				]
 			});
