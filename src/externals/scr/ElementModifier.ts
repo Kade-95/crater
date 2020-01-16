@@ -576,6 +576,29 @@ class ElementModifier {
             resolve(key);
         });
     }
+
+    public popUp(params) {
+        let popUp = this.createElement({
+            element: 'div', attributes: { class: 'crater-pop-up' }, children: [
+                {
+                    element: 'span', children: [
+                        { element: 'img', attributes: { src: this.sharepoint.images.close, class: 'close-crater-pop-up' } }
+                    ]
+                },
+                {
+                    element: 'iframe', attributes: { class: 'crater-pop-up-content', src: params.source }
+                }
+            ]
+        });
+
+        popUp.addEventListener('click', event => {
+            if (!event.target.classList.contains('pop-up-content') && func.isnull(event.target.getParents('.pop-up-content'))) {
+                popUp.remove();
+            }
+        });
+
+        return popUp;
+    }
 }
 
 function prepareFrameWork(): void {
