@@ -48,13 +48,14 @@
     text-align: center;
     flex-direction: column;
     position: relative;
-    min-height: min-content;
+    min-height: 80px;
+    overflow: auto;
 }
 
 .crater-sections-container{
     display: grid;
     grid-template-columns: repeat(1, 1fr);
-    min-height: min-content;
+    min-height: 80px;
 }
 
 .crater .crater-icon {

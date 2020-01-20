@@ -67,6 +67,7 @@
     height: auto;
     background-color: white;
     cursor: pointer;
+    border-radius: 100%;
 }
 
 .crater-pop-up-content{

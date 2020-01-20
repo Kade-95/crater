@@ -28,7 +28,8 @@
 
 .crater-events-row{
     display: grid;
-    grid-template-columns: 1fr 10fr 1fr;
+    grid-template-columns: min-content 1fr min-content;
+    grid-gap: .5em;
 }
 
 .crater-events-row:hover{
@@ -87,4 +88,5 @@
     align-self: center;
     justify-self: center;
     padding: 0.5em;
+    word-wrap: none;
 }
