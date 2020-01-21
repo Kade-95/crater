@@ -2971,9 +2971,9 @@ class Slider extends CraterWebParts {
 
 	public render(params) {
 		if (!func.isset(params.source)) params.source = [
-			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/photo-1542178036-2e5efe4d8f83.jpg', text: 'text0' },
-			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/application-3426397_1920.jpg', text: 'text1' },
-			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/l1.jpg', text: 'text2' }
+			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/photo-1542178036-2e5efe4d8f83.jpg', text: 'text0', link: 'https://www.google.com', linkText: 'Button 0' },
+			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/application-3426397_1920.jpg', text: 'text1', link: 'https://www.facebook.com', linkText: 'Button 1' },
+			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/l1.jpg', text: 'text2', link: 'https://www.twitter.com', linkText: 'Button 2' }
 		];
 
 		//create the slider element
@@ -2992,8 +2992,13 @@ class Slider extends CraterWebParts {
 
 			slidesContainer.makeElement({
 				element: 'div', attributes: { class: 'crater-slide' }, children: [
-					this.elementModifier.createElement({ element: 'img', attributes: { src: image, alt: 'Not Found' } }),
-					this.elementModifier.createElement({ element: 'p', attributes: { class: 'crater-slide-quote' }, text: params.source[j].text })
+					{ element: 'img', attributes: { src: image, alt: 'Not Found' } },
+					{
+						element: 'span', attributes: { class: 'crater-slide-details' }, children: [
+							{ element: 'p', text: params.source[j].text, attributes: { class: 'crater-slide-quote' } },
+							{ element: 'a', attributes: { href: params.source[j].link, class: 'crater-slide-link btn' }, text: params.source[j].linkText }
+						]
+					},
 				]
 			});
 			radioToggle.makeElement({ element: 'input', attributes: { type: 'radio', class: 'crater-slide-radio-toggle' } });
@@ -3036,6 +3041,21 @@ class Slider extends CraterWebParts {
 			});
 		});
 
+		let settings = this.sharePoint.properties.pane.content[this.key].settings;
+
+		this.element.querySelectorAll('.crater-slide-quote').forEach(quote => {
+			quote.css({ fontFamily: settings.textFontStyle, fontSize: settings.textFontSize, color: settings.textColor });
+		});
+
+		this.element.querySelectorAll('.crater-slide-link').forEach(link => {
+			link.css({ fontFamily: settings.linkFontStyle, fontSize: settings.linkFontStyle, color: settings.linkColor, backgroundColor: settings.linkBackgroundColor });
+
+			if(settings.linkShow == 'No'){
+				link.hide();
+			}else{
+				link.show();
+			}
+		});
 	}
 
 	//start the slider animation
@@ -3142,6 +3162,60 @@ class Slider extends CraterWebParts {
 			let slides = this.sharePoint.properties.pane.content[key].draft.dom.querySelectorAll('.crater-slide');
 
 			this.paneContent.append(this.generatePaneContent({ slides }));
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'card text-settings' }, children: [
+					{
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							{
+								element: 'h2', attributes: { class: 'title' }, text: 'Edit Text'
+							}]
+					},
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'Font Style', list: func.fontStyles
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Color', list: func.colors
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Font Size', list: func.pixelSizes
+							})
+						]
+					})
+				]
+			});
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'card link-settings' }, children: [
+					{
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							{
+								element: 'h2', attributes: { class: 'title' }, text: 'Edit Links'
+							}]
+					},
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'Font Style', list: func.fontStyles
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Color', list: func.colors
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Font Size', list: func.pixelSizes
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Background Color', list: func.colors
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'Show', options: ['Yes', 'No']
+							})
+						]
+					})
+				]
+			});
 
 			this.paneContent.makeElement({
 				element: 'div', attributes: { class: 'card', style: { margin: '1em', display: 'block' } }, sync: true, children: [
@@ -3290,6 +3364,20 @@ class Slider extends CraterWebParts {
 			listRowHandler(listRow, slideListRows[position]);
 		});
 
+		let textSettings = this.paneContent.querySelector('.text-settings');
+
+		let linkSettings = this.paneContent.querySelector('.link-settings');
+
+		textSettings.querySelector('#Font-Style-cell').onChanged();
+		textSettings.querySelector('#Color-cell').onChanged();
+		textSettings.querySelector('#Font-Size-cell').onChanged();
+
+		linkSettings.querySelector('#Font-Style-cell').onChanged();
+		linkSettings.querySelector('#Color-cell').onChanged();
+		linkSettings.querySelector('#Font-Size-cell').onChanged();
+		linkSettings.querySelector('#Font-Style-cell').onChanged();
+		linkSettings.querySelector('#Show-cell').onChanged();
+
 		this.paneContent.addEventListener('mutated', event => {
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
@@ -3302,6 +3390,22 @@ class Slider extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
 			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.querySelector('#Duration-cell').value;
+
+			this.sharePoint.properties.pane.content[this.key].settings.textFontStyle = textSettings.querySelector('#Font-Style-cell').value;
+
+			this.sharePoint.properties.pane.content[this.key].settings.textColor = textSettings.querySelector('#Color-cell').value;
+
+			this.sharePoint.properties.pane.content[this.key].settings.textFontSize = textSettings.querySelector('#Font-Size-cell').value;
+
+			this.sharePoint.properties.pane.content[this.key].settings.linkFontStyle = linkSettings.querySelector('#Font-Style-cell').value;
+
+			this.sharePoint.properties.pane.content[this.key].settings.linkColor = linkSettings.querySelector('#Color-cell').value;
+
+			this.sharePoint.properties.pane.content[this.key].settings.linkFontSize = linkSettings.querySelector('#Font-Size-cell').value;
+
+			this.sharePoint.properties.pane.content[this.key].settings.linkBackgroundColor = linkSettings.querySelector('#Background-Color-cell').value;
+
+			this.sharePoint.properties.pane.content[this.key].settings.linkShow = linkSettings.querySelector('#Show-cell').value;
 		});
 	}
 
@@ -5278,7 +5382,7 @@ class Crater extends CraterWebParts {
 		};
 
 		let adjustHeight = (event) => {
-			return
+			return;
 			//make sure that section does not exceed the bounds of the parent/crater
 			if (func.isnull(currentSection)) return;
 			if (event.clientY < this.element.position().bottom - 100 && event.clientY > this.element.position().bottom + 100) return;
@@ -6663,7 +6767,7 @@ class CountDown extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Color',  list: func.colors
+								element: 'input', name: 'Color', list: func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'BackgroundColor', list: func.colors
@@ -7643,58 +7747,82 @@ class Map extends CraterWebParts {
 	public params;
 	public paneContent;
 	public elementModifier = new ElementModifier();
-
+	public self = this;
 	constructor(params) {
 		super({ sharePoint: params.sharePoint });
 		this.sharePoint = params.sharePoint;
 		this.params = params;
 	}
 
-	public render(params) {
+	public render(params?) {
 
 		let mapDiv = this.createKeyedElement({
 			element: 'div', attributes: { class: 'crater-map', 'data-type': 'map' }, children: [
-				{ element: 'div', attributes: { class: 'crater-map-div', id: 'crater-map-div' } }
+				{ element: 'div', attributes: { class: 'crater-map-div', id: 'crater-map-div' } },
+				{
+					element: 'script', attributes: { src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDdGAHe_9Ghatd4wZjyc3hRdirIQ1ttcv0&callback=initMap' }
+				}
 			]
 		});
-		this.key = mapDiv.dataset.key;
+
+		this.key = this.key || mapDiv.dataset.key;
 
 		this.sharePoint.properties.pane.content[this.key].settings = { myMap: { lat: -34.067, lng: 150.067, zoom: 4, markerChecked: true, color: '' } };
-
 		window['initMap'] = this.initMap;
 
-		mapDiv.makeElement({
-			element: 'script', attributes: { defer: '', async: '', src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDdGAHe_9Ghatd4wZjyc3hRdirIQ1ttcv0&callback=initMap' }
-		});
+		this.element = mapDiv;
 
 		return mapDiv;
 	}
 
 	public initMap = () => {
-		let mapLocation = {
-			lat: -34.067,
-			lng: 150.067
+		const mapColor = this.sharePoint.properties.pane.content[this.key].settings.myMap.color;
+		let mapStyles = [
+			{ elementType: 'geometry.stroke', stylers: [{ color: mapColor }, { lightness: 0 }] },
+			{ elementType: 'labels.text.fill', stylers: [{ color: mapColor }, { lightness: 0 }] },
+			{ elementType: 'labels.text.stroke', stylers: [{ color: '#f9f9f9' }] },
+			{ featureType: 'water', elementType: 'geometry.fill', stylers: [{ color: mapColor }, { lightness: 80 }] },
+			{ featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: mapColor }, { lightness: 0 }] },
+			{ featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#f9f9f9' }] },
+			{ featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: mapColor }, { lightness: 80 }] },
+			{ featureType: 'landscape', elementType: 'geometry.fill', stylers: [{ color: mapColor }, { lightness: 95 }] }
+		];
+
+		let newMap = {
+			lat: this.sharePoint.properties.pane.content[this.key].settings.myMap.lat,
+			lng: this.sharePoint.properties.pane.content[this.key].settings.myMap.lng
 		};
 
-		//@ts-ignore
-		let map = new google.maps.Map(document.querySelector('#crater-map-div'), {
-			center: mapLocation,
-			zoom: 4,
-			mapTypeControlOptions: {
-				mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain',
-					'styled_map']
-			}
+		const styles = (mapColor !== '') ? mapStyles : '';
+
+		// @ts-ignore
+		let map = new google.maps.Map(this.element.querySelector('#crater-map-div'), {
+			center: newMap,
+			zoom: this.sharePoint.properties.pane.content[this.key].settings.myMap.zoom,
+			styles
 		});
 
-		//@ts-ignore
-		var marker = new google.maps.Marker({
-			position: mapLocation,
-			map
-		});
-
+		if (this.sharePoint.properties.pane.content[this.key].settings.myMap.markerChecked) {
+			//@ts-ignore
+			let marker = new google.maps.Marker({
+				position: newMap,
+				map
+			});
+		}
 	}
 
 	public rendered(params) {
+		this.element = params.element;
+		this.key = params.element.dataset['key'];
+		this.element.querySelector('#crater-map-div').innerHTML = '';
+		this.element.querySelector('script').remove();
+		window['initMap'] = this.initMap;
+		this.element.makeElement(
+			{
+				element: 'script', attributes: { src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDdGAHe_9Ghatd4wZjyc3hRdirIQ1ttcv0&callback=initMap' }
+			}
+		);
+		console.log(this.element);
 	}
 
 	public setUpPaneContent(params) {
@@ -7715,7 +7843,7 @@ class Map extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'card-title' }, children: [
 							this.elementModifier.createElement({
-								element: 'h2', attributes: { class: 'title' }, text: 'Personalise Map'
+								element: 'h2', attributes: { class: 'title' }, text: 'Customize Map'
 							})
 						]
 					}),
@@ -7723,9 +7851,17 @@ class Map extends CraterWebParts {
 						element: 'div', attributes: { class: 'row' }, children: [
 							{
 								element: 'div', attributes: { class: 'message-note' }, children: [
-									{ element: 'span', text: 'Note: Clear the color input field to reset the map color to default' }
+									{
+										element: 'div', attributes: { class: 'message-text' }, children: [
+											{ element: 'p', text: 'NOTE:' },
+											{ element: 'p', attributes: { style: { color: 'green' } }, text: `Clear the color input field to reset the map color to default.` },
+											{ element: 'p', attributes: { style: { color: 'green' } }, text: `The latitude/longitude should be in the format '6.6018'.` },
+											{ element: 'p', attributes: { style: { color: 'green' } }, text: `The optimal zoom level values range from 0 - 20` }
+										]
+									}
 								]
-							}]
+							}
+						]
 					}),
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
@@ -7742,10 +7878,10 @@ class Map extends CraterWebParts {
 								element: 'input', name: 'color', list: func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'width', value: this.element.querySelector('#crater-map-div').css()['width']
+								element: 'input', name: 'width', value: this.element.querySelector('#crater-map-div').css()['width'], list: func.pixelSizes
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'height', value: this.element.querySelector('#crater-map-div').css()['height']
+								element: 'input', name: 'height', value: this.element.querySelector('#crater-map-div').css()['height'], list: func.pixelSizes
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'marker', options: ['show', 'hide']
@@ -7820,50 +7956,12 @@ class Map extends CraterWebParts {
 		});
 
 		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
-			const mapColor = this.sharePoint.properties.pane.content[this.key].settings.myMap.color;
-			let mapStyles = [
-				{ elementType: 'geometry.stroke', stylers: [{ color: mapColor }, { lightness: 0 }] },
-				{ elementType: 'labels.text.fill', stylers: [{ color: mapColor }, { lightness: 0 }] },
-				{ elementType: 'labels.text.stroke', stylers: [{ color: '#f9f9f9' }] },
-				{ featureType: 'water', elementType: 'geometry.fill', stylers: [{ color: mapColor }, { lightness: 80 }] },
-				{ featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: mapColor }, { lightness: 0 }] },
-				{ featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#f9f9f9' }] },
-				{ featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: mapColor }, { lightness: 80 }] },
-				{ featureType: 'landscape', elementType: 'geometry.fill', stylers: [{ color: mapColor }, { lightness: 95 }] }
-			];
-
-
-			let initMap = () => {
-				let newMap = {
-					lat: this.sharePoint.properties.pane.content[this.key].settings.myMap.lat,
-					lng: this.sharePoint.properties.pane.content[this.key].settings.myMap.lng
-				};
-
-				const styles = (mapColor !== '') ? mapStyles : '';
-
-				//@ts-ignore
-				let map = new google.maps.Map(this.element.querySelector('#crater-map-div'), {
-					center: newMap,
-					zoom: this.sharePoint.properties.pane.content[this.key].settings.myMap.zoom,
-					styles
-				});
-
-				if (this.sharePoint.properties.pane.content[this.key].settings.myMap.markerChecked) {
-					//@ts-ignore
-					let marker = new google.maps.Marker({
-						position: newMap,
-						map
-					});
-				}
-			};
-
-			window['initMap'] = initMap;
-
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.querySelector('#crater-map-div').innerHTML = '';
 			this.element.removeChild(this.element.querySelector('script'));
+			window['initMap'] = this.initMap;
 			this.element.makeElement({
-				element: 'script', attributes: { defer: '', async: '', src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDdGAHe_9Ghatd4wZjyc3hRdirIQ1ttcv0&callback=initMap' }
+				element: 'script', attributes: { src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDdGAHe_9Ghatd4wZjyc3hRdirIQ1ttcv0&callback=initMap' }
 			});
 
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());

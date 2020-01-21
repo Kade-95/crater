@@ -28,16 +28,25 @@
     left: 0;
 }
 
+.crater-slide-details{
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+}
+
 .crater-slide-quote {
     top: 0;
     display: block;
     position: relative;
-    z-index: 2;
     color: white;
     font-weight: 1000;
     font-size: 2em;
     font-family: monospace;
     text-transform: capitalize;
+}
+
+.crater-slide-link{
+    text-decoration: none;
 }
 
 .crater-slider .crater-top-right {

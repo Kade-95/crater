@@ -64,12 +64,28 @@ class Connection {
                 if (this.readyState == 4 && this.status == 200) {
                     resolve(request.responseText);
                 }
-            }; 
-            
+            };
+
             request.open(params.method, params.url, params.async);
             if (func.isset(params.data)) request.send(params.data);
             else request.send();
         });
+    }
+
+    public getSite() {
+        let site = '';
+
+        if (location.pathname == '') {
+            site = location.origin;
+        }
+        else if (location.pathname.split('/').indexOf('SitePages') == 1) {
+            site = location.origin;
+        }
+        else if (location.pathname.split('/').indexOf('sites') == 1) {
+            site = location.origin + '/' + location.pathname.split('/')[1] + '/' + location.pathname.split('/')[1];
+        }
+
+        return site
     }
 
     public put(params) {

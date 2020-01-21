@@ -250,6 +250,7 @@ class PropertyPane {
             let target = event.target;
 
             let fetchData = (link, list, form, formError) => {
+                link = `https://cors-anywhere.herokuapp.com/` + link;
                 if (!this.elementModifier.validateForm(form)) {
                     formError.textContent = 'Form not filled correctly';
                     return;
@@ -273,7 +274,7 @@ class PropertyPane {
 
                 let connectionType = this.paneConnection.querySelector('#Type-cell').value;
                 if (connectionType == 'Same Site') {
-                    let link = location.origin;
+                    let link = this.paneConnection.getSite();
                     let list = this.paneConnection.querySelector('#connection-list').value;
                     fetchData(link, list, form, formError);
                 }
