@@ -1,5 +1,6 @@
 import { ElementModifier, func } from '.';
-import { SPHttpClient } from '@microsoft/sp-http';
+import { SPHttpClient, AadHttpClient, HttpClientResponse, MSGraphClient } from '@microsoft/sp-http';
+import * as MicrosoftGraph from '@microsoft/microsoft-graph-types';
 
 class Connection {
     private context: any;
@@ -25,6 +26,8 @@ class Connection {
             })
             .then(jsonResponse => {
                 let value = [];
+                console.log(jsonResponse);
+
                 jsonResponse.value.map(row => {
                     let aRow = {};
                     for (const cell in row) {
@@ -34,25 +37,6 @@ class Connection {
                 });
                 return value;
             });
-    }
-
-    private worker(params) {
-        if (Worker) {
-            return new Promise((resolve, reject) => {
-                var working = new Worker('MainWorker.js');
-                console.log(working);
-
-                working.onmessage = event => {
-                    resolve(event.data);
-                };
-                working.onerror = event => {
-                    console.log(params);
-                    reject(event);
-                };
-
-                working.postMessage(params);
-            });
-        }
     }
 
     public ajax(params) {
@@ -82,10 +66,33 @@ class Connection {
             site = location.origin;
         }
         else if (location.pathname.split('/').indexOf('sites') == 1) {
-            site = location.origin + '/' + location.pathname.split('/')[1] + '/' + location.pathname.split('/')[1];
+            site = location.origin + '/' + location.pathname.split('/')[1] + '/' + location.pathname.split('/')[2];
         }
 
-        return site
+        return site;
+    }
+
+    public getWithAad(params) {
+        return this.context.aadHttpClientFactory.getClient(params.link)
+            .then((aadClient: AadHttpClient) => {
+                const endPoint: string = params.endPoint;
+                aadClient.get(endPoint, AadHttpClient.configurations.v1)
+                    .then((rawResponse: HttpClientResponse) => {
+                        return rawResponse.json();
+                    })
+                    .then((jsonResponse: any) => {
+                        console.log(jsonResponse);
+                    });
+            });
+    }
+
+    public getWithGraph(params) {
+        return new Promise((resolve, reject) => {
+            this.context.msGraphClientFactory.getClient()
+                .then((client: MSGraphClient): void => {
+                    resolve(client);
+                });
+        });
     }
 
     public put(params) {

@@ -5,7 +5,11 @@
     "id": "d106d91f-d11e-4738-94d0-8ae900394058",
     "version": "1.0.0.0",
     "includeClientSideAssets": true,
-    "isDomainIsolated": false
+    "isDomainIsolated": false,
+    "webApiPermissionRequests": [
+      {"resource": "Microsoft Graph", "scope": "User.ReadWrite.All"},
+      {"resource": "Microsoft Graph", "scope": "Directory.ReadWrite.All"}
+    ]
   },
   "paths": {
     "zippedPackage": "solution/crater.sppkg"

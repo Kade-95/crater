@@ -1,10 +1,11 @@
-import { ElementModifier, func, ColorPicker, Connection } from '.';
+import { ElementModifier, func, ColorPicker } from '.';
 import FroalaEditor from 'froala-editor';
 import 'froala-editor/js/plugins/align.min.js';
 
 require('./../styles/connection.css');
 require('./../styles/form.css');
 require('./../styles/events.css');
+require('./../styles/event.css');
 require('./../styles/list.css');
 require('./../styles/slider.css');
 require('./../styles/counter.css');
@@ -25,7 +26,10 @@ require('./../styles/datelist.css');
 require('./../styles/instagram.css');
 require('./../styles/beforeafter.css');
 require('./../styles/table.css');
+require('./../styles/power.css');
+require('./../styles/employeedirectory.css');
 require('./../../../node_modules/froala-editor/css/froala_editor.pkgd.min.css');
+const factory = require('./powerbi.js');
 
 class CraterWebParts {
 	public elementModifier = new ElementModifier();
@@ -323,6 +327,16 @@ class CraterWebParts {
 					element: 'input', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value, list
 				}));
 			}
+			else if (i == 'fontWeight') {
+				blockRow.append(this.elementModifier.cell({
+					element: 'select', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value, options: func.boldness
+				}));
+			}
+			else if (i == 'fontSize') {
+				blockRow.append(this.elementModifier.cell({
+					element: 'input', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value, list: func.pixelSizes
+				}));
+			}
 			else {
 				blockRow.append(this.elementModifier.cell({
 					element: 'input', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value
@@ -337,6 +351,408 @@ class CraterWebParts {
 class Sample extends CraterWebParts {
 	constructor(params) {
 		super({ sharePoint: params.sharePoint });
+	}
+}
+
+class EmployeeDirectory extends CraterWebParts {
+	public params: any;
+	public elementModifier = new ElementModifier();
+	public paneContent: any;
+	public element: any;
+	private key: any;
+
+	constructor(params) {
+		super({ sharePoint: params.sharePoint });
+		this.sharePoint = params.sharePoint;
+		this.params = params;
+	}
+
+	public render(params) {
+		if (!func.isset(params.source)) params.source = [
+			{ image: this.sharePoint.images.append, text: 'One here' },
+			{ image: this.sharePoint.images.edit, text: 'Two now' },
+			{ image: this.sharePoint.images.sync, text: 'Three then' },
+			{ image: this.sharePoint.images.async, text: 'Four done' },
+			{ image: this.sharePoint.images.delete, text: 'Five when' }
+		];
+
+		let employeeDirectory = this.createKeyedElement({
+			element: 'div', attributes: { class: 'crater-employee-directory crater-component', 'data-type': 'employeedirectory' }, children: [
+				{
+					element: 'div', attributes: { class: 'crater-employee-directory-content' }, children: [
+						{
+							element: 'div', attributes: { class: 'crater-employee-directory-main-view' }, children: [
+								{
+									element: 'menu', attributes: { class: 'crater-employee-directory-menu' }, children: [
+										{ element: 'input', attributes: { placeholder: 'Search by Name...', id: 'crater-employee-directory-search-query' } },
+										{ element: 'select', attributes: { id: 'crater-employee-directory-search-type', class: 'btn' }, options: ['By Name', 'By Department', 'By Location', 'By Job Title'] },
+									]
+								},
+								{ element: 'div', attributes: { class: 'crater-employee-directory-display' } }
+							]
+						}
+					]
+				}
+			]
+		});
+
+		this.key = this.key || employeeDirectory.dataset.key;
+
+		return employeeDirectory;
+	}
+
+	public rendered(params) {
+		this.element = params.element;
+		this.key = params.key;
+
+		let display = this.element.querySelector('.crater-employee-directory-display');
+
+		// this.sharePoint.connection.getWithGraph()
+		// 	.then(client => {
+		// 		console.log(client);
+		// 	});
+	}
+
+	public setUpPaneContent(params): any {
+		this.element = params.element;
+		this.key = params.element.dataset['key'];
+
+		this.paneContent = this.elementModifier.createElement({
+			element: 'div',
+			attributes: { class: 'crater-property-content' }
+		});
+
+		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		}
+		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		}
+		else {
+			let columns = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelectorAll('.crater-carousel-column');
+
+			this.paneContent.makeElement({
+				element: 'div', children: [
+					this.elementModifier.createElement({
+						element: 'button', attributes: { class: 'btn new-component', style: { display: 'inline-block', borderRadius: '5px' } }, text: 'Add New'
+					})
+				]
+			});
+
+			this.paneContent.append(this.generatePaneContent({ columns }));
+
+			let settingsPane = this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'card settings-pane' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: "Settings"
+							})
+						]
+					}),
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'Duration', value: this.sharePoint.properties.pane.content[this.key].settings.duration || ''
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Columns', value: this.sharePoint.properties.pane.content[this.key].settings.columns || ''
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'FontSize'
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'FontStyle'
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'ImageSize'
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'ShowText', value: this.sharePoint.properties.pane.content[this.key].settings.showText || '', options: ['Yes', 'No']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'Curved', value: this.sharePoint.properties.pane.content[this.key].settings.curved || '', options: ['Yes', 'No']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'Shadow', value: this.sharePoint.properties.pane.content[this.key].settings.shadow || '', options: ['Yes', 'No']
+							}),
+						]
+					})
+				]
+			});
+		}
+
+		return this.paneContent;
+	}
+
+	public generatePaneContent(params) {
+		let columnsPane = this.elementModifier.createElement({
+			element: 'div', attributes: { class: 'card columns-pane' }, children: [
+				this.elementModifier.createElement({
+					element: 'div', attributes: { class: 'card-title' }, children: [
+						this.elementModifier.createElement({
+							element: 'h2', attributes: { class: 'title' }, text: "Columns"
+						})
+					]
+				}),
+			]
+		});
+
+		for (let i = 0; i < params.columns.length; i++) {
+			columnsPane.makeElement({
+				element: 'div',
+				attributes: {
+					style: { border: '1px solid #bbbbbb', margin: '.5em 0em' }, class: 'crater-carousel-column-pane row'
+				},
+				children: [
+					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-carousel-column' }),
+					this.elementModifier.cell({
+						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.columns[i].querySelector('.crater-carousel-image').src }
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'Text', attributes: {}, value: params.columns[i].querySelector('.crater-carousel-text').innerText || ''
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'Color', attributes: {}, value: params.columns[i].querySelector('.crater-carousel-text').css().color || '', list: func.colors
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'BackgroundColor', attributes: {}, value: params.columns[i].querySelector('.crater-carousel-text').css().backgroundColor || ''
+					}),
+				]
+			});
+		}
+
+		return columnsPane;
+	}
+
+	public listenPaneContent(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+
+		let domDraft = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let content = domDraft.querySelector('.crater-carousel-content');
+		let columns = domDraft.querySelectorAll('.crater-carousel-column');
+
+		let columnPanePrototype = this.elementModifier.createElement({
+			element: 'div',
+			attributes: {
+				style: { border: '1px solid #bbbbbb', margin: '.5em 0em' }, class: 'crater-carousel-column-pane row'
+			},
+			children: [
+				this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-carousel-column' }),
+				this.elementModifier.cell({
+					element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: this.sharePoint.images.append }
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'Text', attributes: {}, value: 'Text Here'
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'Color', attributes: {}, list: func.colors
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'BackgroundColor', attributes: {}, list: func.colors
+				}),
+			]
+		});
+
+		let columnPrototype = this.elementModifier.createElement({
+			element: 'span', attributes: { class: 'crater-carousel-column' }, children: [
+				{ element: 'img', attributes: { class: 'crater-carousel-image', src: this.sharePoint.images.append } },
+				{ element: 'span', attributes: { class: 'crater-carousel-text' }, text: 'Text Here' }
+			]
+		});
+
+		let carouselColumnHandler = (columnPane, columnDom) => {
+			columnPane.addEventListener('mouseover', event => {
+				columnPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+			});
+
+			columnPane.addEventListener('mouseout', event => {
+				columnPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+			});
+
+			let imageCell = columnPane.querySelector('#Image-cell').parentNode;
+			this.uploadImage({ parent: imageCell }, (image) => {
+				imageCell.querySelector('#Image-cell').src = image.src;
+				columnDom.querySelector('.crater-carousel-image').src = image.src;
+			});
+
+			columnPane.querySelector('#Text-cell').onChanged(value => {
+				columnDom.querySelector('.crater-carousel-text').textContent = value;
+			});
+
+			let colorCell = columnPane.querySelector('#Color-cell').parentNode;
+			this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#Color-cell') }, (color) => {
+				columnDom.querySelector('.crater-carousel-text').css({ color });
+				colorCell.querySelector('#Color-cell').value = color;
+				colorCell.querySelector('#Color-cell').setAttribute('value', color);
+			});
+
+			let backgroundColorCell = columnPane.querySelector('#BackgroundColor-cell').parentNode;
+			this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#BackgroundColor-cell') }, (backgroundColor) => {
+				columnDom.css({ backgroundColor });
+				backgroundColorCell.querySelector('#BackgroundColor-cell').value = backgroundColor;
+				backgroundColorCell.querySelector('#BackgroundColor-cell').setAttribute('value', backgroundColor);
+			});
+
+			columnPane.querySelector('.delete-crater-carousel-column').addEventListener('click', event => {
+				columnDom.remove();
+				columnPane.remove();
+			});
+
+			columnPane.querySelector('.add-before-crater-carousel-column').addEventListener('click', event => {
+				let newColumnPrototype = columnPrototype.cloneNode(true);
+				let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
+
+				columnDom.before(newColumnPrototype);
+				columnPane.before(newColumnPanePrototype);
+				carouselColumnHandler(newColumnPanePrototype, newColumnPrototype);
+			});
+
+			columnPane.querySelector('.add-after-crater-carousel-column').addEventListener('click', event => {
+				let newColumnPrototype = columnPrototype.cloneNode(true);
+				let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
+
+				columnDom.after(newColumnPrototype);
+				columnPane.after(newColumnPanePrototype);
+				carouselColumnHandler(newColumnPanePrototype, newColumnPrototype);
+			});
+		};
+
+		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+			let newColumnPrototype = columnPrototype.cloneNode(true);
+			let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
+
+			content.append(newColumnPrototype);//c
+			this.paneContent.querySelector('.columns-pane').append(newColumnPanePrototype);
+
+			carouselColumnHandler(newColumnPanePrototype, newColumnPrototype);
+		});
+
+		this.paneContent.querySelectorAll('.crater-carousel-column-pane').forEach((columnPane, position) => {
+			carouselColumnHandler(columnPane, columns[position]);
+		});
+
+		let settingsPane = this.paneContent.querySelector('.settings-pane');
+
+		settingsPane.querySelector('#Duration-cell').onChanged();
+
+		settingsPane.querySelector('#Columns-cell').onChanged(value => {
+			domDraft.querySelector('.crater-carousel-content').css({ gridTemplateColumns: `repeat(${value}, 1fr)` });
+		});
+
+		settingsPane.querySelector('#FontSize-cell').onChanged(fontSize => {
+			domDraft.querySelectorAll('.crater-carousel-text').forEach(text => {
+				text.css({ fontSize });
+			});
+		});
+
+		settingsPane.querySelector('#FontStyle-cell').onChanged(fontFamily => {
+			domDraft.querySelectorAll('.crater-carousel-text').forEach(text => {
+				text.css({ fontFamily });
+			});
+		});
+
+		settingsPane.querySelector('#ImageSize-cell').onChanged(width => {
+			domDraft.querySelectorAll('.crater-carousel-image').forEach(text => {
+				text.css({ width });
+			});
+		});
+
+		settingsPane.querySelector('#ShowText-cell').onChanged(display => {
+			domDraft.querySelectorAll('.crater-carousel-text').forEach(text => {
+				if (display.toLowerCase() == 'no') {
+					text.hide();
+				} else {
+					text.show();
+				}
+			});
+		});
+
+		settingsPane.querySelector('#Curved-cell').onChanged(curved => {
+			domDraft.querySelectorAll('.crater-carousel-column').forEach(column => {
+				if (curved.toLowerCase() == 'yes') {
+					column.css({ borderRadius: '10px' });
+				} else {
+					column.cssRemove(['border-radius']);
+				}
+			});
+		});
+
+		settingsPane.querySelector('#Shadow-cell').onChanged(shadow => {
+			domDraft.querySelectorAll('.crater-carousel-column').forEach(column => {
+				if (shadow.toLowerCase() == 'yes') {
+					column.css({ boxShadow: 'var(--accient-shadow)' });
+				} else {
+					column.cssRemove(['box-shadow']);
+				}
+			});
+		});
+
+		this.paneContent.addEventListener('mutated', event => {
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+		});
+
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+
+			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.querySelector('#Duration-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.querySelector('#Columns-cell').value;
+		});
+	}
+
+	public update(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		this.paneContent = this.setUpPaneContent(params);
+
+		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+
+		let updateWindow = this.elementModifier.createForm({
+			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
+			contents: {
+				image: { element: 'select', attributes: { id: 'meta-data-image', name: 'Image' }, options: params.options },
+				text: { element: 'select', attributes: { id: 'meta-data-text', name: 'Text' }, options: params.options },
+			},
+			buttons: {
+				submit: { element: 'button', attributes: { id: 'update-element', class: 'btn' }, text: 'Update' },
+			}
+		});
+
+		let data: any = {};
+		let source: any;
+		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+			event.preventDefault();
+			data.image = updateWindow.querySelector('#meta-data-image').value;
+			data.text = updateWindow.querySelector('#meta-data-text').value;
+			source = func.extractFromJsonArray(data, params.source);
+
+			let newContent = this.render({ source });
+			draftDom.querySelector('.crater-carousel-content').innerHTML = newContent.querySelector('.crater-carousel-content').innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+
+			this.paneContent.querySelector('.columns-pane').innerHTML = this.generatePaneContent({ columns: newContent.querySelectorAll('.crater-carousel-column') }).innerHTML;
+
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+		});
+
+
+		if (!func.isnull(paneConnection)) {
+			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+				this.element.innerHTML = draftDom.innerHTML;
+
+				this.element.css(draftDom.css());
+
+				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			});
+		}
+
+		return updateWindow;
 	}
 }
 
@@ -2637,7 +3053,7 @@ class Tab extends CraterWebParts {
 		for (let keyedElement of this.element.querySelector('.crater-tab-content').childNodes) {
 			if (keyedElement.classList.contains('keyed-element')) {
 				list.push({
-					name: keyedElement.dataset.type,
+					name: keyedElement.dataset.title || keyedElement.dataset.type,
 					owner: keyedElement.dataset.key,
 					icon: (func.isset(showIcons) && showIcons.toLowerCase() == 'yes') ? keyedElement.dataset.icon : ''
 				});
@@ -2847,7 +3263,7 @@ class Tab extends CraterWebParts {
 			});
 
 			tabContentRowPane.querySelector('#Title-cell').onChanged(value => {
-				tabContentRowPane.dataset.title = value;
+				tabContentRowDom.dataset.title = value;
 			});
 
 			tabContentRowPane.querySelector('.delete-crater-tab-content-row').addEventListener('click', event => {
@@ -2948,6 +3364,8 @@ class Tab extends CraterWebParts {
 
 			for (let keyedElement of this.element.querySelectorAll('.keyed-element')) {
 				this[keyedElement.dataset.type]({ action: 'rendered', element: keyedElement, sharePoint: this.sharePoint });
+				console.log(keyedElement);
+
 			}
 
 			this.sharePoint.properties.pane.content[this.key].settings.showMenuIcons = menuPane.querySelector('#ShowIcons-cell').value;
@@ -3050,9 +3468,9 @@ class Slider extends CraterWebParts {
 		this.element.querySelectorAll('.crater-slide-link').forEach(link => {
 			link.css({ fontFamily: settings.linkFontStyle, fontSize: settings.linkFontStyle, color: settings.linkColor, backgroundColor: settings.linkBackgroundColor });
 
-			if(settings.linkShow == 'No'){
+			if (settings.linkShow == 'No') {
 				link.hide();
-			}else{
+			} else {
 				link.show();
 			}
 		});
@@ -8777,7 +9195,2798 @@ class BeforeAfter extends CraterWebParts {
 	}
 }
 
+class Event extends CraterWebParts {
+	public params;
+	public element;
+	public key;
+	public paneContent;
+	public elementModifier = new ElementModifier();
+	public today: any;
+	public month: any;
+	public day: any;
+	public monthArray = func.trimMonthArray();
+
+
+	constructor(params) {
+		super({ sharePoint: params.sharePoint });
+		this.sharePoint = params.sharePoint;
+		this.params = params;
+	}
+
+
+	public render(params) {
+		this.today = func.today();
+		this.month = func.isMonthValid(this.today);
+		this.day = func.isDayValid(this.today);
+
+		if (!func.isset(params.source)) {
+			params.source = [
+				{
+					icon: 'https://img.icons8.com/pastel-glyph/64/000000/christmas-tree.png',
+					title: "BasketBall Game",
+					location: "Lagos Island, Lagos",
+					day: "19",
+					month: "Aug",
+					start: '12:00AM',
+					end: '01:00AM'
+				},
+				{
+					icon: 'https://img.icons8.com/cute-clipart/64/000000/shoes.png',
+					title: "Shoe City Event",
+					location: "Ikeja, Lagos",
+					day: "28",
+					month: "oct",
+					start: '01:00PM',
+					end: '02:00PM'
+				},
+				{
+					icon: 'https://img.icons8.com/cotton/64/000000/football-ball.png',
+					title: "Football Game",
+					location: "Teslim Balogun Statdium, Lagos",
+					day: "21",
+					month: "Jan",
+					start: '02:00PM',
+					end: '03:00PM'
+				}
+			];
+		}
+
+		let event = this.createKeyedElement({
+			element: 'div', attributes: { class: 'crater-event', 'data-type': 'event' }, children: [
+				{
+					element: 'div', attributes: { class: 'crater-event-title' }, children: [
+						{ element: 'img', attributes: { class: 'crater-event-title-imgIcon', src: 'https://img.icons8.com/cute-clipart/64/000000/tear-off-calendar.png' } },
+						{ element: 'span', attributes: { class: 'crater-event-title-captionTitle' }, text: 'Events' }
+					]
+				},
+				{ element: 'div', attributes: { class: 'crater-event-content' } }
+			]
+		});
+
+		let content = event.querySelector(`.crater-event-content`);
+		let locationElement = content.querySelectorAll('.crater-event-content-task-location') as any;
+
+		for (let each of params.source) {
+			content.makeElement(
+				{
+					element: 'div', attributes: { class: 'crater-event-content-item' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'crater-event-content-item-icon' }, children: [
+								this.elementModifier.createElement({ element: 'img', attributes: { class: 'crater-event-content-item-icon-image', id: 'icon', src: func.isnull(each.icon) ? this.sharePoint.images.append : each.icon, alt: 'Event Icon' } })
+							]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'crater-event-content-task' }, children: [
+								{ element: 'div', attributes: { class: 'crater-event-content-task-caption', id: 'eventTask' }, text: each.title },
+								{
+									element: 'div', attributes: { class: 'crater-event-content-task-location' }, children: [
+										{ element: 'img', attributes: { src: 'https://img.icons8.com/small/16/000000/clock.png' } },
+										{ element: 'span', attributes: { class: 'crater-event-content-task-location-duration', id: 'startTime' }, text: `${each.start} - ` },
+										{ element: 'span', attributes: { class: 'crater-event-content-task-location-duration', id: 'endTime' }, text: `${each.end}` },
+										{ element: 'img', attributes: { src: 'https://img.icons8.com/small/16/000000/previous--location.png' } },
+										{ element: 'span', attributes: { class: 'crater-event-content-task-location-place', id: 'location' }, text: `${each.location}` }
+									]
+								}
+							]
+						}),
+						{
+							element: 'div', attributes: { class: 'crater-event-content-item-date' }, children: [
+								{
+									element: 'div', attributes: { class: 'crater-event-content-item-date-day', id: 'Day' }, text: each.day
+								},
+								{ element: 'div', attributes: { class: 'crater-event-content-item-date-month', id: 'Month' }, text: each.month.toUpperCase() }
+							]
+						}
+					]
+				}
+			);
+		}
+		this.key = this.key || event.dataset.key;
+		return event;
+	}
+
+	public rendered(params) {
+		this.element = params.element;
+
+	}
+
+	public setUpPaneContent(params) {
+		let key = params.element.dataset['key'];//create a key variable and set it to the webpart key
+		this.element = this.sharePoint.properties.pane.content[key].draft.dom;//define the declared element to the draft dom content
+		this.paneContent = this.elementModifier.createElement({
+			element: 'div', attributes: { class: 'crater-property-content' }
+		}).monitor(); //monitor the content pane 
+		if (this.sharePoint.properties.pane.content[key].draft.pane.content !== '') {//check if draft pane content is not empty and set it to the pane content
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		}
+		else if (this.sharePoint.properties.pane.content[key].content !== '') {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		} else {
+			let eventList = this.sharePoint.properties.pane.content[key].draft.dom.querySelector('.crater-event-content');
+			let dateListRows = eventList.querySelectorAll('.crater-event-content-item');
+			this.paneContent.makeElement({
+				element: 'div', children: [
+					this.elementModifier.createElement(
+						{ element: 'button', attributes: { class: 'btn new-component', style: { display: 'inline-block', borderRadius: '5px' } }, text: 'Add New' }
+					)
+				]
+			});
+
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'title-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							{ element: 'h2', attributes: { class: 'title' }, text: 'Event Title Layout' }
+						]
+					}),
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [//create the cells for changing crater event title
+							this.elementModifier.cell({
+								element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: this.element.querySelector('.crater-event-title-imgIcon').src }
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'title', value: this.element.querySelector('.crater-event-title').textContent
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'backgroundcolor', value: this.element.querySelector('.crater-event-title').css()['background-color']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'color', value: this.element.querySelector('.crater-event-title').css().color
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'fontsize', value: this.element.querySelector('.crater-event-title').css()['font-size']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'height', value: this.element.querySelector('.crater-event-title').css()['height'] || ''
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'toggleTitle', options: ['show', 'hide']
+							})
+						]
+					})
+				]
+			});
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'event-icon-row-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'Edit Event Icon'
+							})
+						]
+					}),
+					{
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'iconWidth', value: this.element.querySelector('.crater-event-content-item-icon-image').css()['width']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'iconHeight', value: this.element.querySelector('.crater-event-content-item-icon-image').css()['height']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'toggleIcon', options: ['show', 'hide']
+							})
+						]
+					}
+				]
+			});
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'event-title-row-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'Edit Event Title'
+							})
+						]
+					}),
+					{
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-event-content-task-caption').css()['font-size']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-event-content-task-caption').css()['font-family']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'eventColor', value: this.element.querySelector('.crater-event-content-task-caption').css()['color']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'toggleTitle', options: ['show', 'hide']
+							})
+						]
+					}
+				]
+			});
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'event-location-row-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'Edit Event Location'
+							})
+						]
+					}),
+					{
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-event-content-task-location-place').css()['font-size']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-event-content-task-location-place').css()['font-family']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'locationColor', value: this.element.querySelector('.crater-event-content-task-location-place').css().color
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'toggleLocation', options: ['show', 'hide']
+							})
+						]
+					}
+				]
+			});
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'event-duration-row-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'Edit Event Duration'
+							})
+						]
+					}),
+					{
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-event-content-task-location-duration').css()['font-size']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-event-content-task-location-duration').css()['font-family']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'durationColor', value: this.element.querySelector('.crater-event-content-task-location-duration').css()['color']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'toggleDuration', options: ['show', 'hide']
+							})
+						]
+					}
+				]
+			});
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'event-date-row-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'Edit Event Date '
+							})
+						]
+					}),
+					{
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'daySize', value: this.element.querySelector('.crater-event-content-item-date-day').css()['font-size']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'monthSize', value: this.element.querySelector('.crater-event-content-item-date-month').css()['font-size']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-event-content-item-date').css()['font-family']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'dateColor', value: this.element.querySelector('.crater-event-content-item-date').css()['color']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'toggleDate', options: ['show', 'hide']
+							})
+						]
+					}
+				]
+			});
+
+			this.paneContent.append(this.generatePaneContent({ list: dateListRows }));
+
+		}
+		return this.paneContent;
+	}
+
+
+	public generatePaneContent(params) {
+		let eventListPane = this.elementModifier.createElement({
+			element: 'div', attributes: { class: 'card list-pane' }, children: [
+				this.elementModifier.createElement({
+					element: 'div', attributes: { class: 'card-title' }, children: [
+						this.elementModifier.createElement({
+							element: 'h2', attributes: { class: 'title' }, text: 'Events List'
+						})
+					]
+				}),
+			]
+		});
+
+		let strip = (value) => {
+			return value.split(' ');
+		};
+		let cTime = strip(this.element.querySelector('#startTime').textContent)[0];
+		let dTime = this.element.querySelector('#endTime').textContent;
+		// let cDay = this.element.querySelector('.crater-event-content-item-date-day').textContent;
+		// let cMonth = this.element.querySelector('.crater-event-content-item-date-month').textContent;
+		// let gDate = new Date(`${cMonth} ${cDay}, 2019`);
+
+
+		for (let i = 0; i < params.list.length; i++) {
+			eventListPane.makeElement({
+				element: 'div',
+				attributes: { class: 'crater-event-item-pane row' },
+				children: [
+					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-event-content-item' }),
+					this.elementModifier.cell({
+						element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.list[i].querySelector('#icon').src }
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'Task', attributes: { class: 'taskValue' }, value: params.list[i].querySelector('#eventTask').textContent
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'Location', attributes: { class: 'locationValue' }, value: params.list[i].querySelector('#location').textContent
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'Day', attribute: { class: 'crater-date dateValue' }, value: params.list[i].querySelector('#Day').textContent
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'Month', attribute: { class: 'crater-date dateValue' }, value: params.list[i].querySelector('#Month').textContent
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'start', attributes: { class: 'startValue' }, value: cTime
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'end', attributes: { class: 'endValue' }, value: dTime
+					})
+				]
+			});
+		}
+
+		return eventListPane;
+
+	}
+
+	public listenPaneContent(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		//get the content and all the events
+		let eventList = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-event-content');
+		let eventListRow = eventList.querySelectorAll('.crater-event-content-item');
+
+		let eventListRowPanePrototype = this.elementModifier.createElement({//create a row on the property pane
+			element: 'div',
+			attributes: {
+				class: 'crater-event-item-pane row'
+			},
+			children: [
+				this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-event-content-item' }),
+				this.elementModifier.cell({
+					element: 'input', name: 'icon', value: this.sharePoint.images.append
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'Task', value: 'New Task'
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'Location', value: 'Lagos, Nigeria'
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'Day', attributes: { placeholder: 'e.g 1' },
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'Month', attributes: { placeholder: 'preferably first three letters only e.g Jan' },
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'start', dataAttributes: { type: 'time' }
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'end', dataAttributes: { type: 'time' }
+				})
+			]
+		});
+
+
+		let eventListRowDomPrototype = this.createKeyedElement(
+			{
+				element: 'div', attributes: { class: 'crater-event-content-item keyed-element' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'crater-event-content-item-icon' }, children: [
+							this.elementModifier.createElement({ element: 'img', attributes: { class: 'crater-event-content-item-icon-image', src: this.sharePoint.images.append, alt: 'Event Icon' } })
+						]
+					}),
+					{
+						element: 'div', attributes: { class: 'crater-event-content-task' }, children: [
+							{ element: 'div', attributes: { class: 'crater-event-content-task-caption', id: 'eventTask' }, text: this.paneContent.querySelector(`.taskValue input`).value },
+							{
+								element: 'div', attributes: { class: 'crater-event-content-task-location' }, children: [
+									{ element: 'img', attributes: { src: 'https://img.icons8.com/small/16/000000/clock.png' } },
+									{ element: 'span', attributes: { class: 'crater-event-content-task-location-duration startTime' }, text: '' },
+									{ element: 'span', attributes: { class: 'crater-event-content-task-location-duration endTime' }, text: '' },
+									{ element: 'img', attributes: { src: 'https://img.icons8.com/small/16/000000/previous--location.png' } },
+									{ element: 'span', attributes: { class: 'crater-event-content-task-location-place' }, text: this.paneContent.querySelector(`.locationValue input`).value }
+								]
+							}
+						]
+					},
+					{
+						element: 'div', attributes: { class: 'crater-event-content-item-date' }, children: [
+							{ element: 'div', attributes: { class: 'crater-event-content-item-date-day', id: 'Day' }, text: '' },
+							{ element: 'div', attributes: { class: 'crater-event-content-item-date-month', id: 'Month' }, text: '' }
+						]
+					},
+				]
+			}
+		);
+
+
+		let eventRowHandler = (eventRowPane, eventRowDom) => {
+			eventRowPane.addEventListener('mouseover', event => {
+				eventRowPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+			});
+
+			eventRowPane.addEventListener('mouseout', event => {
+				eventRowPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+			});
+
+			let iconCellParent = eventRowPane.querySelector('#icon-cell').parentNode;
+			this.uploadImage({ parent: iconCellParent }, (image) => {
+				iconCellParent.querySelector('#icon-cell').src = image.src;
+				eventRowDom.querySelector('.crater-event-content-item-icon-image').src = image.src;
+			});
+
+			// get the values of the newly created row on the property - pane
+			eventRowPane.querySelector('#Task-cell').onChanged(value => {
+				eventRowDom.querySelector('.crater-event-content-task-caption').innerHTML = value;
+			});
+
+			eventRowPane.querySelector('#Location-cell').onChanged(value => {
+				eventRowDom.querySelector('.stateCountry').innerHTML = value;
+			});
+
+			eventRowPane.querySelector('#Day-cell').onChanged(value => {
+				eventRowDom.querySelector('.crater-event-content-item-date-day').innerHTML = value;
+			});
+
+			eventRowPane.querySelector('#Month-cell').onChanged(value => {
+				eventRowDom.querySelector('.crater-event-content-item-date-month').innerHTML = value;
+			});
+
+			eventRowPane.querySelector('#start-cell').onChanged(value => {
+				eventRowDom.querySelector('.startTime').innerHTML = value + ` - `;
+			});
+
+			eventRowPane.querySelector('#end-cell').onChanged(value => {
+				eventRowDom.querySelector('.endTime').innerHTML = value;
+			});
+
+			eventRowPane.querySelector('.delete-crater-event-content-item').addEventListener('click', event => {
+				eventRowDom.remove();
+				eventRowPane.remove();
+			});
+
+			eventRowPane.querySelector('.add-before-crater-event-content-item').addEventListener('click', event => {
+				let newEventRowDom = eventListRowDomPrototype.cloneNode(true);
+				let neweventRowPane = eventListRowPanePrototype.cloneNode(true);
+
+				eventRowDom.before(newEventRowDom);
+				eventRowPane.before(neweventRowPane);
+				eventRowHandler(neweventRowPane, newEventRowDom);
+			});
+
+			eventRowPane.querySelector('.add-after-crater-event-content-item').addEventListener('click', event => {
+				let newEventRowDom = eventListRowDomPrototype.cloneNode(true);
+				let newEventRowPane = eventListRowPanePrototype.cloneNode(true);
+
+				eventRowDom.after(newEventRowDom);
+				eventRowPane.after(newEventRowPane);
+
+				eventRowHandler(newEventRowPane, newEventRowDom);
+			});
+		};
+
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+
+		let titlePane = this.paneContent.querySelector('.title-pane');
+		let eventIconRowPane = this.paneContent.querySelector('.event-icon-row-pane');
+		let eventTitleRowPane = this.paneContent.querySelector('.event-title-row-pane');
+		let eventLocationRowPane = this.paneContent.querySelector('.event-location-row-pane');
+		let eventDurationRowPane = this.paneContent.querySelector('.event-duration-row-pane');
+		let eventDateRowPane = this.paneContent.querySelector('.event-date-row-pane');
+
+		let iconParent = titlePane.querySelector('#icon-cell').parentNode;
+
+		let eventColorParent = eventTitleRowPane.querySelector('#eventColor-cell').parentNode;
+		this.pickColor({ parent: eventColorParent, cell: eventColorParent.querySelector('#eventColor-cell') }, (color) => {
+			draftDom.querySelectorAll('.crater-event-content-task-caption').forEach(element => {
+				element.css({ color });//get the color of the event font in the draftDom
+			});
+			eventColorParent.querySelector('#eventColor-cell').value = color;
+			eventColorParent.querySelector('#eventColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+		});
+
+		let dateColorParent = eventDateRowPane.querySelector('#dateColor-cell').parentNode;
+		this.pickColor({ parent: dateColorParent, cell: dateColorParent.querySelector('#dateColor-cell') }, (color) => {
+			draftDom.querySelectorAll('.crater-event-content-item-date').forEach(element => {
+				element.css({ color });//get the color of the event font in the draftDom
+			});
+			dateColorParent.querySelector('#dateColor-cell').value = color;
+			dateColorParent.querySelector('#dateColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+		});
+
+		let locationColorParent = eventLocationRowPane.querySelector('#locationColor-cell').parentNode;
+		this.pickColor({ parent: locationColorParent, cell: locationColorParent.querySelector('#locationColor-cell') }, (color) => {
+			draftDom.querySelectorAll('.crater-event-content-task-location-place').forEach(element => {
+				element.css({ color });//get the color of the event font in the draftDom
+			});
+			locationColorParent.querySelector('#locationColor-cell').value = color;
+			locationColorParent.querySelector('#locationColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+		});
+
+		let durationColorParent = eventDurationRowPane.querySelector('#durationColor-cell').parentNode;
+		this.pickColor({ parent: durationColorParent, cell: durationColorParent.querySelector('#durationColor-cell') }, (color) => {
+			draftDom.querySelectorAll('.crater-event-content-task-location-duration').forEach(element => {
+				element.css({ color });//get the color of the event font in the draftDom
+			});
+			durationColorParent.querySelector('#durationColor-cell').value = color;
+			durationColorParent.querySelector('#durationColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+		});
+		this.uploadImage({ parent: iconParent }, (image) => {
+			iconParent.querySelector('#icon-cell').src = image.src;
+			draftDom.querySelector('.crater-event-title-imgIcon').src = image.src;
+		});
+		titlePane.querySelector('#title-cell').onChanged(value => {
+			draftDom.querySelector('.crater-event-title-captionTitle').innerHTML = value;
+		});
+
+		let backgroundColorCell = titlePane.querySelector('#backgroundcolor-cell').parentNode;
+		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
+			draftDom.querySelector('.crater-event-title').css({ backgroundColor });
+			backgroundColorCell.querySelector('#backgroundcolor-cell').value = backgroundColor;
+			backgroundColorCell.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor);
+		});
+
+		let colorCell = titlePane.querySelector('#color-cell').parentNode;
+		this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#color-cell') }, (color) => {
+			draftDom.querySelector('.crater-event-title').css({ color });
+			colorCell.querySelector('#color-cell').value = color;
+			colorCell.querySelector('#color-cell').setAttribute('value', color);
+		});
+
+
+		titlePane.querySelector('#fontsize-cell').onChanged(value => {
+			draftDom.querySelector('.crater-event-title').css({ fontSize: value });
+		});
+
+		titlePane.querySelector('#height-cell').onChanged(value => {
+			draftDom.querySelector('.crater-event-title').css({ height: value });
+		});
+
+		eventIconRowPane.querySelector('#iconWidth-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-event-content-item-icon-image').forEach(element => {
+				element.css({ width: value });
+			});
+		});
+		eventIconRowPane.querySelector('#iconHeight-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-event-content-item-icon-image').forEach(element => {
+				element.css({ height: value });
+			});
+		});
+
+		eventTitleRowPane.querySelector('#fontSize-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-event-content-task-caption').forEach(element => {
+				element.css({ fontSize: value });
+			});
+		});
+		eventTitleRowPane.querySelector('#fontFamily-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-event-content-task-caption').forEach(element => {
+				element.css({ fontFamily: value });
+			});
+		});
+
+		eventLocationRowPane.querySelector('#fontSize-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-event-content-task-location-place').forEach(element => {
+				element.css({ fontSize: value });
+			});
+		});
+		eventLocationRowPane.querySelector('#fontFamily-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-event-content-task-location-place').forEach(element => {
+				element.css({ fontFamily: value });
+			});
+		});
+
+		eventDurationRowPane.querySelector('#fontSize-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-event-content-task-location-duration').forEach(element => {
+				element.css({ fontSize: value });
+			});
+		});
+		eventDurationRowPane.querySelector('#fontFamily-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-event-content-task-location-duration').forEach(element => {
+				element.css({ fontFamily: value });
+			});
+		});
+
+		eventDateRowPane.querySelector('#daySize-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-event-content-item-date-day').forEach(element => {
+				element.css({ fontSize: value });
+			});
+		});
+		eventDateRowPane.querySelector('#monthSize-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-event-content-item-date-month').forEach(element => {
+				element.css({ fontSize: value });
+			});
+		});
+
+		eventDateRowPane.querySelector('#fontFamily-cell').onChanged(value => {
+			draftDom.querySelectorAll('.crater-event-content-item-date').forEach(element => {
+				element.css({ fontFamily: value });
+			});
+		});
+		//appends the dom and pane prototypes to the dom and pane when you click add new
+		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+			let newEventRowDom = eventListRowDomPrototype.cloneNode(true);
+			let newEventRowPane = eventListRowPanePrototype.cloneNode(true);
+
+			eventList.append(newEventRowDom);//c
+			this.paneContent.querySelector('.list-pane').append(newEventRowPane);
+			eventRowHandler(newEventRowPane, newEventRowDom);
+		});
+
+		let paneItems = this.paneContent.querySelectorAll('.crater-event-item-pane');
+		paneItems.forEach((eventRow, position) => {
+			eventRowHandler(eventRow, eventListRow[position]);
+		});
+
+		let showHeader = titlePane.querySelector('#toggleTitle-cell');
+		showHeader.addEventListener('change', e => {
+
+			switch (showHeader.value.toLowerCase()) {
+				case "hide":
+					draftDom.querySelectorAll('.crater-event-title').forEach(element => {
+						element.style.display = "none";
+					});
+					break;
+				case "show":
+					draftDom.querySelectorAll('.crater-event-title').forEach(element => {
+						element.style.display = "flex";
+					});
+					break;
+				default:
+					draftDom.querySelectorAll('.crater-event-title').forEach(element => {
+						element.style.display = "none";
+					});
+			}
+		});
+
+		//to hide or show properties
+		let showIcon = eventIconRowPane.querySelector('#toggleIcon-cell');
+
+		showIcon.addEventListener('change', e => {
+
+			switch (showIcon.value.toLowerCase()) {
+				case "hide":
+					draftDom.querySelectorAll('.crater-event-content-item-icon-image').forEach(element => {
+						element.style.display = "none";
+					});
+					break;
+				case "show":
+					draftDom.querySelectorAll('.crater-event-content-item-icon-image').forEach(element => {
+						element.style.display = "block";
+					});
+					break;
+				default:
+					draftDom.querySelectorAll('.crater-event-content-item-icon-image').forEach(element => {
+						element.style.display = "none";
+					});
+			}
+		});
+
+		let showTitle = eventTitleRowPane.querySelector('#toggleTitle-cell');
+		showTitle.addEventListener('change', e => {
+
+			switch (showTitle.value.toLowerCase()) {
+				case "hide":
+					draftDom.querySelectorAll('.crater-event-content-task-caption').forEach(element => {
+						element.style.visibility = "hidden";
+					});
+					break;
+				case "show":
+					draftDom.querySelectorAll('.crater-event-content-task-caption').forEach(element => {
+						element.style.visibility = "visible";
+					});
+					break;
+				default:
+					draftDom.querySelectorAll('.crater-event-content-task-caption').forEach(element => {
+						element.style.visibility = "hidden";
+					});
+			}
+		});
+
+		let showLocation = eventLocationRowPane.querySelector('#toggleLocation-cell');
+		showLocation.addEventListener('change', e => {
+
+			switch (showLocation.value.toLowerCase()) {
+				case "hide":
+					draftDom.querySelectorAll('.crater-event-content-task-location-place').forEach(element => {
+						element.style.visibility = "hidden";
+						element.previousSibling.style.visibility = "hidden";
+					});
+					break;
+				case "show":
+					draftDom.querySelectorAll('.crater-event-content-task-location-place').forEach(element => {
+						element.style.visibility = "visible";
+						element.previousSibling.style.visibility = "visible";
+					});
+					break;
+				default:
+					draftDom.querySelectorAll('.crater-event-content-task-location-place').forEach(element => {
+						element.style.visibility = "hidden";
+						element.previousSibling.style.visibility = "hidden";
+					});
+			}
+		});
+
+		let showDuration = eventDurationRowPane.querySelector('#toggleDuration-cell');
+		showDuration.addEventListener('change', e => {
+
+			switch (showDuration.value.toLowerCase()) {
+				case "hide":
+					draftDom.querySelectorAll('.crater-event-content-task-location-duration').forEach(element => {
+						element.style.visibility = "hidden";
+						element.previousSibling.style.visibility = "hidden";
+					});
+					break;
+				case "show":
+					draftDom.querySelectorAll('.crater-event-content-task-location-duration').forEach(element => {
+						element.style.visibility = "visible";
+						element.previousSibling.style.visibility = "visible";
+					});
+					break;
+				default:
+					draftDom.querySelectorAll('.crater-event-content-task-location-duration').forEach(element => {
+						element.style.visibility = "hidden";
+						element.previousSibling.style.visibility = "hidden";
+					});
+			}
+		});
+
+		let showDate = eventDateRowPane.querySelector('#toggleDate-cell');
+		showDate.addEventListener('change', e => {
+
+			switch (showDate.value.toLowerCase()) {
+				case "hide":
+					draftDom.querySelectorAll('.crater-event-content-item-date').forEach(element => {
+						element.style.display = "none";
+					});
+					break;
+				case "show":
+					draftDom.querySelectorAll('.crater-event-content-item-date').forEach(element => {
+						element.style.display = "block";
+					});
+					break;
+				default:
+					draftDom.querySelectorAll('.crater-event-content-item-date').forEach(element => {
+						element.style.display = "none";
+					});
+			}
+		});
+
+		this.paneContent.addEventListener('mutated', event => {
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+		});
+
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			this.element.innerHTML = draftDom.innerHTML;//upate the webpart
+			this.element.css(draftDom.css());
+			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
+		});
+	}
+
+	public update(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		this.paneContent = this.setUpPaneContent(params);
+
+		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+
+		let updateWindow = this.elementModifier.createForm({
+			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
+			contents: {
+				title: { element: 'select', attributes: { id: 'meta-data-title', name: 'Title' }, options: params.options },
+				icon: { element: 'select', attributes: { id: 'meta-data-icon', name: 'Icon' }, options: params.options },
+				day: { element: 'select', attributes: { id: 'meta-data-day', name: 'Day' }, options: params.options },
+				month: { element: 'select', attributes: { id: 'meta-data-month', name: 'Month' }, options: params.options },
+				location: { element: 'select', attributes: { id: 'meta-data-location', name: 'Location' }, options: params.options },
+				start: { element: 'select', attributes: { id: 'meta-data-start', name: 'Start' }, options: params.options },
+				end: { element: 'select', attributes: { id: 'meta-data-end', name: 'End' }, options: params.options }
+			},
+			buttons: {
+				submit: { element: 'button', attributes: { id: 'update-element', class: 'btn' }, text: 'Update' },
+			}
+		});
+
+		let data: any = {};
+		let source: any;
+		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+			event.preventDefault();
+			data.title = updateWindow.querySelector('#meta-data-title').value;
+			data.icon = updateWindow.querySelector('#meta-data-icon').value;
+			data.day = updateWindow.querySelector('#meta-data-day').value;
+			data.month = updateWindow.querySelector('#meta-data-month').value;
+			data.location = updateWindow.querySelector('#meta-data-location').value;
+			data.start = updateWindow.querySelector('#meta-data-start').value;
+			data.end = updateWindow.querySelector('#meta-data-end').value;
+			source = func.extractFromJsonArray(data, params.source);
+
+			let newContent = this.render({ source });
+			draftDom.querySelector('.crater-event-content').innerHTML = newContent.querySelector('.crater-event-content').innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+			this.paneContent.querySelector('.list-pane').innerHTML = this.generatePaneContent({ list: newContent.querySelectorAll('.crater-event-content-item') }).innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+		});
+
+
+		if (!func.isnull(paneConnection)) {
+			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+				this.element.innerHTML = draftDom.innerHTML;
+
+				this.element.css(draftDom.css());
+
+				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			});
+		}
+
+		return updateWindow;
+	}
+}
+
+class Power extends CraterWebParts {
+	public key: any;
+	public element: any;
+	public paneContent: any;
+	public elementModifier: any = new ElementModifier();
+	public params: any;
+	public counter: number = 15;
+	public image = {
+		loading: 'data:image/png;base64,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',
+		loading2: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAABmJLR0QA/wD/AP+gvaeTAAAQbklEQVR4nO2de3Bc1X3HP79zV7uy1vJDMsKYtwPGDG1I0lAoAwlQkqEBQ5oBMm0I2KK8bWpjOclMM42m7bSh2EAsu5MXyGX6mGJaZKwSnkNSUlpCAskkmNQPPSzjl2w9d/XYvff++sfKWLsryfu4q9Wu7mdm/7hX2nN+e+93z/md7znnLvj4+Pj4+Pj4+Pj4+Pj4+MwWxOsCGxsbA9XHzrtF0RUClymcLkoQ4ZjALld4S3D/c33T3b/yum6f7PFUABvXNH9JlCeBszP49zaEFoGWsw6H37p9++2Ol7H4ZIYnAnj0a09VB4bMd4E/zbGIbuAFVFsGo/Ja47ZVI17E5XNq8hbA4+t+WKNx61XgUx7EA0gE9EcCLRLgxXVPrurzplyfichLAI2NjYF5x859VeGa8ecDAVi+3OaCpQ41C8FYSiRiOHxE6Og0HOgy2E5GVceBN1BtsUV3fH3L3QfzidcnnbwE8PiabetVdeP4czULlc9/Ls7Che6k74vb0LXfor3D0LnfMDqaURgq8DMXWgKW+/za79z9f/nE7pMgZwE81vBM2Iw4XcDCE+fOOEP5wg2jBIOZl+O6cPCQob3D0NEeIBLN9J36gSA7EPP8uqY73xFEs/oAPkAeAti0pnklSvOJ42AQvnzbKHPn5nEfFI52G9o7LNo7hN5ek+k7P1TYgdJSHY/9+L7v3xfPPYjZRc4CePyhbdtV9NYTx5d+3OHKP/D2uvf1C+3tFu3thqPdBs1MW70oL6rRFg0FfrRh450ZtymzkdxbgNXNe4GPnTj+0h/HOL1u8n4/X6JRobPT0NZuOHjQwsmsqhFVXhVDSwW68+Gm+u6CBVii5COAKFB14rj+rlFCldPTDcdtOPihYV9bIpGMxTL6GC7wPyg7wTy/futduwscZkmQjwCS7vYD944UwFg+NbYNHx5MCKGjwzA8nFkQCr8UaEHcltlsS3sngPtOmncSrCRQPRcTcBCxAVC1UDuAMxLHGR4A1/vWQhWOHTd0dhj27LXo68/443WiusMYdlaNxn8ym5JIbwVgLIK1C7GsfmCqGxzAdcI4ow52ZBDcwkwD9PYYOvYbOjoNh4+YqUMaQ+G4EV5UZadbab1Y7kmkZwJ4cLUSqg0hDGVZksHVMG7MYA9GUbsw0wCRiLC/y6Kj09DVZXAzSyKHQV5H2G4sfaEcbWnPBLDuWwYhlnc4ShgnFsCORtHR4TzLm5jRUejotOjsNOzvsohn1uA7wP8qbHfE/vevN91zoCDBTTOeCeCRb9n5R5OCEsJ1KnGiMZyhCBm14VliO8KHBxJzFO0dVsZJJLAL2K6izzY01e/yPLBpYkYLYDxKENeZgzvkYA8NgHrvOajC4cMyNry0iEQyvjxtqLaq6vZIXddbjY2NhTNEPKZkBJCMhathnFFwIoOoXZikvbfHsK8tkUR2H8vYlu4W4SVg+0Bt+OXGxtvz7RcLSokKYDyCq3MTSWQ0isYKk0QODAodHQnz6ciRjG3pKMgbCNsrCLQ83HTHQEGCy4MyEEAyyhzceAhneGQsb/CekWHo7LLY12Zx4IDByWwUO6LIT0FbrUDg2XVPfvVQQYLLkrITwHiUEK49B2c4hjM8WBDzybbhw9xs6feAVsty/7WYaxvKWgDJBHDdKpwY2AP9BTGfHAcOHTYfdRVDQ1mMKISd6rit6/+h/r+nc23DLBLAeE6aT85gBNce9byG8bb03n0WvX2Z29KCvoxIa3g09lKhbelZKoDxCEoVbryCeGQIHc3WycyMnh6hrcOivd3i2LGML3s3yk4xtAwM8mohVkv7Akgh2XwaLEgdg4MyNntpcfBQZiMKheMi/KOr1pYNW+5s9yoWXwBTUoHrzsEednEihTGfRoahoyvRMhzokkxWS48A3x6M8KgXLYIvgIwZZz4NDqCO95832ZYOMDzFVIjA28ayb1n7nXuO5FOnL4CcGJu0GrWwIxE07n0S6SocPGhob7fY1zbpQpd2G/eqfPZLZOxv+oxHESIEQv1U1jpULq4mWLsIq2quZzUYgbPOdLn6qjhfvWOU666JU1WVliycH0Batz64NeeKfQF4gDCMVdFHcN4IlYvnEjytFqt6fuIueoBl4KKLHP7ky6Occ05qHiKfHDZVj+Vati8AjxFGsKx+guEoc+pChOpqCMyrAWPlXXYwCF+4IcbS85NFIHDvpjXNV+RSpi+AgmJjzAAVVQPMqQsQOr2GioW1mEAo5xJF4A+vi1GzMKk7MKJ8M5fyfAFMGw5GBgiE+gktcqlcvICK2kVIZdWp35pCIABXX51sECr80RMPPL0027J8ARSFsSSyoo/KBbFxSWR1xiUsOcNN3YhjHEtWZBuJL4AZwMkkcpjKxVWE6mqwqhecMolctix5QktStulnQiDbN/jkRtse4bVWQ2Qg+aZWz4PrV7icf0Hi2yzEEBMjGAbCIVw3jDPsYEf706azz1iclgxekm1cfgswTbzeaqXdfIDBAXitdbLbYGNMPxXhCJV1c6ioWcT4W1ad0mMonJZtXH4LkAFDUeG9t4W2PULf8cRNXFirnH+h8snLlapw4afvhRiBYAxrcRXxAXCGIgQr0uqdn225vgBOwe5dwis7LGIpSzuPHhaOHhbeexs+/0WHZRdPLYLrV7i8ttMwmLIqsHo+fO6mzBenCCME51nErAU4g2n7VLJ2nnwBTMHuXULrc9aU2xFiMWjdbnHTbVOL4PwLXO5Z59VsokMwPEzMmQd5bsbxc4BJGIomvvkZ7UVReGWHxXBh1pJMgkPFvPyXtfkCmIT33pa0Zl9rHNxzR3HPHUVrkmc/Y6Pw3tvTezmF/GchfQFMQtvu5EujNTa6wAYLsEAXOGkiaNtdhAck5IkvgEno600+1ur0/jv1XF+PL4CyIZ6aW1kTJAMp51K7jFKgLEcBM2HcnkqmTuB0U3YC8Grc7jUJJzD9/Akn8J61xRFAWXUBJ8btUzXFJ8btuz8ovf66EJSNAGb6uP36FS7V89LPZ+sEek3ZdAGTjdu1OjFUk0EL6Tn5cU+M26+8dnqaXm+dQO8omxZgtozbvaZsBDBbxu1eUzYCmC3jdq/JJwc4CCwBmDsvvyHVTBy3zxbyEIA8APqDqjB119+Ye3IzU8fts4WcBbB+y8oXgBe0+ynN9fl9Xs63z3RmqhPoQQ6QWyI108ftXpPbmsDCU7SaS2G+fTZQtCs628btZeUEPnb/M3UmYD+syI1Nf5soJtusvT9t3J5+EbTaSXLvSnncPlOdwKwFsGl1822o8xRItcBHT9rONmtPG4NPtHk25Zw/bveerLqATaubbwP+DWHSTWz+bFtpkbEAHrv/mTqUp8gk7S+DrH22kLEATMB+OPWb72ftpU8Wd0huGn9U7ln7bCGLJFA+Nt61mWy2TXpOHpdy1u41ZeAEavKTqDKcbXPN2Si5PxKlXJipTmDBVwQ5ZhmYZQhRjHsU0W5EC/MIVp/smTbpKWEccz629fvY1pXTVe2MoaycwHxRmVOMaovKTHUC/XHaLMcXwCyn5ASghIsdQllRcvsC7MAViA4j2o3Ro4gOUIhfFJ0tlJwAIJFEqpyDyzkII4geB/YWO6ySpCQFMB6lEpUzmekCKAMnMDfc2PH/wvVn8meqE1jwmitPv+yzwdrlISd64Hp3pLs18chLn5nCtElvzlmfeb3yjMtXBE/73QXx4Z7fm656T830TFj5TuA4wks+/e6m1c3FqDqNeOBqjNs7NqroBgpzM2aqE1jySWD+VOCaOqAOR12EPoweA2bEbzsXnJIzggqKGFRqEjOYs4TMBaAkz+FO1FLaaf3pBE/FyRNnyF9p6CEZC0CFfeOPZTB9HbdEUovTfWn/lCfBRb8Tdob3f8YdOvg8dqTPdwHzI/McQKUV0U+cODyxYUOrHVBBIiZpE0fiLez0KM4k5iy55k3gTYBI25uXVoRkA/CVQtRV7mQsAHVMk1jOn49fGSw9gbSbPo5+RuNN+QZ4KuYuvfpXwB2bVjfPCAHYgSsQtxujxxA9aXmUvBO44bt3HlWj9WS4n1eF+obv33cs99BKEyWMa87Dtj6NHbgKx7oINbXl4QQ2NNU/p6K3M3Vy16/CrQ1Nq/4jv9BKHyWEK2dhm08UZGGsSk3eZWQtvYam+ucqRC8A/hp4FySSePGuiv6VxmIXlNTN1+lJIq/94jLmzksXQfV8yckJdE0dtvXxvOPKyQh6uKm+G/jLsVdJ40b3XAihtRII30JwwVliCuONnXdhDas2TPzrrqJDOHoMo91jecPkolRCuGYprlniSVzFcwKVwaStZg7pO4SnwVeoPPuGvcBqYLW+/1JNbH7oQTWhrwDLva5rMlSqPlrfAHGMHke0F9EoiQtTMfY/tbhSw8RbqXOjaNnHTPEVkuq75Iae0FnX/k3lkisvLmQ9U1OBK4txzMWJRNK6HNv6FI5ZjiunMf7mO05aS5H1tHvx0k+V1vGH0hNA+qyE4G1B+qxp8xVKlaHBtJ+MyXoCo3gtgGOaUu1l6QlgOkOY/cGJ/IVp8RVKiUP7U3pEka5syyiaAHxfIX9++8sjySdU38i2jKLOBpajr2D3/nqNRrve0Xh/HOBAex//vPnn/NPmd/jxzj107unBsfN3/fbv7aVzT0/SOaPakm05RV8P0NBU/9zmNU//JK6yBrgRZGwuVneraCuj8aZS+uZXLb1lC7BFtdHEOi69+eVnI/8yFLHnAPR2D/Hrnx0kGLQ4Z1kNS5fXcu6yGirnVGRVx0DPMK8890HySdU31m2tfzfbeIsuACgvX+EEIo0u0LJpdXM/kLQZMhZz2Pubbvb+phsxwpnnzue8i2pZuryW+bVT75vs2tfLK899wHA0Pv60q5bZkEucM0IAnjBDfIVUVHSNqPwAWDDh313lQHsfB9r7+OlL+6g5LczS5TWcfWENtXVhQpUBhiIxDu3v57fvHaEjpdlPFKLfbNi86he5xFc2AlBhn8DJ6epBC12QbLFOt68AiS6ucWVza3WY64CbEVYw9pT1iejpjtLTHeXnb2aY0Iv8cP2WVX+Xa3xlI4CZtF4hlcZtq0aAF8de9z/+0LZLFL1pTAxXktvSZAflLx7Zctffr2dlzrGVjQBm6nqFiXhk68r3gfeBR59Y23ye68jNqqwQ9LPAKTNCRV7D8I2GzSt/sZ5VecVSVk9x2rjm6VtF5VlO/bn0VEPLTaubk/wJd+nEP9Rs2pJn+NZvWZXzNX1ibfMCjXODCteLcJkqZwNzBTmiaKeKvm657Mgl25+MshIAfCSCp4AJtmEACV+h/lS+QjEEUAzKblm4h+sVklYfizPBfU2fxi+5FctlkwOMxxtfQTtBPpoV1KhA6m8jRdNmMDtyr684lF0L4BkiL48/ND0BJHLyF04kajA9KQIQXpqu8LzCF8AkuGptBk52/K4gRwNIZwjpCCFHKsBN6hZG1XU2T3ec+eILYBI2bLmzHZGvpZ4XN/FKOy/a0LD1zzqnIzYv8QUwBeubVm4WkQam3DIsNsr6R5rqt0xbYB5SUkOWYvH4Q9suUeEboDcCC8dO94rQ6qLfbmiq31XM+HymkY33fm/Rxnu/t6jYcfj4+Pj4+Pj4+Pj4+Pj45MD/A+JWzX0rH59IAAAAAElFTkSuQmCC'
+	};
+
+	constructor(params) {
+		super({ sharePoint: params.sharePoint });
+		this.sharePoint = params.sharePoint;
+		this.params = params;
+	}
+
+	public render(params): any {
+		let power: any = this.createKeyedElement({
+			element: 'div', attributes: { class: 'crater-power', id: 'crater-power', 'data-type': 'power' }, children: [
+				{
+					element: 'div', attributes: { id: 'power-overlay' }, children: [
+						{ element: 'div', attributes: { id: 'power-overlay-text' } }
+					]
+				},
+				{
+					element: 'div', attributes: { class: 'crater-power-container' }, children: [
+						{
+							element: 'div', attributes: { id: 'renderContainer' }, children: [
+								{
+									element: 'div', attributes: { id: 'render-error' }, children: [
+										{ element: 'p', attributes: { id: 'render-text' } }
+									]
+								}
+							]
+						},
+						{
+							element: 'div', attributes: { class: 'crater-power-timer' }, children: [
+								{ element: 'span', attributes: { class: 'crater-power-counter' }, text: this.counter + ' Seconds to Login!' }
+							]
+						},
+						{
+							element: 'div', attributes: { id: 'crater-power-connect', class: 'crater-power-connect' }, children: [
+								{
+									element: 'div', attributes: { class: 'user' }, children: [
+										{ element: 'img', attributes: { class: 'crater-power-image', alt: 'Master-User', src: this.image.loading } },
+										{
+											element: 'div', attributes: { class: 'login-container' }, children: [
+												{ element: 'h4', attributes: { class: 'user-header' }, text: 'Master Account' },
+												{ element: 'p', attributes: { class: 'power-text' }, text: 'SharePoint site visitors will not be required to login to Power BI to view Power BI Data in SharePoint.' },
+												{ element: 'p', attributes: { class: 'user-recommended' }, text: 'Good for 20+ users' },
+												{ element: 'button', attributes: { id: 'master', class: 'user-button' }, text: 'Connect' }
+											]
+										}
+									]
+								},
+								{
+									element: 'div', attributes: { class: 'user' }, children: [
+										{ element: 'img', attributes: { class: 'crater-power-image', alt: 'Logged-in-User', src: this.image.loading } },
+										{
+											element: 'div', attributes: { class: 'login-container' }, children: [
+												{ element: 'h4', attributes: { class: 'user-header' }, text: 'Logged-In User' },
+												{ element: 'p', attributes: { class: 'power-text' }, text: 'Every SharePoint Site Visitor will be required to login to Power BI using Pro Account to view Power BI Data' },
+												{ element: 'p', attributes: { class: 'user-recommended' }, text: 'Good for 1 - 20 users' },
+												{ element: 'button', attributes: { id: 'normal', class: 'user-button' }, text: 'Connect' }
+											]
+										}
+									]
+								}
+							]
+						},
+						{ element: 'div', attributes: { class: 'login_form' } },
+					]
+				},
+			]
+		});
+
+		let form = `<div id="id01" class="modal">
+		  <form class="modal-content animate-modal">
+		 	 <div class="form-header">
+		  		<div class="form-header-space">
+					<h4>MASTER ACCOUNT LOGIN</h4> 	
+			  	</div>
+			</div>  
+			<div class="form-body">
+				<div class="form-container">
+			  		<label for="uname"><b>Username: </b></label>
+			  		<input class="input" id="power-username" type="text" placeholder="Enter Username" name="uname">
+				</div>
+				<div class="form-container">
+			  		<label for="psw"><b>Password: </b></label>
+			  		<input class="input" id="power-password" type="password" placeholder="Enter Password" name="psw">
+				</div>
+				<div class="error-message" id="emptyField">
+					<p> The above field(s) cannot be empty! && Name length cannot be less than 3</p>
+				</div>
+			</div>
+			<div class="cancel-container">
+			  <button id="login-submit" class="cancelbtn" type="submit">Login</button>
+			  <button type="button" id="cancelbtn" class="cancelbtn">Cancel</button>
+			</div>
+		  </form>
+		</div>
+		`;
+
+		power.querySelector('.login_form').innerHTML += form;
+
+		this.key = power.dataset.key;
+		this.sharePoint.properties.pane.content[this.key].settings.myPowerBi = { showNavContent: '', showFilter: '', loginType: '', code: '', username: '', tenantID: "90fa49f0-0a6c-4170-abed-92ed96ba67ca", clientSecret: 'FUq.Y0@BN4byWh6B8.H:et:?F/VX2-3a', password: '', clientId: '9605a407-7c23-4dc8-bd90-997fbc254d38', accessToken: '', embedToken: '', embedUrl: '', reports: [], reportName: [], groups: [], groupName: [], dashboards: [], dashBoardName: [], tiles: [], tileName: [], width: '100%', height: '300px' };
+		window.onerror = (msg, url, lineNumber, columnNumber, error) => {
+			console.log(msg, url, lineNumber, columnNumber, error);
+		};
+		power.querySelector('#master').addEventListener('click', event => {
+			let loginForm = power.querySelector('.login_form') as any;
+			let powerConnect = power.querySelector('.crater-power-connect') as any;
+
+			powerConnect.style.display = "none";
+			loginForm.style.display = 'block';
+			let username = power.querySelector('#power-username') as any;
+			let password = power.querySelector('#power-password') as any;
+			let errorDisplay = power.querySelector('#emptyField') as any;
+			let loginButton = power.querySelector('#login-submit') as any;
+			let cancelButton = power.querySelector('#cancelbtn') as any;
+			let renderBox = power.querySelector('#renderContainer') as any;
+
+			loginButton.addEventListener('click', e => {
+				e.preventDefault();
+				if ((username.value.length == 0) || (password.value.length == 0) || (username.value.length < 3)) {
+					username.style.border = '1px solid tomato';
+					password.style.border = '1px solid tomato';
+					errorDisplay.style.display = "block";
+					return;
+				}
+				else {
+					this.showLoading();
+					this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken = '';
+					this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.username = username.value;
+					this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.password = password.value;
+					this.getAccessToken().then(aResponse => {
+						if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken) {
+							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups.length = 0;
+							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupName.length = 0;
+							this.getWorkSpace(aResponse);
+							renderBox.querySelector('#render-error').style.display = 'none';
+							renderBox.style.display = "block";
+							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.loginType = 'master';
+							loginForm.style.display = "none";
+							if (renderBox.querySelector('.connected')) renderBox.querySelector('.connected').remove();
+							renderBox.makeElement({
+								element: 'div', attributes: { class: 'connected' }, children: [
+									{ element: 'img', attributes: { alt: 'Master-User', src: this.image.loading2 } },
+									{
+										element: 'div', attributes: { class: 'login-container' }, children: [
+											{ element: 'h4', text: 'Power BI Master' },
+											{ element: 'button', attributes: { id: 'master', class: 'user-button' }, text: 'Reconnect' },
+											{ element: 'p', text: `Connected using ${this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.username}` },
+										]
+									}
+								]
+							});
+							renderBox.querySelector('#master').addEventListener('click', ev => {
+								loginButton.innerHTML = 'Login';
+								if (power.querySelector('.login_form').style.display = 'none') power.querySelector('.login_form').style.display = 'block';
+							});
+
+
+						}
+					});
+				}
+			});
+
+			cancelButton.addEventListener('click', e => {
+				loginForm.style.display = 'none';
+				if (!renderBox.querySelector('.connected')) powerConnect.style.display = 'grid';
+			});
+
+		});
+		power.querySelector('#normal').addEventListener('click', event => {
+			// this.checkConsent();
+			this.startCounter();
+			this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken = '';
+			this.requestCode().then(response => {
+				setTimeout(() => {
+					this.getAccessToken(response).then(access => {
+						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups.length = 0;
+						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupName.length = 0;
+						this.getWorkSpace(access);
+						if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken && this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups.length !== 0) {
+							let powerConnect = power.querySelector('.crater-power-connect') as any;
+							powerConnect.style.display = "none";
+							let renderBox = power.querySelector('#renderContainer') as any;
+							renderBox.querySelector('#render-error').style.display = 'none';
+							renderBox.style.display = 'block';
+							power.querySelector('.crater-power-timer').style.display = "none";
+							if (renderBox.querySelector('.connected')) renderBox.querySelector('.connected').remove();
+							renderBox.makeElement({
+								element: 'div', attributes: { class: 'connected' }, children: [
+									{ element: 'img', attributes: { alt: 'Login', src: this.image.loading2 } },
+									{
+										element: 'div', attributes: { class: 'login-container' }, children: [
+											{ element: 'h4', text: 'Power BI User' },
+											{ element: 'p', attributes: { id: 'new-user', class: 'user-button' }, text: 'Connected' },
+										]
+									}
+								]
+							});
+							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.loginType = 'user';
+						}
+					});
+				}, 15000);
+			});
+		});
+
+		return power;
+	}
+	public showLoading() {
+		let loadingButton = document.querySelector('#login-submit') as any;
+		loadingButton.style.zIndex = 2;
+		loadingButton.render({
+			element: 'img', attributes: { class: 'crater-icon', src: this.sharePoint.images.loading, style: { width: '20px', height: '20px' } }
+		});
+	}
+	public checkConsent() {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+
+		let promise = new Promise((res, rej) => {
+			let host = (location.href === `https://localhost:4321/temp/workbench.html`) ? location.href : (location.origin === `https://ipigroup.sharepoint.com/`) ? location.origin : `https://ipigroup.sharepoint.com/`;
+			let openURL = `https://login.microsoftonline.com/${draftPower.tenantID}/v2.0/adminconsent?client_id=${draftPower.clientId}&state=12345&redirect_uri=${host}&scope=https://analysis.windows.net/powerbi/api/Workspace.ReadWrite.All`;
+
+			let newWindow = window.open(openURL, '_blank');
+			const windowLocation = newWindow.location.href;
+			const changedURL = (newWindow.location.href === windowLocation) ? res(newWindow.location.href) : rej(new Error('Sorry, permissions were not granted!'));
+			// setTimeout(() => {
+			// }, 5000);
+		}).catch(err => console.log(err.message));
+
+		return promise;
+	}
+	public startCounter() {
+		//@ts-ignore
+		document.querySelector('.crater-power-timer').style.display = 'block';
+		clearInterval(1);
+		setInterval(() => {
+			if (this.counter === 0) {
+				//@ts-ignore
+				document.querySelector('.crater-power-counter').render({
+					element: 'img', attributes: { class: 'crater-icon', src: this.sharePoint.images.loading, style: { width: '20px', height: '20px' } }
+				});
+			}
+			else {
+				this.counter--;
+				//@ts-ignore
+				document.querySelector('.crater-power-counter').textContent = 'Please wait ' + this.counter + ' Seconds';
+			}
+		}, 1000);
+
+	}
+	public requestCode() {
+		let promise = new Promise((res, rej) => {
+			let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+			let host = (location.href === `https://localhost:4321/temp/workbench.html`) ? location.href : (location.origin === `https://ipigroup.sharepoint.com/`) ? location.origin : `https://ipigroup.sharepoint.com/`;
+			let state = 12345;
+			let openURL = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${draftPower.clientId}&response_type=code&redirect_uri=${host}&response_mode=query&scope=openid&state=${state}`;
+			let newWindow = window.open(openURL, '_blank');
+			newWindow.focus();
+
+			setTimeout(() => {
+				//@ts-ignore
+				if (newWindow.location.search.substring(1).indexOf('code') !== -1) {
+					let splitURL = newWindow.location.search.substring(1).split('=')[1].split('&state')[0];
+					draftPower.code = splitURL;
+					res(splitURL);
+					newWindow.close();
+				} else {
+					rej(new Error('Sorry, there was an error'));
+					newWindow.close();
+				}
+			}, 13000);
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#render-error').style.display = 'block';
+			document.querySelector('#render-text').textContent = error.message;
+		});
+
+		return promise;
+	}
+	public createWorkSpace(access) {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let url = `https://api.powerbi.com/v1.0/myorg/groups`;
+
+		let accessString = 'Bearer ' + access;
+
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('group created...');
+					draftPower.groups = [];
+					draftPower.groupName.length = 0;
+					for (let workspace in JSON.parse(result)) {
+
+						draftPower.groups.push({
+							//@ts-ignore
+							workspaceName: workspace.name,
+							//@ts-ignore
+							workspaceId: workspace.id
+						});
+						//@ts-ignore
+						draftPower.groupName.push(workspace.name);
+					}
+				}
+			};
+
+			request.open('POST', url, false);
+			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			request.setRequestHeader('Authorization', accessString);
+			request.send(`name=new workspace`);
+			res(JSON.parse(result));
+			rej(new Error('Sorry, there was an error'));
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#render-error').style.display = 'block';
+			document.querySelector('#render-text').textContent = error.message;
+		});
+
+		return promise;
+	}
+	public cloneReport(params) {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let url = `https://api.powerbi.com/v1.0/myorg/reports/${params.reportID}/Clone`;
+
+		let accessString = 'Bearer ' + params.accessToken;
+
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('report cloned...');
+
+					draftPower.reportId = result.id;
+					draftPower.embedUrl = result.embedUrl;
+				}
+			};
+
+			request.open('POST', url, false);
+			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			request.setRequestHeader('Authorization', accessString);
+			request.send(`name=new&targetWorkspaceId=${params.groupID}`);
+			res(JSON.parse(result));
+			rej(new Error('Sorry, there was an error'));
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#render-error').style.display = 'block';
+			document.querySelector('#render-text').textContent = error.message;
+		});
+
+		return promise;
+	}
+	public cloneTile(params) {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let url = `https://api.powerbi.com/v1.0/myorg/dashboards/${params.dashboardID}/tiles/${params.tileID}/Clone`;
+
+		let accessString = 'Bearer ' + params.accessToken;
+
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('tile cloned...');
+					draftPower.tileId = result.tileId;
+					draftPower.reportId = result.tileId;
+					draftPower.embedUrl = result.embedUrl;
+				}
+			};
+
+			request.open('POST', url, false);
+			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			request.setRequestHeader('Authorization', accessString);
+			request.send(`name=new&targetWorkspaceId=${params.groupID}&targetDashboardId=${params.dashboardID}`);
+			res(JSON.parse(result));
+			rej(new Error('Sorry, there was an error'));
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#render-error').style.display = 'block';
+			document.querySelector('#render-text').textContent = error.message;
+		});
+
+		return promise;
+	}
+	public getReports(access, groupID, third?) {
+
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let url = (third) ? `https://api.powerbi.com/v1.0/myorg/reports` : `https://api.powerbi.com/v1.0/myorg/groups/${groupID}/reports`;
+
+		let accessString = 'Bearer ' + access;
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('getting reports...');
+					draftPower.reports.length = 0;
+					draftPower.reportName.length = 0;
+					for (let i = 0; i < JSON.parse(result).value.length; i++) {
+						if (draftPower.reports.indexOf(JSON.parse(result).value[i].name) === -1) {
+							//@ts-ignore
+							draftPower.reports.push({
+								reportName: JSON.parse(result).value[i].name,
+								reportId: JSON.parse(result).value[i].id,
+								embedUrl: JSON.parse(result).value[i].embedUrl
+							});
+
+							draftPower.reportName.push(JSON.parse(result).value[i].name);
+						}
+					}
+					if (draftPower.reportName.length === 0) {
+						draftPower.reportName.push('No Reports');
+					}
+					// for (let report of JSON.parse(result).value) {
+					// 	//@ts-ignore
+					// 	draftPower.reports.push({
+					// 		reportName: report.name,
+					// 		reportId: report.id
+					// 	});
+					// 	draftPower.reportName.push(report.name);
+					// 	console.log(draftPower.reports.indexOf(report.name));
+
+					// }
+
+				}
+			};
+
+			request.open('GET', url, false);
+			request.setRequestHeader('Authorization', accessString);
+			request.send();
+			res(JSON.parse(result));
+			rej(new Error('Sorry, there was an error'));
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#renderContainer').style.display = "block";
+			document.querySelector('#render-text').textContent = error.message;
+
+		});
+
+		return promise;
+	}
+	public getPages(params) {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let url = (params.groupID === 'none') ? `https://api.powerbi.com/v1.0/myorg/reports/${params.reportID}/pages` : `https://api.powerbi.com/v1.0/myorg/groups/${params.groupID}/reports/${params.reportID}/pages`;
+
+		let accessString = 'Bearer ' + params.accessToken;
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('getting pages...');
+					draftPower.pageName = [];
+					draftPower.pages = [];
+					for (let page in JSON.parse(result).value) {
+						//@ts-ignore
+						if (draftPower.pageName.indexOf(JSON.parse(result).value[page].displayName) === -1) {
+							draftPower.pages.push({
+								pageName: JSON.parse(result).value[page].Name,
+								displayName: JSON.parse(result).value[page].displayName
+							});
+							//@ts-ignore
+							draftPower.pageName.push(JSON.parse(result).value[page].displayName);
+						}
+					}
+				}
+			};
+
+			request.open('GET', url, false);
+			request.setRequestHeader('Authorization', accessString);
+			request.send();
+			res(JSON.parse(result));
+			rej(new Error('Sorry, there was an error'));
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#renderContainer').style.display = "block";
+			document.querySelector('#render-text').textContent = error.message;
+		});
+
+		return promise;
+	}
+	public getDashboards(access, groupID, third?) {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		draftPower.dashboards.length = 0;
+		draftPower.dashBoardName.length = 0;
+		let url = (third) ? `https://api.powerbi.com/v1.0/myorg/dashboards/` : `https://api.powerbi.com/v1.0/myorg/groups/${groupID}/dashboards/`;
+
+		let accessString = 'Bearer ' + access;
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('getting dashboards...');
+					if (draftPower.groupId !== 'none') {
+						for (let dashboard of JSON.parse(result).value) {
+
+							//@ts-ignore
+							draftPower.dashboards.push({
+								dashboardName: dashboard.displayName,
+								dashboardId: dashboard.id,
+								embedUrl: dashboard.embedUrl
+							});
+							draftPower.dashBoardName.push(dashboard.displayName);
+						}
+
+						if (draftPower.dashBoardName.length === 0) {
+							draftPower.dashBoardName.push('No Dashboards');
+						}
+					} else {
+						if (draftPower.dashBoardName.length === 0) {
+							draftPower.dashBoardName.push('Cannot Embed Dashboards for this Workspace');
+						}
+					}
+
+				}
+			};
+			request.open('GET', url, false);
+			request.setRequestHeader('Authorization', accessString);
+			request.send();
+			res(JSON.parse(result));
+			rej(new Error('Sorry, there was an error'));
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#renderContainer').style.display = "block";
+			document.querySelector('#render-text').textContent = error.message;
+		});
+
+		return promise;
+	}
+	public getTiles(access, groupID, dashboardID) {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+
+		let url = (groupID === 'none') ? `https://api.powerbi.com/v1.0/myorg/dashboards/${dashboardID}/tiles` : `https://api.powerbi.com/v1.0/myorg/groups/${groupID}/dashboards/${dashboardID}/tiles`;
+
+		let accessString = 'Bearer ' + access;
+
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('getting dashboards...');
+					draftPower.tiles.length = 0;
+					draftPower.tileName.length = 0;
+					for (let tile of JSON.parse(result).value) {
+						draftPower.tiles.push({
+							tileName: tile.title,
+							tileId: tile.id,
+							embedUrl: tile.embedUrl,
+							reportId: tile.reportId
+						});
+						draftPower.tileName.push(tile.title);
+					}
+					draftPower.tileName.push('Show Full Dashboard');
+
+				}
+			};
+			request.open('GET', url, false);
+			request.setRequestHeader('Authorization', accessString);
+			request.send();
+			res(JSON.parse(result));
+			rej(new Error('Sorry, there was an error'));
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#render-error').style.display = 'block';
+			document.querySelector('#render-text').textContent = error.message;
+		});
+
+		return promise;
+	}
+	public addUser(params) {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let url = `https://api.powerbi.com/v1.0/myorg/groups/${params.groupID}/users`;
+		const sendLink = (draftPower.loginType.toLowerCase() === 'master') ? `identifier=${draftPower.username}&groupUserAccessRight=Admin&principalType=User` : (draftPower.loginType.toLowerCase() === 'user') ? `id=${params.groupID}&groupUserAccessRight=Admin&principalType=Group` : '';
+
+		let accessString = 'Bearer ' + params.accessToken;
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('User Added');
+					console.log(result);
+				}
+			};
+
+			request.open('POST', url, false);
+			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			request.setRequestHeader('Authorization', accessString);
+			request.send(sendLink);
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#render-error').style.display = 'block';
+			document.querySelector('#render-text').textContent = error.message;
+		});
+
+		return promise;
+	}
+	public addDashBoard(params) {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let url = `https://api.powerbi.com/v1.0/myorg/dashboards`;
+
+		let accessString = 'Bearer ' + params.accessToken;
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('Dashboard Added');
+					draftPower.tokenEmbed = 'fulldashboard';
+					draftPower.dashboardId = result.id;
+					draftPower.dashboardEmbedUrl = result.embedUrl;
+				}
+			};
+
+			request.open('POST', url, false);
+			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			request.setRequestHeader('Authorization', accessString);
+			request.send('name=newDashBoard');
+			res(JSON.parse(result));
+			rej(new Error('Sorry, the Dashboard could not be added'));
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#render-error').style.display = 'block';
+			document.querySelector('#render-text').textContent = error.message;
+		});
+
+		return promise;
+	}
+	public deleteUser(params) {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let url = ` https://api.powerbi.com/v1.0/myorg/groups/${params.groupID}/users/${params.username}`;
+
+		let accessString = 'Bearer ' + params.accessToken;
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('User deleted');
+				}
+			};
+
+			request.open('DELETE', url, false);
+			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			request.setRequestHeader('Authorization', accessString);
+			request.send();
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#render-error').style.display = 'block';
+			document.querySelector('#render-text').textContent = error.message;
+		});
+
+		return promise;
+	}
+
+	public deleteWorkspace(params) {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let url = ` https://api.powerbi.com/v1.0/myorg/groups/${params.groupID}`;
+
+		let accessString = 'Bearer ' + params.accessToken;
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('Workspace deleted');
+				}
+			};
+
+			request.open('DELETE', url, false);
+			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			request.setRequestHeader('Authorization', accessString);
+			request.send();
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#render-error').style.display = 'block';
+			document.querySelector('#render-text').textContent = error.message;
+		});
+
+		return promise;
+	}
+
+	public getWorkSpace(access) {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let url = `https://api.powerbi.com/v1.0/myorg/groups`;
+
+		let accessString = 'Bearer ' + access;
+
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('getting workspaces...');
+					draftPower.groups.length = 0;
+					draftPower.groupName.length = 0;
+					for (let workspace of JSON.parse(result).value) {
+						//@ts-ignore
+						draftPower.groups.push({
+							workspaceName: workspace.name,
+							workspaceId: workspace.id
+						});
+						draftPower.groupName.push(workspace.name);
+					}
+
+					if (document.querySelector('#getWork')) {
+						let errorText = document.querySelector('#render-text') as any;
+						errorText.textContent = '';
+						//@ts-ignore
+						document.querySelector('#renderContainer').style.display = "none";
+						document.querySelector('#getWork').remove();
+					}
+					draftPower.groupName.push('My WorkSpace');
+				}
+			};
+
+			request.open('GET', url, false);
+			request.setRequestHeader('Authorization', accessString);
+			request.send();
+			res(JSON.parse(result));
+			rej(new Error('Sorry, there was an error'));
+		}).catch(error => {
+			let powDiv = document.querySelector('#render-error') as any;
+			//@ts-ignore
+			document.querySelector('#renderContainer').style.display = 'block';
+			powDiv.querySelector('#render-text').textContent = `Couldn't Fetch Workspaces!`;
+			powDiv.makeElement({
+				element: 'div', children: [
+					{ element: 'button', attributes: { id: 'getWork', class: 'user-button' }, text: 'Retry' }
+				]
+			});
+			powDiv.querySelector('#getWork').addEventListener('click', even => {
+				this.getWorkSpace(access);
+			});
+		});
+
+		return promise;
+	}
+
+	public getAccessToken(authCode?) {
+		let host = (location.href === `https://localhost:4321/temp/workbench.html`) ? location.href : (location.origin === `https://ipigroup.sharepoint.com/`) ? location.origin : `https://ipigroup.sharepoint.com/`;
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let endpoint = `client_id=${draftPower.clientId}&grant_type=Authorization_code&code=${authCode}&scope=https://analysis.windows.net/powerbi/api/Workspace.ReadWrite.All` + `&client_secret=${draftPower.clientSecret}&redirect_uri=${host}`;
+		let endpoint2 = `grant_type=password&client_id=${draftPower.clientId}&resource=https://analysis.windows.net/powerbi/api` + `&username=${draftPower.username}&password=${draftPower.password}&scope=openid`;
+		let url = (authCode) ? 'https://cors-anywhere.herokuapp.com/https://login.microsoftonline.com/common/oauth2/v2.0/token/' : 'https://cors-anywhere.herokuapp.com/https://login.microsoftonline.com/common/oauth2/token/';
+		const defineEndpoint = (authCode) ? endpoint : endpoint2;
+
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('getting access tokens..');
+					draftPower.accessToken = JSON.parse(result).access_token;
+					draftPower.refreshToken = JSON.parse(result).refresh_token;
+				}
+			};
+			request.open('POST', url, false);
+			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			request.send(defineEndpoint);
+			res(JSON.parse(result).access_token);
+			rej(new Error('Sorry, there was an error'));
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#login-submit').style.zIndex = 0;
+			document.querySelector('#login-submit').innerHTML = 'Login';
+			document.querySelector('.crater-power-counter').innerHTML = "Sorry, there was an error. Please, click the connect button to try again";
+			//@ts-ignore
+			document.querySelector('#renderContainer').style.display = "block";
+			document.querySelector('#render-text').textContent = `Please make sure your details are valid!`;
+		});
+
+		return promise;
+		// -------------------------------------------
+	}
+	public tokenListener(params) {
+		let currentTime = Date.now();
+		let expiration = Date.parse(params.tokenExpiration);
+		let safetyInterval = params.minutesToRefresh * 60 * 1000;
+
+		let timeout = expiration - currentTime - safetyInterval;
+
+		if (timeout <= 0) {
+			console.log('updating embed token');
+			this.updateToken({ groupID: params.groupId, reportID: params.reportId });
+		} else {
+			console.log('report embed token will be updated in ' + timeout + 'milliseconds');
+			setTimeout(() => {
+				this.updateToken({ groupID: params.groupId, reportID: params.reportId });
+			}, timeout);
+		}
+	}
+
+	public updateToken(params) {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+
+		this.getEmbedToken({ accessToken: draftPower.accessToken, groupID: draftPower.groupId, reportID: draftPower.reportId, generateUrl: draftPower.tokenEmbed }).then(response => {
+			let embedContainer = document.querySelector('#renderContainer') as any;
+			//@ts-ignore
+			let reportRefresh = powerbi.get(embedContainer);
+
+			reportRefresh.setAccessToken(response).then(() => {
+				this.tokenListener({ tokenExpiration: draftPower.expiration, minutesToRefresh: 2 });
+			});
+		}).catch(error => {
+			//@ts-ignore
+			document.querySelector('#renderContainer').style.display = "block";
+			document.querySelector('#render-text').textContent = error.message;
+		});
+	}
+
+	public getEmbedToken(params) {
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let tokenURL;
+		if ((!func.isset(params.generateUrl)) || (params.generateUrl.toLowerCase() === 'reportname')) {
+			tokenURL = 'https://api.powerbi.com/v1.0/myorg/groups/' + params.groupID + '/reports/' + params.reportID + '/GenerateToken';
+		}
+		else if (params.generateUrl.toLowerCase() === 'fulldashboard') {
+			tokenURL = `https://api.powerbi.com/v1.0/myorg/groups/${params.groupID}/dashboards/${draftPower.dashboardId}/GenerateToken`;
+		} else if (params.generateUrl.toLowerCase() === 'tile') {
+			tokenURL = `https://api.powerbi.com/v1.0/myorg/groups/${params.groupID}/dashboards/${draftPower.dashboardId}/tiles/${draftPower.tileId}/GenerateToken`;
+		}
+
+		let accessString = 'Bearer ' + params.accessToken;
+		let self = this;
+		let promise = new Promise((res, rej) => {
+			let result;
+			let request = new XMLHttpRequest();
+			request.onreadystatechange = function (e) {
+				if (this.readyState == 4 && this.status == 200) {
+					result = request.responseText;
+					console.log('getting embed token...');
+					draftPower.embedToken = JSON.parse(result).token;
+					draftPower.expiration = JSON.parse(result).expiration;
+
+					if (self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.changed) {
+						if (document.querySelector('#renderContainer')) {
+							document.querySelector('#renderContainer').remove();
+							let powerContainer = document.querySelector('.crater-power-container') as any;
+							powerContainer.makeElement({
+								element: 'div', attributes: { id: 'renderContainer' }, children: [
+									{
+										element: 'div', attributes: { id: 'render-error' }, children: [
+											{ element: 'p', attributes: { id: 'render-text' } }
+										]
+									}
+								]
+							});
+						}
+					}
+				}
+			};
+
+			request.open('POST', tokenURL, false);
+			request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			request.setRequestHeader('Authorization', accessString);
+			request.send('accessLevel=View');
+			res(JSON.parse(result).token);
+			rej(new Error('Sorry, there was an error'));
+		}).catch(error => {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('#render-error').style.display = 'block';
+			document.querySelector('#render-text').textContent = error.message;
+		});
+
+		return promise;
+	}
+
+	public embedPower(params) {
+		if (!func.isset(params.tokenType)) params.tokenType = 'embed';
+		try {
+			const newEmbed = (params.embedUrl) ? params.embedUrl : `https://app.powerbi.com/reportEmbed?reportId=${this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.reportId}&groupId=${this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId}`;
+			window['powerbi-client'] = factory;
+			const models = window['powerbi-client'].models;
+			const newToken = (params.tokenType === "embed") ? models.TokenType.Embed : (params.tokenType === 'aad') ? models.TokenType.Aad : models.TokenType.Embed;
+			const viewMode = ((!func.isset(params.viewMode)) || (params.viewMode.toLowerCase() === 'view')) ? models.ViewMode.View : (params.viewMode.toLowerCase() === 'edit') ? models.ViewMode.Edit : models.ViewMode.View;
+			const pageName = (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.namePage) ? this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.namePage : '';
+			const dashboardId = (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedType === 'tile') ? this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.dashboardId : '';
+
+			const config = {
+				type: params.type,
+				tokenType: newToken,
+				accessToken: params.accessToken,
+				embedUrl: newEmbed,
+				id: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.reportId,
+				dashboardId,
+				viewMode,
+				pageName,
+				permissions: models.Permissions.All,
+				settings: {
+					filterPaneEnabled: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.showFilter || false,
+					navContentPaneEnabled: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.showNavContent || false
+				}
+			};
+
+			// Get a reference to the embedded dashboard HTML element 
+			const reportContainer = document.querySelector('#renderContainer') as any;
+
+			reportContainer.style.display = 'block';
+			//@ts-ignore
+			let report = powerbi.embed(reportContainer, config);
+			this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.changed = false;
+			this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedded = true;
+			report.off('loaded');
+
+			report.on('loaded', () => {
+				this.tokenListener({ tokenExpiration: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.expiration, minutesToRefresh: 2, reportId: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.reportId, groupId: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId });
+			});
+			if (func.isset(params.switch)) report.switchMode('edit');
+		}
+		catch (error) {
+			console.log(error.message);
+			//@ts-ignore
+			document.querySelector('.login_form').style.display = "block";
+			//@ts-ignore
+			document.querySelector('#render-error').style.display = 'block';
+			document.querySelector('#render-text').textContent = error.message;
+		}
+	}
+
+	public rendered(params) {
+		this.element = params.element;
+		this.key = params.element.dataset.key;
+
+		window.onerror = (msg, url, lineNumber, columnNumber, error) => {
+			console.log(msg, url, lineNumber, columnNumber, error);
+		};
+		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedded) {
+			this.getEmbedToken({ accessToken: draftPower.accessToken, groupID: draftPower.groupId, reportID: draftPower.reportId, generateUrl: draftPower.tokenEmbed }).then(response => {
+				this.element.querySelector('.crater-power-container').css({ width: draftPower.width, height: draftPower.height });
+				this.element.querySelector('#renderContainer').css({ width: '100%', height: draftPower.height });
+				this.embedPower({ accessToken: response, type: draftPower.embedType, embedUrl: draftPower.embedUrl });
+			});
+		}
+	}
+
+	public setUpPaneContent(params) {
+		let key = params.element.dataset['key'];
+		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.paneContent = this.elementModifier.createElement({
+			element: 'div', attributes: { class: 'crater-property-content' }
+		}).monitor();
+
+
+		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		}
+		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		} else {
+			if ((this.sharePoint.properties.pane.content[key].settings.myPowerBi.loginType === 'master')) {
+
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'power-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								this.elementModifier.createElement({
+									element: 'h2', attributes: { class: 'title' }, text: 'CONNECTION'
+								})
+							]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'row' }, children: [
+								{
+									element: 'div', attributes: { class: 'message-note' }, children: [
+										{ element: 'span', attributes: { style: { color: 'green' } }, text: `POWER BI connected using ${this.sharePoint.properties.pane.content[key].settings.myPowerBi.username}` }
+									]
+								}]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'power-embed row' }, children: [
+								this.elementModifier.cell({
+									element: 'select', name: 'WorkSpace', options: this.sharePoint.properties.pane.content[key].settings.myPowerBi.groupName
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'user-rights', options: ['Allow', 'Deny']
+								})
+							]
+						})
+					]
+				});
+
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'size-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								this.elementModifier.createElement({
+									element: 'h2', attributes: { class: 'title' }, text: 'SIZE AUTO CONTROL'
+								})
+							]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'row' }, children: [
+								{
+									element: 'div', attributes: { class: 'message-note' }, children: [
+										{
+											element: 'span', attributes: { style: { color: 'green' } }, text: `Please change this value if you wish to change the size of the report`
+										}
+									]
+								}]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'power-embed row' }, children: [
+								this.elementModifier.cell({
+									element: 'select', name: 'display', options: ['16:9 (1280px x 720px)', '4:3 (1000px x 750px)', 'Custom Size']
+								})
+							]
+						})
+					]
+				});
+			}
+			else if (this.sharePoint.properties.pane.content[key].settings.myPowerBi.loginType === 'user') {
+
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'power-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								this.elementModifier.createElement({
+									element: 'h2', attributes: { class: 'title' }, text: 'CONNECTION'
+								})
+							]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'power-embed row' }, children: [
+								this.elementModifier.cell({
+									element: 'select', name: 'WorkSpace', options: this.sharePoint.properties.pane.content[key].settings.myPowerBi.groupName
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'user-rights', options: ['Allow', 'Deny']
+								})
+							]
+						})
+					]
+				});
+
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'size-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								this.elementModifier.createElement({
+									element: 'h2', attributes: { class: 'title' }, text: 'SIZE AUTO CONTROL'
+								})
+							]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'row' }, children: [
+								{
+									element: 'div', attributes: { class: 'message-note' }, children: [
+										{
+											element: 'span', attributes: { style: { color: 'green' } }, text: `Please change this value if you wish to change the size of the report`
+										}
+									]
+								}]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'power-embed row' }, children: [
+								this.elementModifier.cell({
+									element: 'select', name: 'display', options: ['16:9 (1280px x 720px)', '4:3 (1000px x 750px)', 'Custom Size']
+								})
+							]
+						})
+					]
+				});
+			}
+			else if (this.sharePoint.properties.pane.content[key].settings.myPowerBi.loginType === '') {
+				let userList = this.sharePoint.properties.pane.content[key].draft.dom.querySelector('.crater-power-container');
+				let userListRows = userList.querySelectorAll('.user');
+
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'layout-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								this.elementModifier.createElement({
+									element: 'h2', attributes: { class: 'title' }, text: 'Edit Layout Box'
+								})
+							]
+						}),
+						{
+							element: 'div', attributes: { class: 'row' }, children: [
+								this.elementModifier.cell({
+									element: 'input', name: 'backgroundcolor', value: this.element.querySelector('.user').css()['background-color']
+								})
+							]
+						}
+					]
+				});
+
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'layout-button-row-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								this.elementModifier.createElement({
+									element: 'h2', attributes: { class: 'title' }, text: 'Edit Layout Button'
+								})
+							]
+						}),
+						{
+							element: 'div', attributes: { class: 'row' }, children: [
+								this.elementModifier.cell({
+									element: 'input', name: 'fontSize', value: this.element.querySelector('.user-button').css()['font-size']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'backgroundcolor', value: this.element.querySelector('.user-button').css()['background-color']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'fontFamily', value: this.element.querySelector('.user-button').css()['font-family']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'color', value: this.element.querySelector('.user-button').css()['color']
+								})
+							]
+						}
+					]
+				});
+
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'layout-recommended-row-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								this.elementModifier.createElement({
+									element: 'h2', attributes: { class: 'title' }, text: 'Edit Layout Recommended'
+								})
+							]
+						}),
+						{
+							element: 'div', attributes: { class: 'row' }, children: [
+								this.elementModifier.cell({
+									element: 'input', name: 'fontSize', value: this.element.querySelector('.user-recommended').css()['font-size']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'fontFamily', value: this.element.querySelector('.user-recommended').css()['font-family']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'color', value: this.element.querySelector('.user-recommended').css()['color']
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'toggle', options: ['show', 'hide']
+								})
+							]
+						}
+					]
+				});
+
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'layout-info-row-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								this.elementModifier.createElement({
+									element: 'h2', attributes: { class: 'title' }, text: 'Edit Layout Info'
+								})
+							]
+						}),
+						{
+							element: 'div', attributes: { class: 'row' }, children: [
+								this.elementModifier.cell({
+									element: 'input', name: 'fontSize', value: this.element.querySelector('.power-text').css()['font-size']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'fontFamily', value: this.element.querySelector('.power-text').css()['font-family']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'color', value: this.element.querySelector('.power-text').css()['color']
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'toggle', options: ['show', 'hide']
+								})
+							]
+						}
+					]
+				});
+
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'layout-header-row-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								this.elementModifier.createElement({
+									element: 'h2', attributes: { class: 'title' }, text: 'Edit Layout Header'
+								})
+							]
+						}),
+						{
+							element: 'div', attributes: { class: 'row' }, children: [
+								this.elementModifier.cell({
+									element: 'input', name: 'fontSize', value: this.element.querySelector('.user-header').css()['font-size']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'fontFamily', value: this.element.querySelector('.user-header').css()['font-family']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'color', value: this.element.querySelector('.user-header').css()['color']
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'toggle', options: ['show', 'hide']
+								})
+							]
+						}
+					]
+				});
+				this.paneContent.append(this.generatePaneContent({ list: userListRows }));
+			}
+		}
+		return this.paneContent;
+	}
+
+	public generatePaneContent(params) {
+		let userListPane = this.elementModifier.createElement({
+			element: 'div', attributes: { class: 'card list-pane' }, children: [
+				this.elementModifier.createElement({
+					element: 'div', attributes: { class: 'card-title' }, children: [
+						this.elementModifier.createElement({
+							element: 'h2', attributes: { class: 'title' }, text: 'User'
+						})
+					]
+				}),
+			]
+		});
+
+		for (let i = 0; i < params.list.length; i++) {
+			userListPane.makeElement({
+				element: 'div',
+				attributes: { class: 'crater-power-user-pane row' },
+				children: [
+					this.elementModifier.cell({
+						element: 'img', name: 'image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.list[i].querySelector('.crater-power-image').src }
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'header', attribute: { class: 'crater-user-header' }, value: params.list[i].querySelector('.user-header').textContent
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'info-text', value: params.list.title || params.list[i].querySelector('.power-text').textContent
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'recommended', value: params.list.subTitle || params.list[i].querySelector('.user-recommended').textContent
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'button', value: params.list.body || params.list[i].querySelector('.user-button').textContent
+					})
+				]
+			});
+		}
+
+		return userListPane;
+	}
+
+	public listenPaneContent(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		let self = this;
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+
+		window.onerror = (msg, url, lineNumber, columnNumber, error) => {
+			console.log(msg, url, lineNumber, columnNumber, error);
+		};
+
+		if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.loginType.length !== 0) {
+
+			let powerPane = this.paneContent.querySelector('.power-pane');
+			let sizePane = this.paneContent.querySelector('.size-pane');
+			if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.loginType.toLowerCase() === 'user') {
+				powerPane.querySelector('#user-rights-cell').parentElement.remove();
+			} else {
+				powerPane.querySelector('#user-rights-cell').onChanged(value => {
+					switch (value.toLowerCase()) {
+						case 'allow':
+							this.getAccessToken().then(response => {
+								this.addUser({ accessToken: response, groupID: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId });
+							});
+							break;
+						case 'deny':
+							this.getAccessToken().then(response => {
+								this.deleteUser({ accessToken: response, groupID: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId, username: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.username });
+							});
+							break;
+					}
+				});
+			}
+
+			let changedPage = () => {
+				try {
+					if (powerPane.querySelector('#page-cell')) {
+						powerPane.querySelector('#page-cell').onChanged(value => {
+							for (let page = 0; page < self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.pageName.length; page++) {
+								for (let property in self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.pageName[page]) {
+									if (value === self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.pages[page].displayName) {
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.namePage = self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.pages[page].pageName;
+									}
+								}
+							}
+						});
+					}
+				} catch (error) {
+					console.log(error.message);
+				}
+
+			};
+			let changedTile = () => {
+				try {
+					if (powerPane.querySelector('#tile-cell')) {
+						powerPane.querySelector('#tile-cell').onChanged(value => {
+
+							for (let tile = 0; tile < self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tiles.length; tile++) {
+								for (let property in self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tiles[tile]) {
+									if (value === self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tiles[tile].tileName) {
+										if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
+										if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
+										if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
+
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tokenEmbed = 'tile';
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.embedType = 'tile';
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tileId = self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tiles[tile].tileId;
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.reportId = self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tiles[tile].tileId;
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.embedUrl = self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tiles[tile].embedUrl;
+										self.getPages({ accessToken: self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.accessToken, groupID: self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.groupId, reportID: self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tiles[tile].reportId });
+										changedPage();
+									}
+									else if (value.toLowerCase() === 'show full dashboard') {
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tokenEmbed = 'fulldashboard';
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.embedType = 'dashboard';
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.reportId = self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboardId;
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.embedUrl = self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboardEmbedUrl;
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.namePage = '';
+										if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
+										if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
+										if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
+									}
+								}
+							}
+
+							if (value.toLowerCase() !== 'show full dashboard') {
+								powerPane.querySelector('.power-embed').makeElement({
+									element: 'div', children: [
+										self.elementModifier.cell({
+											element: 'select', name: 'page', options: self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.pageName
+										})
+									]
+								});
+
+								powerPane.makeElement({
+									element: 'div', attributes: { class: 'row' }, children: [
+										self.elementModifier.cell({
+											element: 'select', name: 'filter-panel', options: ['show', 'hide']
+										}),
+										self.elementModifier.cell({
+											element: 'select', name: 'navigation', options: ['show', 'hide']
+										})
+									]
+								});
+
+								powerPane.querySelector('#filter-panel-cell').onChanged(val => {
+									switch (val.toLowerCase()) {
+										case 'show':
+											self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showFilter = true;
+											break;
+										case 'hide':
+											self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showFilter = false;
+											break;
+										default:
+											self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showFilter = false;
+									}
+								});
+
+								powerPane.querySelector('#navigation-cell').onChanged(val => {
+									switch (val.toLowerCase()) {
+										case 'show':
+											self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showNavContent = true;
+											break;
+										case 'hide':
+											self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showNavContent = false;
+											break;
+										default:
+											self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showNavContent = false;
+									}
+								});
+							}
+						});
+					}
+				} catch (error) {
+					console.log(error.message);
+				}
+
+			};
+			let changedReport = () => {
+				try {
+					if (powerPane.querySelector('#view-cell')) {
+						powerPane.querySelector('#view-cell').onChanged(value => {
+							if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
+							if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
+							if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
+
+							for (let view = 0; view < self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.reports.length; view++) {
+								for (let property in self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.reports[view]) {
+									if (value === self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.reports[view].reportName) {
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tokenEmbed = 'reportName';
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.reportId = self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.reports[view].reportId;
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.embedUrl = self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.reports[view].embedUrl;
+										self.getPages({ accessToken: self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.accessToken, groupID: self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.groupId, reportID: self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.reportId }).catch(error => console.log(error.message));
+									}
+								}
+							}
+							powerPane.querySelector('.power-embed').makeElement({
+								element: 'div', children: [
+									self.elementModifier.cell({
+										element: 'select', name: 'page', options: self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.pageName
+									})
+								]
+							});
+							changedPage();
+							powerPane.makeElement({
+								element: 'div', attributes: { class: 'row' }, children: [
+									self.elementModifier.cell({
+										element: 'select', name: 'filter-panel', options: ['show', 'hide']
+									}),
+									self.elementModifier.cell({
+										element: 'select', name: 'navigation', options: ['show', 'hide']
+									})
+								]
+							});
+
+							powerPane.querySelector('#filter-panel-cell').onChanged(val => {
+								switch (val.toLowerCase()) {
+									case 'show':
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showFilter = true;
+
+										break;
+									case 'hide':
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showFilter = false;
+										break;
+									default:
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showFilter = false;
+								}
+							});
+
+							powerPane.querySelector('#navigation-cell').onChanged(val => {
+								switch (val.toLowerCase()) {
+									case 'show':
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showNavContent = true;
+										break;
+									case 'hide':
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showNavContent = false;
+										break;
+									default:
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showNavContent = false;
+								}
+							});
+						});
+					}
+				} catch (error) {
+					console.log(error.message);
+				}
+
+			};
+			let changedDashboard = () => {
+				try {
+					if (powerPane.querySelector('#view-cell')) {
+						powerPane.querySelector('#view-cell').onChanged(value => {
+							if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
+							if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
+							if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
+							if (powerPane.querySelector('#tile-cell')) powerPane.querySelector('#tile-cell').parentElement.remove();
+							for (let view = 0; view < self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboards.length; view++) {
+								for (let property in self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboards[view]) {
+									if (value === self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboards[view].dashboardName) {
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tokenEmbed = 'fulldashboard';
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboardId = self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboards[view].dashboardId;
+										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboardEmbedUrl = self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboards[view].embedUrl;
+										self.getTiles(self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.accessToken, self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.groupId, self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboardId);
+									}
+								}
+							}
+							powerPane.querySelector('.power-embed').makeElement({
+								element: 'div', children: [
+									self.elementModifier.cell({
+										element: 'select', name: 'tile', options: self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tileName
+									})
+								]
+							});
+							self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.embedType = 'dashboard';
+							changedTile();
+						});
+					}
+				} catch (error) {
+					console.log(error.message);
+				}
+
+			};
+
+			powerPane.querySelector('#WorkSpace-cell').onChanged(value => {
+				this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.changed = true;
+				if (powerPane.querySelector('#embed-type-cell')) powerPane.querySelector('#embed-type-cell').parentElement.remove();
+				if (powerPane.querySelector('#view-cell')) powerPane.querySelector('#view-cell').parentElement.remove();
+				if (powerPane.querySelector('#tile-cell')) powerPane.querySelector('#tile-cell').parentElement.remove();
+				if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
+				if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
+				if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
+				for (let group = 0; group < this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups.length; group++) {
+					for (let property in this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups[group]) {
+						if (value === this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups[group].workspaceName) {
+							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups[group].workspaceId;
+							this.getReports(this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken, this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId);
+							this.getDashboards(this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken, this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId);
+						} else if (value.toLowerCase() === 'my workspace') {
+							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId = 'none';
+							this.getReports(this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken, this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId, 'third');
+							this.getDashboards(this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken, this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId, 'third');
+						}
+					}
+				}
+
+				powerPane.querySelector('.power-embed').makeElement({
+					element: 'div', children: [
+						self.elementModifier.cell({
+							element: 'select', name: 'embed-type', options: ['Dashboard', 'Report']
+						})
+					]
+				});
+
+				powerPane.querySelector('#embed-type-cell').onChanged(val => {
+					switch (val.toLowerCase()) {
+						case 'report':
+							if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
+							if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
+							if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
+							if (powerPane.querySelector('#view-cell')) powerPane.querySelector('#view-cell').parentElement.remove();
+							if (powerPane.querySelector('#tile-cell')) powerPane.querySelector('#tile-cell').parentElement.remove();
+							powerPane.querySelector('.power-embed').makeElement({
+								element: 'div', children: [
+									this.elementModifier.cell({
+										element: 'select', name: 'view', options: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.reportName
+									})
+								]
+							});
+							self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tileId = '';
+							self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboardId = '';
+							// if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.reportName.indexOf('No Reports') !== -1) {
+							// 	powerPane.querySelector('#view-cell').options[0].selected = true;
+							// 	powerPane.querySelector('#view-cell').disabled = true;
+							// }
+							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedType = val.toLowerCase();
+							changedReport();
+							break;
+						case 'dashboard':
+							if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
+							if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
+							if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
+							if (powerPane.querySelector('#view-cell')) powerPane.querySelector('#view-cell').parentElement.remove();
+							if (powerPane.querySelector('#tile-cell')) powerPane.querySelector('#tile-cell').parentElement.remove();
+
+							powerPane.querySelector('.power-embed').makeElement({
+								element: 'div', children: [
+									this.elementModifier.cell({
+										element: 'select', name: 'view', options: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.dashBoardName
+									})
+								]
+							});
+							// if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.dashBoardName.indexOf('No Dashboards') !== -1) {
+							// 	powerPane.querySelector('#view-cell').options[0].selected = true;
+							// 	powerPane.querySelector('#view-cell').disabled = true;
+							// }
+							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedType = val.toLowerCase();
+							changedDashboard();
+							break;
+					}
+				});
+			});
+
+			sizePane.querySelector('#display-cell').onChanged(value => {
+				switch (value) {
+					case '16:9 (1280px x 720px)':
+						if (sizePane.querySelector('#width-cell')) sizePane.querySelector('#width-cell').parentElement.remove();
+						if (sizePane.querySelector('#height-cell')) sizePane.querySelector('#height-cell').parentElement.remove();
+						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.width = '1280px';
+						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.height = '720px';
+						break;
+					case '4:3 (1000px x 750px)':
+						if (sizePane.querySelector('#width-cell')) sizePane.querySelector('#width-cell').parentElement.remove();
+						if (sizePane.querySelector('#height-cell')) sizePane.querySelector('#height-cell').parentElement.remove();
+						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.width = '1000px';
+						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.height = '750px';
+						break;
+					case 'Custom Size':
+						sizePane.querySelector('.power-embed').makeElement({
+							element: 'div', children: [
+								this.elementModifier.cell({
+									element: 'input', name: 'width', value: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.width
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'height', value: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.height
+								})
+							]
+						});
+						sizePane.querySelector('#width-cell').onChanged(val => {
+							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.width = val;
+						});
+						sizePane.querySelector('#height-cell').onChanged(val => {
+							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.height = val;
+						});
+						break;
+				}
+			});
+		}
+		else {
+			let layoutRowPane = this.paneContent.querySelector('.layout-pane');
+			let layoutButtonRowPane = this.paneContent.querySelector('.layout-button-row-pane');
+			let layoutRecommendedRowPane = this.paneContent.querySelector('.layout-recommended-row-pane');
+			let layoutInfoRowPane = this.paneContent.querySelector('.layout-info-row-pane');
+			let layoutHeaderRowPane = this.paneContent.querySelector('.layout-header-row-pane');
+			let userList = this.element.querySelector('.crater-power-connect');
+			let userListRow = userList.querySelectorAll('.user');
+
+			let layoutBackgroundParent = layoutRowPane.querySelector('#backgroundcolor-cell').parentNode;
+			this.pickColor({ parent: layoutBackgroundParent, cell: layoutBackgroundParent.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
+				this.element.querySelectorAll('.login-container').forEach(element => {
+					element.css({ backgroundColor });
+				});
+				layoutBackgroundParent.querySelector('#backgroundcolor-cell').value = backgroundColor;
+				layoutBackgroundParent.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor); //set the value of the eventColor cell in the pane to the color
+			});
+
+			let layoutButtonParent = layoutButtonRowPane.querySelector('#backgroundcolor-cell').parentNode;
+			this.pickColor({ parent: layoutButtonParent, cell: layoutButtonParent.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
+				this.element.querySelectorAll('.user-button').forEach(element => {
+					element.css({ backgroundColor });
+				});
+				layoutButtonParent.querySelector('#backgroundcolor-cell').value = backgroundColor;
+				layoutButtonParent.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor); //set the value of the eventColor cell in the pane to the color
+			});
+
+			let layoutButtonColor = layoutButtonRowPane.querySelector('#color-cell').parentNode;
+			this.pickColor({ parent: layoutButtonColor, cell: layoutButtonColor.querySelector('#color-cell') }, (color) => {
+				this.element.querySelectorAll('.user-button').forEach(element => {
+					element.css({ color });
+				});
+				layoutButtonColor.querySelector('#color-cell').value = color;
+				layoutButtonColor.querySelector('#color-cell').setAttribute('value', color);
+			});
+
+			let layoutRecommendedColor = layoutRecommendedRowPane.querySelector('#color-cell').parentNode;
+			this.pickColor({ parent: layoutRecommendedColor, cell: layoutRecommendedColor.querySelector('#color-cell') }, (color) => {
+				this.element.querySelectorAll('.user-recommended').forEach(element => {
+					element.css({ color });
+				});
+				layoutRecommendedColor.querySelector('#color-cell').value = color;
+				layoutRecommendedColor.querySelector('#color-cell').setAttribute('value', color);
+			});
+
+			let layoutInfoColor = layoutInfoRowPane.querySelector('#color-cell').parentNode;
+			this.pickColor({ parent: layoutInfoColor, cell: layoutInfoColor.querySelector('#color-cell') }, (color) => {
+				this.element.querySelectorAll('.power-text').forEach(element => {
+					element.css({ color });
+				});
+				layoutInfoColor.querySelector('#color-cell').value = color;
+				layoutInfoColor.querySelector('#color-cell').setAttribute('value', color);
+			});
+
+			let layoutHeaderColor = layoutHeaderRowPane.querySelector('#color-cell').parentNode;
+			this.pickColor({ parent: layoutHeaderColor, cell: layoutHeaderColor.querySelector('#color-cell') }, (color) => {
+				this.element.querySelectorAll('.user-header').forEach(element => {
+					element.css({ color });
+				});
+				layoutHeaderColor.querySelector('#color-cell').value = color;
+				layoutHeaderColor.querySelector('#color-cell').setAttribute('value', color);
+			});
+
+			layoutButtonRowPane.querySelector('#fontSize-cell').onChanged(value => {
+				this.element.querySelectorAll('.user-button').forEach(element => {
+					element.css({ fontSize: value });
+				});
+			});
+
+			layoutRecommendedRowPane.querySelector('#fontSize-cell').onChanged(value => {
+				this.element.querySelectorAll('.user-recommended').forEach(element => {
+					element.css({ fontSize: value });
+				});
+			});
+
+			layoutInfoRowPane.querySelector('#fontSize-cell').onChanged(value => {
+				this.element.querySelectorAll('.power-text').forEach(element => {
+					element.css({ fontSize: value });
+				});
+			});
+
+			layoutHeaderRowPane.querySelector('#fontSize-cell').onChanged(value => {
+				this.element.querySelectorAll('.user-header').forEach(element => {
+					element.css({ fontSize: value });
+				});
+			});
+
+			layoutButtonRowPane.querySelector('#fontFamily-cell').onChanged(value => {
+				this.element.querySelectorAll('.user-button').forEach(element => {
+					element.css({ fontFamily: value });
+				});
+			});
+
+			layoutRecommendedRowPane.querySelector('#fontFamily-cell').onChanged(value => {
+				this.element.querySelectorAll('.user-recommended').forEach(element => {
+					element.css({ fontFamily: value });
+				});
+			});
+
+			layoutInfoRowPane.querySelector('#fontFamily-cell').onChanged(value => {
+				this.element.querySelectorAll('.power-text').forEach(element => {
+					element.css({ fontFamily: value });
+				});
+			});
+
+			layoutHeaderRowPane.querySelector('#fontFamily-cell').onChanged(value => {
+				this.element.querySelectorAll('.user-header').forEach(element => {
+					element.css({ fontFamily: value });
+				});
+			});
+
+			let showRecommended = layoutRecommendedRowPane.querySelector('#toggle-cell');
+			showRecommended.addEventListener('change', e => {
+
+				switch (showRecommended.value.toLowerCase()) {
+					case "hide":
+						this.element.querySelectorAll('.user-recommended').forEach(element => {
+							element.style.display = "none";
+						});
+						break;
+					case "show":
+						this.element.querySelectorAll('.user-recommended').forEach(element => {
+							element.style.display = "block";
+						});
+						break;
+					default:
+						this.element.querySelectorAll('.user-recommended').forEach(element => {
+							element.style.display = "none";
+						});
+				}
+			});
+
+			let showInfo = layoutInfoRowPane.querySelector('#toggle-cell');
+			showInfo.addEventListener('change', e => {
+
+				switch (showInfo.value.toLowerCase()) {
+					case "hide":
+						this.element.querySelectorAll('.power-text').forEach(element => {
+							element.style.display = "none";
+						});
+						break;
+					case "show":
+						this.element.querySelectorAll('.power-text').forEach(element => {
+							element.style.display = "block";
+						});
+						break;
+					default:
+						this.element.querySelectorAll('.power-text').forEach(element => {
+							element.style.display = "none";
+						});
+				}
+			});
+
+			let showHeader = layoutHeaderRowPane.querySelector('#toggle-cell');
+			showHeader.addEventListener('change', e => {
+
+				switch (showHeader.value.toLowerCase()) {
+					case "hide":
+						this.element.querySelectorAll('.user-header').forEach(element => {
+							element.style.display = "none";
+						});
+						break;
+					case "show":
+						this.element.querySelectorAll('.user-header').forEach(element => {
+							element.style.display = "block";
+						});
+						break;
+					default:
+						this.element.querySelectorAll('.user-header').forEach(element => {
+							element.style.display = "none";
+						});
+				}
+			});
+
+			let userRowHandler = (userRowPane, userRowDom) => {
+				let iconParent = userRowPane.querySelector('#image-cell').parentNode;
+				this.uploadImage({ parent: iconParent }, (image) => {
+					iconParent.querySelector('#image-cell').src = image.src;
+					this.element.querySelector('.crater-power-image').src = image.src;
+				});
+				userRowPane.querySelector('#header-cell').onChanged(value => {
+					userRowDom.querySelector('.user-header').innerHTML = value;
+				});
+
+				userRowPane.querySelector('#info-text-cell').onChanged(value => {
+					userRowDom.querySelector('.power-text').innerHTML = value;
+				});
+
+				userRowPane.querySelector('#recommended-cell').onChanged(value => {
+					userRowDom.querySelector('.user-recommended').innerHTML = value;
+				});
+
+				userRowPane.querySelector('#button-cell').onChanged(value => {
+					userRowDom.querySelector('.user-button').innerHTML = value;
+				});
+
+			};
+
+			let paneItems = this.paneContent.querySelectorAll('.crater-power-user-pane');
+			paneItems.forEach((userRow, position) => {
+				userRowHandler(userRow, userListRow[position]);
+			});
+
+		}
+
+		this.paneContent.addEventListener('mutated', event => {
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+		});
+
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+
+			if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.changed) {
+				if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId !== 'none') {
+					this.getEmbedToken({ accessToken: draftPower.accessToken, groupID: draftPower.groupId, reportID: draftPower.reportId, generateUrl: draftPower.tokenEmbed }).then(response => {
+						this.element.querySelector('.crater-power-container').css({ width: draftPower.width, height: draftPower.height });
+						this.element.querySelector('#renderContainer').css({ width: '100%', height: draftPower.height });
+						this.embedPower({ accessToken: response, type: draftPower.embedType, embedUrl: draftPower.embedUrl });
+					});
+				} else {
+					if (draftPower.embedType === 'report') {
+						if (this.element.querySelector('#renderContainer')) this.element.querySelector('#renderContainer').remove();
+						let powerContainer = this.element.querySelector('.crater-power-container') as any;
+						powerContainer.makeElement({
+							element: 'div', attributes: { id: 'renderContainer' }, children: [
+								{
+									element: 'div', attributes: { id: 'render-error' }, children: [
+										{ element: 'p', attributes: { id: 'render-text' } }
+									]
+								}
+							]
+						});
+						let render = powerContainer.querySelector('#renderContainer');
+						const iframeURL = `${draftPower.embedUrl}&autoAuth=true&ctid=${draftPower.tenantID}&filterPaneEnabled=${draftPower.showFilter}&navContentPaneEnabled=${draftPower.showNavContent}&pageName=${draftPower.namePage}`;
+						render.makeElement({
+							element: 'div', attributes: { class: 'power-iframe' }, children: [
+								{
+									element: 'iframe', attributes: { width: draftPower.width, height: draftPower.height, src: iframeURL, frameborder: "0", allowFullScreen: "true" }
+								}
+							]
+						});
+						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedded = false;
+
+						render.querySelector('#render-error').style.display = "none";
+						render.style.display = "block";
+					}
+				}
+			} else {
+				if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId !== 'none') {
+					this.element.querySelector('.crater-power-container').css({ width: draftPower.width, height: draftPower.height });
+					this.element.querySelector('#renderContainer').css({ width: '100%', height: draftPower.height });
+				} else {
+					let powerIframe = this.element.querySelector('#renderContainer').querySelector('iframe');
+					powerIframe.width = draftPower.width;
+					powerIframe.height = draftPower.height;
+				}
+
+			}
+		});
+	}
+}
+
 {
+	CraterWebParts.prototype['employeedirectory'] = params => {
+		let employeeDirectory = new EmployeeDirectory({ sharePoint: params.sharePoint });
+		return employeeDirectory[params.action](params);
+	};
+
+	CraterWebParts.prototype['power'] = params => {
+		let power = new Power({ sharePoint: params.sharePoint });
+		return power[params.action](params);
+	};
+
+	CraterWebParts.prototype['event'] = params => {
+		let event = new Event({ sharePoint: params.sharePoint });
+		return event[params.action](params);
+	};
+
 	CraterWebParts.prototype['youtube'] = params => {
 		let youtube = new YouTube({ sharePoint: params.sharePoint });
 		return youtube[params.action](params);

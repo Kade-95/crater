@@ -11,6 +11,7 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "@microsoft/microsoft-graph-types": "^1.12.0",
     "@microsoft/sp-core-library": "1.8.2",
     "@microsoft/sp-lodash-subset": "1.8.2",
     "@microsoft/sp-office-ui-fabric-core": "1.8.2",

@@ -1,0 +1,34 @@
+.crater-employee-directory{
+
+}
+
+.crater-employee-directory-content{
+    display: grid;
+    grid-template-columns: min-content 1fr;
+    grid-gap: .5em;
+}
+
+.crater-employee-directory-side-bar{
+}
+
+.crater-employee-directory-main-view{
+    position: relative;
+}
+
+.crater-employee-directory-menu{
+    position: absolute;
+    display: grid;
+    grid-template-columns: repeat(4, min-content);
+    padding: .5em 1em;
+    grid-gap: .5em;
+    z-index: 2;
+    top: 0;
+    left: 0;
+}
+
+.crater-employee-directory-options{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-content: center;
+}
