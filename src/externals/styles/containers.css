@@ -89,7 +89,7 @@
 .crater .webpart-options {
     position: absolute;
     background-color: white;
-    display: none;
+    display: unset;
     align-self: center;
     top: 0;
     z-index: 100;

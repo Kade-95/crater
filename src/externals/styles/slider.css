@@ -31,11 +31,11 @@
 .crater-slide-details{
     display: flex;
     flex-direction: column;
+    align-items: center;
     z-index: 2;
 }
 
 .crater-slide-quote {
-    top: 0;
     display: block;
     position: relative;
     color: white;
@@ -45,8 +45,19 @@
     text-transform: capitalize;
 }
 
+.crater-slide-sub-title {
+    display: block;
+    position: relative;
+    color: gray;
+    font-weight: 1000;
+    font-size: 1em;
+    font-family: cursive;
+    text-transform: capitalize;
+}
+
 .crater-slide-link{
     text-decoration: none;
+    width: max-content;
 }
 
 .crater-slider .crater-top-right {

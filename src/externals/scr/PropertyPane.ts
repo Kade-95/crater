@@ -86,17 +86,16 @@ class PropertyPane {
             if (func.isnull(item)) return;
 
             if (item.dataset.owner == 'Content' && this.currentWindow != 'Content') {
-                this.currentWindow = 'Content';
                 this.setUpContent(key);
             }
             else if (item.dataset.owner == 'Styles' && this.currentWindow != 'Styles') {
-                this.currentWindow = 'Styles';
                 this.setUpStyle(key);
             }
             else if (item.dataset.owner == 'Connection' && this.currentWindow != 'Connection') {
-                this.currentWindow = 'Connection';
                 this.setUpConnection(key);
             }
+
+            this.currentWindow = item.dataset.owner;
 
             menus.querySelectorAll('.crater-menu-item').forEach(mItem => {
                 mItem.cssRemove(['background-color']);

@@ -1,4 +1,4 @@
-import { ElementModifier, func, ColorPicker } from '.';
+import { ElementModifier, func, ColorPicker, Connection, BaseClientSideWebPart } from '.';
 import FroalaEditor from 'froala-editor';
 import 'froala-editor/js/plugins/align.min.js';
 
@@ -30,6 +30,8 @@ require('./../styles/power.css');
 require('./../styles/employeedirectory.css');
 require('./../../../node_modules/froala-editor/css/froala_editor.pkgd.min.css');
 const factory = require('./powerbi.js');
+
+import * as MicrosoftGraph from '@microsoft/microsoft-graph-types';
 
 class CraterWebParts {
 	public elementModifier = new ElementModifier();
@@ -184,26 +186,26 @@ class CraterWebParts {
 	public showOptions(element) {
 		element.addEventListener('mouseenter', event => {
 			if (element.hasAttribute('data-key') && this.sharePoint.inEditMode()) {
-				element.querySelector('.webpart-options').css({ display: 'unset' });
+				element.querySelector('.webpart-options').show();
 			}
 		});
 
 		element.addEventListener('mouseleave', event => {
 			if (element.hasAttribute('data-key')) {
-				element.querySelector('.webpart-options').css({ display: 'none' });
+				element.querySelector('.webpart-options').hide();
 			}
 		});
 
 		element.querySelectorAll('.keyed-element').forEach(keyedElement => {
 			keyedElement.addEventListener('mouseenter', event => {
 				if (keyedElement.hasAttribute('data-key') && this.sharePoint.inEditMode()) {
-					keyedElement.querySelector('.webpart-options').css({ display: 'unset' });
+					keyedElement.querySelector('.webpart-options').show();
 				}
 			});
 
 			keyedElement.addEventListener('mouseleave', event => {
 				if (keyedElement.hasAttribute('data-key')) {
-					keyedElement.querySelector('.webpart-options').css({ display: 'none' });
+					keyedElement.querySelector('.webpart-options').hide();
 				}
 			});
 		});
@@ -360,6 +362,7 @@ class EmployeeDirectory extends CraterWebParts {
 	public paneContent: any;
 	public element: any;
 	private key: any;
+	private users: any;
 
 	constructor(params) {
 		super({ sharePoint: params.sharePoint });
@@ -402,15 +405,54 @@ class EmployeeDirectory extends CraterWebParts {
 	}
 
 	public rendered(params) {
+		this.sharePoint = params.sharePoint;
 		this.element = params.element;
-		this.key = params.key;
+		this.key = this.element.dataset.key;
+
+		let search = this.sharePoint.properties.pane.content[this.key].settings.search || 'name';
 
 		let display = this.element.querySelector('.crater-employee-directory-display');
+		this.sharePoint.connection.getWithGraph().then(client => {
+			client.api('/users')
+				.select('mail,displayName,id,jobTitle,mobilePhone')
+				.get((error: any, user: MicrosoftGraph.User, rawResponse?: any) => {
+					this.users = user['value'];
+					console.log(this.users);
+					
+					this.displayUsers(display, this.users);
+				});
+		});
+	}
 
-		// this.sharePoint.connection.getWithGraph()
-		// 	.then(client => {
-		// 		console.log(client);
-		// 	});
+	public displayUsers(display, users) {
+		display.innerHTML = '';
+		for (let employee of users) {
+			let row = display.makeElement({
+				element: 'div', attributes: { class: 'crater-employee-directory-row', 'data-id': employee.id }, children: [
+					{ element: 'img', attributes: { class: 'crater-employee-directory-dp' } },
+					{element: 'span', attributes: {class: 'crater-employee-directory-details'}, children: [
+						{element: 'p', attributes: {class: 'crater-employee-directory-name'}, text: employee.displayName},
+						{element: 'p', attributes: {class: 'crater-employee-directory-mail'}, text: employee.mail},
+						{element: 'p', attributes: {class: 'crater-employee-directory-job'}, text: employee.jobTitle},
+						{element: 'p', attributes: {class: 'crater-employee-directory-contact'}},
+					]}
+				]
+			});
+
+			this.sharePoint.connection.getWithGraph().then(client => {
+				client.api(`/users/${employee.id}/photo`)
+					.responseType('blob')
+					.get((error: any, photoResponse: any, rawResponse?: any) => {
+						if (!func.isnull(photoResponse)) {
+							// const blobUrl = window.URL.createObjectURL(photoResponse);
+							// console.log(photoResponse);
+						}
+
+						// row.querySelector('.crater-employee-directory-dp').src = blobUrl;
+					});
+			});
+
+		}
 	}
 
 	public setUpPaneContent(params): any {
@@ -703,56 +745,6 @@ class EmployeeDirectory extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.querySelector('#Duration-cell').value;
 			this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.querySelector('#Columns-cell').value;
 		});
-	}
-
-	public update(params) {
-		this.element = params.element;
-		this.key = this.element.dataset['key'];
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
-		this.paneContent = this.setUpPaneContent(params);
-
-		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
-
-		let updateWindow = this.elementModifier.createForm({
-			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
-			contents: {
-				image: { element: 'select', attributes: { id: 'meta-data-image', name: 'Image' }, options: params.options },
-				text: { element: 'select', attributes: { id: 'meta-data-text', name: 'Text' }, options: params.options },
-			},
-			buttons: {
-				submit: { element: 'button', attributes: { id: 'update-element', class: 'btn' }, text: 'Update' },
-			}
-		});
-
-		let data: any = {};
-		let source: any;
-		updateWindow.querySelector('#update-element').addEventListener('click', event => {
-			event.preventDefault();
-			data.image = updateWindow.querySelector('#meta-data-image').value;
-			data.text = updateWindow.querySelector('#meta-data-text').value;
-			source = func.extractFromJsonArray(data, params.source);
-
-			let newContent = this.render({ source });
-			draftDom.querySelector('.crater-carousel-content').innerHTML = newContent.querySelector('.crater-carousel-content').innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
-
-			this.paneContent.querySelector('.columns-pane').innerHTML = this.generatePaneContent({ columns: newContent.querySelectorAll('.crater-carousel-column') }).innerHTML;
-
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-		});
-
-
-		if (!func.isnull(paneConnection)) {
-			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
-				this.element.innerHTML = draftDom.innerHTML;
-
-				this.element.css(draftDom.css());
-
-				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
-			});
-		}
-
-		return updateWindow;
 	}
 }
 
@@ -3389,9 +3381,9 @@ class Slider extends CraterWebParts {
 
 	public render(params) {
 		if (!func.isset(params.source)) params.source = [
-			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/photo-1542178036-2e5efe4d8f83.jpg', text: 'text0', link: 'https://www.google.com', linkText: 'Button 0' },
-			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/application-3426397_1920.jpg', text: 'text1', link: 'https://www.facebook.com', linkText: 'Button 1' },
-			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/l1.jpg', text: 'text2', link: 'https://www.twitter.com', linkText: 'Button 2' }
+			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/photo-1542178036-2e5efe4d8f83.jpg', text: 'text0', link: 'https://www.google.com', linkText: 'Button 0', subTitle: 'Sub Title 0' },
+			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/application-3426397_1920.jpg', text: 'text1', link: 'https://www.facebook.com', linkText: 'Button 1', subTitle: 'Sub Title 1' },
+			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/l1.jpg', text: 'text2', link: 'https://www.twitter.com', linkText: 'Button 2', subTitle: 'Sub Title 2' }
 		];
 
 		//create the slider element
@@ -3414,6 +3406,7 @@ class Slider extends CraterWebParts {
 					{
 						element: 'span', attributes: { class: 'crater-slide-details' }, children: [
 							{ element: 'p', text: params.source[j].text, attributes: { class: 'crater-slide-quote' } },
+							{ element: 'p', text: params.source[j].subTitle, attributes: { class: 'crater-slide-sub-title' } },
 							{ element: 'a', attributes: { href: params.source[j].link, class: 'crater-slide-link btn' }, text: params.source[j].linkText }
 						]
 					},
@@ -3472,6 +3465,16 @@ class Slider extends CraterWebParts {
 				link.hide();
 			} else {
 				link.show();
+			}
+		});
+
+		this.element.querySelectorAll('.crater-slide-sub-title').forEach(subTitle => {
+			subTitle.css({ fontFamily: settings.subTitleFontStyle, fontSize: settings.subTitleFontStyle, color: settings.subTitleColor});
+
+			if (settings.subTitleShow == 'No') {
+				subTitle.hide();
+			} else {
+				subTitle.show();
 			}
 		});
 	}
@@ -3625,7 +3628,34 @@ class Slider extends CraterWebParts {
 								element: 'input', name: 'Font Size', list: func.pixelSizes
 							}),
 							this.elementModifier.cell({
+								element: 'select', name: 'Show', options: ['Yes', 'No']
+							}),
+							this.elementModifier.cell({
 								element: 'input', name: 'Background Color', list: func.colors
+							})
+						]
+					})
+				]
+			});
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'card sub-title-settings' }, children: [
+					{
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							{
+								element: 'h2', attributes: { class: 'title' }, text: 'Edit Sub-Titles'
+							}]
+					},
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'Font Style', list: func.fontStyles
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Color', list: func.colors
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Font Size', list: func.pixelSizes
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'Show', options: ['Yes', 'No']
@@ -3686,6 +3716,15 @@ class Slider extends CraterWebParts {
 					this.elementModifier.cell({
 						element: 'input', name: 'Quote', value: params.slides[i].querySelector('.crater-slide-quote').innerText
 					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'Link', value: params.slides[i].querySelector('.crater-slide-link').href
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'Link Text', value: params.slides[i].querySelector('.crater-slide-link').innerText
+					}),
+					this.elementModifier.cell({
+						element: 'input', name: 'Sub Title', value: params.slides[i].querySelector('.crater-slide-sub-title').innerText
+					}),
 				]
 			});
 		}
@@ -3704,7 +3743,7 @@ class Slider extends CraterWebParts {
 		let listRowPrototype = this.elementModifier.createElement({
 			element: 'div',
 			attributes: {
-				style: { border: '1px solid #bbbbbb', margin: '.5em 0em' }, class: 'list-row-pane row'
+				style: { border: '1px solid #bbbbbb', margin: '.5em 0em' }, class: 'crater-slide-row-pane row'
 			},
 			children: [
 				this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-slide-content-row' }),
@@ -3714,17 +3753,32 @@ class Slider extends CraterWebParts {
 				this.elementModifier.cell({
 					element: 'input', name: 'Quote', value: 'quote'
 				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'Link', value: 'https://google.com'
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'Link Text', value: 'Link'
+				}),
+				this.elementModifier.cell({
+					element: 'input', name: 'Sub Title', value: 'Sub Title'
+				}),
 			]
 		});
 
 		let slidePrototype = this.elementModifier.createElement({
-			element: 'div', attributes: { class: 'crater-slide', style: { display: 'none', opacity: 0 } }, children: [
-				this.elementModifier.createElement({ element: 'img', attributes: { src: 'image', alt: 'Not Found' } }),
-				this.elementModifier.createElement({ element: 'p', attributes: { class: 'crater-slide-quote' }, text: 'quote' })
+			element: 'div', attributes: { class: 'crater-slide', style: { opacity: 0 } }, children: [
+				{ element: 'img', attributes: { src: 'image', alt: 'Not Found' } },
+				{
+					element: 'span', attributes: { class: 'crater-slide-details' }, children: [
+						{ element: 'p', text: 'Qoute', attributes: { class: 'crater-slide-quote' } },
+						{ element: 'p', text: 'Sub Title', attributes: { class: 'crater-slide-sub-title' } },
+						{ element: 'a', attributes: { href: 'https://google.com', class: 'crater-slide-link btn' }, text: 'Link' }
+					]
+				},
 			]
 		});
 
-		let listRowHandler = (listRowPane, listRowDom) => {
+		let listRowHandler = (listRowPane, listRowDom) => {			
 			listRowPane.addEventListener('mouseover', event => {
 				listRowPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
 			});
@@ -3741,6 +3795,14 @@ class Slider extends CraterWebParts {
 
 			listRowPane.querySelector('#Quote-cell').onChanged(value => {
 				listRowDom.querySelector('.crater-slide-quote').innerHTML = value;
+			});
+
+			listRowPane.querySelector('#Link-cell').onChanged(value => {
+				listRowDom.querySelector('.crater-slide-link').href = value;
+			});
+
+			listRowPane.querySelector('#Link-Text-cell').onChanged(value => {
+				listRowDom.querySelector('.crater-slide-link').innerText = value;
 			});
 
 			listRowPane.querySelector('.delete-crater-slide-content-row').addEventListener('click', event => {
@@ -3772,7 +3834,7 @@ class Slider extends CraterWebParts {
 			let newSlide = slidePrototype.cloneNode(true);
 			let newListRow = listRowPrototype.cloneNode(true);
 
-			slides.append(newSlide);//c
+			slides.append(newSlide);
 			this.paneContent.querySelector('.list-pane').append(newListRow);
 
 			listRowHandler(newListRow, newSlide);
@@ -3786,6 +3848,8 @@ class Slider extends CraterWebParts {
 
 		let linkSettings = this.paneContent.querySelector('.link-settings');
 
+		let subTitleSettings = this.paneContent.querySelector('.sub-title-settings');
+
 		textSettings.querySelector('#Font-Style-cell').onChanged();
 		textSettings.querySelector('#Color-cell').onChanged();
 		textSettings.querySelector('#Font-Size-cell').onChanged();
@@ -3793,8 +3857,13 @@ class Slider extends CraterWebParts {
 		linkSettings.querySelector('#Font-Style-cell').onChanged();
 		linkSettings.querySelector('#Color-cell').onChanged();
 		linkSettings.querySelector('#Font-Size-cell').onChanged();
-		linkSettings.querySelector('#Font-Style-cell').onChanged();
 		linkSettings.querySelector('#Show-cell').onChanged();
+		linkSettings.querySelector('#Background-Color-cell').onChanged();
+
+		subTitleSettings.querySelector('#Font-Style-cell').onChanged();
+		subTitleSettings.querySelector('#Color-cell').onChanged();
+		subTitleSettings.querySelector('#Font-Size-cell').onChanged();
+		subTitleSettings.querySelector('#Show-cell').onChanged();
 
 		this.paneContent.addEventListener('mutated', event => {
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
@@ -3821,9 +3890,17 @@ class Slider extends CraterWebParts {
 
 			this.sharePoint.properties.pane.content[this.key].settings.linkFontSize = linkSettings.querySelector('#Font-Size-cell').value;
 
+			this.sharePoint.properties.pane.content[this.key].settings.linkShow = linkSettings.querySelector('#Show-cell').value;
+
 			this.sharePoint.properties.pane.content[this.key].settings.linkBackgroundColor = linkSettings.querySelector('#Background-Color-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.linkShow = linkSettings.querySelector('#Show-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.subTitleFontStyle = subTitleSettings.querySelector('#Font-Style-cell').value;
+
+			this.sharePoint.properties.pane.content[this.key].settings.subTitleColor = subTitleSettings.querySelector('#Color-cell').value;
+
+			this.sharePoint.properties.pane.content[this.key].settings.subTitleFontSize = subTitleSettings.querySelector('#Font-Size-cell').value;
+
+			this.sharePoint.properties.pane.content[this.key].settings.subTitleShow = subTitleSettings.querySelector('#Show-cell').value;
 		});
 	}
 
@@ -8247,7 +8324,7 @@ class Map extends CraterWebParts {
 		let key = params.element.dataset['key'];
 		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
 		this.paneContent = this.elementModifier.createElement({
-			elemen: 'div', attributes: { class: 'crater-property-content' }
+			element: 'div', attributes: { class: 'crater-property-content' }
 		}).monitor();
 
 		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
@@ -8495,7 +8572,7 @@ class Instagram extends CraterWebParts {
 		let key = params.element.dataset['key'];
 		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
 		this.paneContent = this.elementModifier.createElement({
-			elemen: 'div', attributes: { class: 'crater-property-content' }
+			element: 'div', attributes: { class: 'crater-property-content' }
 		});
 
 		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
@@ -8642,7 +8719,7 @@ class YouTube extends CraterWebParts {
 		let key = params.element.dataset['key'];
 		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
 		this.paneContent = this.elementModifier.createElement({
-			elemen: 'div', attributes: { class: 'crater-property-content' }
+			element: 'div', attributes: { class: 'crater-property-content' }
 		}).monitor();
 
 		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content

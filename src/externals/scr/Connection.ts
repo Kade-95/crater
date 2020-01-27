@@ -10,7 +10,7 @@ class Connection {
             this[key] = params[key];
         });
 
-        this.context = this['sharepoint'].context;
+        // this.context = this['sharepoint'].context;
         this.elementModifier = new ElementModifier();
     }
 

@@ -1,11 +1,8 @@
 .crater-employee-directory{
-
 }
 
 .crater-employee-directory-content{
-    display: grid;
-    grid-template-columns: min-content 1fr;
-    grid-gap: .5em;
+    width: 100%;
 }
 
 .crater-employee-directory-side-bar{
@@ -13,17 +10,14 @@
 
 .crater-employee-directory-main-view{
     position: relative;
+    width: 100%;
 }
 
 .crater-employee-directory-menu{
-    position: absolute;
     display: grid;
     grid-template-columns: repeat(4, min-content);
     padding: .5em 1em;
     grid-gap: .5em;
-    z-index: 2;
-    top: 0;
-    left: 0;
 }
 
 .crater-employee-directory-options{
@@ -31,4 +25,47 @@
     flex-direction: row;
     justify-content: space-around;
     align-content: center;
+}
+
+.crater-employee-directory-display{
+    height: 400px;
+    overflow-y: auto;
+    display: grid;
+}
+
+.crater-employee-directory-row{
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    grid-gap: 1em;
+    padding: 1em;
+}
+
+.crater-employee-directory-dp{
+    width: 3em;
+    height: 3em;
+    border-radius: 100%;
+    background-color: green;
+    border: 1px solid black;
+}
+
+.crater-employee-directory-details{
+    display: flex;
+    flex-direction: column;
+    justify-content: start;    
+}
+
+.crater-employee-directory-name{
+    text-align: left;
+}
+
+.crater-employee-directory-mail{
+    text-align: left;
+}
+
+.crater-employee-directory-job{
+    text-align: left;
+}
+
+.crater-employee-directory-contact{
+    text-align: left;
 }
