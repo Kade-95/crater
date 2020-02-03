@@ -28,7 +28,11 @@
     background-color: white;
     color: black;
     cursor: pointer;
-    border: unset;
+    border: 1px solid black;
+}
+
+.crater .btn {
+    border: none;
     box-shadow: var(--accient-shadow);
 }
 
@@ -52,7 +56,7 @@
     overflow: auto;
 }
 
-.crater-sections-container{
+.crater-sections-container {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
     min-height: 80px;

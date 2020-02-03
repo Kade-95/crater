@@ -40,10 +40,14 @@
 }
 
 .crater .row {
-    border: 1px solid var(--light-accient-color);
     margin: .5em;
-    padding: 2em 0em;
+    padding: 2em;
     position: relative;
+    text-align: left;
+}
+
+.crater .row:hover{
+    border: 1px solid var(--light-accient-color);
 }
 
 .crater .cell {
@@ -52,15 +56,17 @@
     font-size: 1em;
     letter-spacing: .1em;
     font-weight: 300;
-    box-shadow: var(--accient-shadow);
+    border: 1px solid gray;
     border-radius: 10px;
     overflow: auto;
     text-align: center;
+    min-width: 100px;
 }
 
 .crater .cell:hover, .crater .cell:focus {
+    border: none;
     box-shadow: var(--primary-shadow);
-    transition-duration: .5s;
+    transition-duration: .2s;
 }
 
 .crater .cell-label {
@@ -74,11 +80,13 @@
 
 .crater .cell-data {
     padding: 0.3em;
-    text-align: center;
     width: unset;
     outline: none;
     border: none;
     color: var(--accient-color);
+    min-height: 30px;
+    text-align: center;
+    justify-self: center;
 }
 
 .crater .cell-data:hover, .crater .cell-data:focus {

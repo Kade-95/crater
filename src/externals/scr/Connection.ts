@@ -1,5 +1,5 @@
 import { ElementModifier, func } from '.';
-import { SPHttpClient, AadHttpClient, HttpClientResponse, MSGraphClient } from '@microsoft/sp-http';
+import { SPHttpClient, AadHttpClient, HttpClientResponse, MSGraphClient, IHttpClientOptions } from '@microsoft/sp-http';
 import * as MicrosoftGraph from '@microsoft/microsoft-graph-types';
 
 class Connection {
@@ -72,18 +72,34 @@ class Connection {
         return site;
     }
 
-    public getWithAad(params) {
-        return this.context.aadHttpClientFactory.getClient(params.link)
-            .then((aadClient: AadHttpClient) => {
-                const endPoint: string = params.endPoint;
-                aadClient.get(endPoint, AadHttpClient.configurations.v1)
-                    .then((rawResponse: HttpClientResponse) => {
-                        return rawResponse.json();
-                    })
-                    .then((jsonResponse: any) => {
-                        console.log(jsonResponse);
-                    });
-            });
+    public getWithAad(endPoint, url, options?) {
+        return new Promise((resolve, reject) => {
+            this.context.aadHttpClientFactory.getClient(url)
+                .then((aadClient: AadHttpClient) => {
+                    aadClient.get(endPoint, AadHttpClient.configurations.v1)
+                        .then((rawResponse: HttpClientResponse) => {
+                            return rawResponse.json();
+                        })
+                        .then((jsonResponse: any) => {
+                            resolve(jsonResponse);
+                        });
+                });
+        });
+    }
+
+    public updateWithAad(endPoint, url, options: IHttpClientOptions) {
+        return new Promise((resolve, reject) => {
+            this.context.aadHttpClientFactory.getClient(url)
+                .then((aadClient: AadHttpClient) => {
+                    aadClient.post(endPoint, AadHttpClient.configurations.v1, options)
+                        .then((rawResponse: HttpClientResponse) => {
+                            return rawResponse.json();
+                        })
+                        .then((jsonResponse: any) => {
+                            resolve(jsonResponse);
+                        });
+                });
+        });
     }
 
     public getWithGraph(params) {

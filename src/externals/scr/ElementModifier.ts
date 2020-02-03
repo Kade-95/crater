@@ -13,7 +13,7 @@ class ElementModifier {
         let mDrop = this.createElement({
             element: 'span', attributes: params.attributes, children: [
                 {
-                    element: 'span', attributes: { id: 'drop-control', style: { display: 'flex' } }, children: [
+                    element: 'span', attributes: { id: 'drop-control', style: { display: 'grid', gridTemplateColumns: '1fr max-content' } }, children: [
                         { element: 'input', attributes: params.dataAttributes },
                         {
                             element: 'span', attributes: {
@@ -32,7 +32,12 @@ class ElementModifier {
                     ]
                 },
                 {
-                    element: 'span', attributes: { id: 'drop-contents', style: { backgroundColor: 'white', display: 'none' } }, children: params.contents
+                    element: 'span', attributes: {
+                        id: 'drop-contents',
+                        style: {
+                            backgroundColor: 'white', display: 'none', height: '300px', overflow: 'auto'
+                        }
+                    }, children: params.contents
                 }
             ]
         });
@@ -93,63 +98,109 @@ class ElementModifier {
 
         let allImages = [];
         let contents = [];
+        let style = {
+            display: 'flex',
+            justifyContent: 'space-around',
+            overflow: 'hidden',
+            margin: '0.5em 0em',
+            padding: '0.2em 0em'
+        };
 
-        for (let image of this.sharepoint.app.querySelectorAll('img')) {
-            if (allImages.indexOf(image.src) == -1) {
-                allImages.push(image.src);
-                contents.push({
-                    element: 'p', attributes: { value: image.src }, children: [
-                        { element: 'img', attributes: { class: 'crater-icon', src: image.src } },
-                        { element: 'a', text: image.src.slice(0, 15) }
-                    ]
+        let getImages = () => {
+            return new Promise((resolve, reject) => {
+
+                for (let image of this.sharepoint.app.querySelectorAll('img')) {
+                    // @ts-ignore
+                    if (!allImages.includes(image.src)) {
+                        allImages.push(image.src);
+                        contents.push({
+                            element: 'p', attributes: {
+                                value: image.src,
+                                class: 'single-image',
+                                style
+                            }, children: [
+                                { element: 'img', attributes: { class: 'crater-icon', src: image.src } },
+                                { element: 'a', text: image.src.slice(0, 20) }
+                            ]
+                        });
+                    }
+                }
+
+                for (let storedImage in this.sharepoint.images) {
+                    // @ts-ignore
+                    if (!allImages.includes(this.sharepoint.images[storedImage])) {
+                        allImages.push(this.sharepoint.images[storedImage]);
+                        contents.push({
+                            element: 'p', attributes: {
+                                value: this.sharepoint.images[storedImage],
+                                class: 'single-image',
+                                style
+                            }, children: [
+                                { element: 'img', attributes: { class: 'crater-icon', src: this.sharepoint.images[storedImage] } },
+                                { element: 'a', text: this.sharepoint.images[storedImage].slice(0, 20) }
+                            ]
+                        });
+                    }
+                }
+
+                resolve(allImages);
+            });
+        };
+
+        getImages().then(res => {
+            let imageSelector = this.dropDown({
+                attributes: { class: 'crater-image-selector' }, dataAttributes: { id: params.name, value: params.value || '' }, contents
+            });
+
+            let link = this.createElement({
+                element: 'span', attributes: { style: { display: 'grid' } }, children: [
+                    imageSelector,
+                    { element: 'button', attributes: { id: `submit`, class: 'small-btn' }, text: 'Change' },
+                ]
+            });
+
+            //close import window
+            let closeButton = this.createElement({
+                element: 'img', attributes: { class: 'crater-close small-btn', src: this.sharepoint.images.close }
+            });
+
+            closeButton.addEventListener('click', event => {
+                params.parent.querySelectorAll('.upload-form').forEach(element => {
+                    element.remove();
                 });
-            }
-        }
-
-        let imageSelector = this.dropDown({
-            attributes: { class: 'crater-image-selector' }, dataAttributes: { id: params.name, value: params.value || '' }, contents
-        });
-
-        let link = this.createElement({
-            element: 'span', attributes: { style: { display: 'grid' } }, children: [
-                imageSelector,
-                { element: 'button', attributes: { id: `submit`, class: 'small-btn' }, text: 'Change' },
-            ]
-        });
-
-        //close import window
-        let closeButton = this.createElement({
-            element: 'img', attributes: { class: 'crater-close small-btn', src: this.sharepoint.images.close }
-        });
-
-        closeButton.addEventListener('click', event => {
-            params.parent.querySelectorAll('.upload-form').forEach(element => {
-                element.remove();
             });
-        });
 
-        params.attributes.style = (func.isset(params.attributes.style)) ? params.attributes.style : {};
+            params.attributes.style = (func.isset(params.attributes.style)) ? params.attributes.style : {};
 
-        params.attributes.style.minHeight = '10px';
-        params.attributes.style.position = 'relative';
+            params.attributes.style.minHeight = '10px';
+            params.attributes.style.position = 'relative';
 
-        let selectionView = params.parent.makeElement({
-            element: 'span', attributes: params.attributes, children: [
-                closeButton, link, upload
-            ]
-        });
-
-        selectionView.css({ display: 'grid', gridGap: '0.5em', padding: '0.5em' });
-
-        upload.querySelector(`#${params.name}-cell`).addEventListener('change', event => {
-            this.imageToJson(upload.querySelector(`#${params.name}-cell`).files[0], (file) => {
-                callBack(file);
+            let selectionView = params.parent.makeElement({
+                element: 'span', attributes: params.attributes, children: [
+                    closeButton, link, upload
+                ]
             });
-        });
 
-        link.querySelector(`#submit`).addEventListener('click', event => {
-            let value = link.querySelector(`#${params.name}`).value;
-            if (!func.isSpaceString(value)) callBack({ src: link.querySelector(`#${params.name}`).value });
+            selectionView.css({ display: 'grid', gridGap: '0.5em', padding: '0.5em' });
+
+            upload.querySelector(`#${params.name}-cell`).addEventListener('change', event => {
+                this.imageToJson(upload.querySelector(`#${params.name}-cell`).files[0], (file) => {
+                    callBack(file);
+                });
+            });
+
+            link.querySelector(`#submit`).addEventListener('click', event => {
+                let value = link.querySelector(`#${params.name}`).value;
+                if (!func.isSpaceString(value)) callBack({ src: link.querySelector(`#${params.name}`).value });
+            });
+
+            imageSelector.ondblclick = (event) => {
+                let clicked = event.target;
+                if(!clicked.classList.contains('single-image')) clicked = clicked.getParents('.single-image');
+                if(!func.isnull(clicked)){
+                    link.querySelector(`#submit`).click();     
+                }
+            };
         });
     }
 
@@ -165,6 +216,38 @@ class ElementModifier {
         myfile.size = file.size;
         myfile.type = file.type;
         fileReader.readAsDataURL(file);
+    }
+
+    public base64ToBlob(image, type = '', sliceSize = 512) {
+        const byteChars = atob(image);
+        const byteArrays = [];
+
+        for (let offset = 0; offset < byteChars.length; offset += sliceSize) {
+            const slice = byteChars.slice(offset, offset + sliceSize);
+
+            const byteNumbers = new Array(slice.length);
+            for (let i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+            }
+
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
+
+        }
+
+        const blob = new Blob(byteArrays, { type });
+        return blob;
+    }
+
+    public b64ToBlob(url) {
+        return new Promise((resolve, reject) => {
+            fetch(url)
+                .then(res => {
+                    res.blob().then(image => {
+                        resolve(image);
+                    });
+                });
+        });
     }
 
     //Create a crater element
@@ -510,6 +593,8 @@ class ElementModifier {
 
             data.setAttribute('list', `${id}-list`);
         }
+
+        if (func.isset(params.text)) data.textContent = params.text;
         return cell;
     }
 
@@ -1183,15 +1268,11 @@ function prepareFrameWork(): void {
     Element.prototype['removeChildren'] = function (params) {
         this.childNodes.forEach(node => {
             if (func.isset(params)) {
-                console.log(func.hasArrayElement(Array(node.className), params.class.split(' ')));
-
                 if (!((func.isset(params.name) && params.name == node.nodeName) || func.isset(params.class) && func.hasArrayElement(Array(node.className), params.class.split(' ')) || (func.isset(params.id) && params.id == node.id))) {
-                    // node.remove();              
-                    console.log(node);
-
+                    node.remove();
                 }
             } else {
-                // node.remove();
+                node.remove();
             }
         });
     };

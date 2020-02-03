@@ -76,3 +76,11 @@
     border: none;
     box-shadow: var(--secondary-shadow);
 }
+
+.crater-background-filter{
+    width: 100%;
+    height: inherit;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+}

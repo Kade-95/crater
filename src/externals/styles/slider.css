@@ -22,17 +22,20 @@
 }
 
 .crater-slide img {
-    filter: brightness(50%);
+    filter: brightness(50%) blur(3px);
     position: absolute;
     top: 0;
     left: 0;
 }
 
 .crater-slide-details{
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: max-content;
+    grid-gap: 1em;
+    /* flex-direction: column; */
     align-items: center;
     z-index: 2;
+    padding: 1em;
 }
 
 .crater-slide-quote {
