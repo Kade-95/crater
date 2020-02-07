@@ -29,11 +29,10 @@
 }
 
 .crater-slide-details{
-    display: grid;
-    grid-template-columns: max-content;
-    grid-gap: 1em;
-    /* flex-direction: column; */
+    display: flex;
+    flex-direction: column;
     align-items: center;
+    justify-content: space-between;
     z-index: 2;
     padding: 1em;
 }
@@ -56,6 +55,7 @@
     font-size: 1em;
     font-family: cursive;
     text-transform: capitalize;
+    margin: 1em 0em;
 }
 
 .crater-slide-link{

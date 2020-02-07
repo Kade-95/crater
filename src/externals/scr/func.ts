@@ -814,6 +814,15 @@ class Func {
 	public secondsInMinutes(minutes) {
 		return Math.floor(minutes * 60);
 	}
+
+	public range(from, to) {
+		let value = [];
+		for (let i = from; i <= to; i++) {
+			value.push(i);
+		}
+
+		return value;
+	}
 }
 
 let func = new Func();

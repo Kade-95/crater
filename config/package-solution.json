@@ -3,7 +3,7 @@
   "solution": {
     "name": "crater-client-side-solution",
     "id": "d106d91f-d11e-4738-94d0-8ae900394058",
-    "version": "1.0.0.0",
+    "version": "1.0.0.2",
     "includeClientSideAssets": true,
     "isDomainIsolated": false,
     "webApiPermissionRequests": [

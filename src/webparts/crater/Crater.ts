@@ -16,6 +16,8 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 	public craterWebparts = new CraterWebParts({ sharePoint: this });
 	public displayPanelWindow: any;
 	public displayPanelWindowExpanded: any = false;
+	public pasteActive = false;
+	public pasteElement: any;
 
 	public images = Images;
 
@@ -83,54 +85,27 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 							this.propertyPane.render(element.getParents('data-key'));
 						}
 						else if (element.id == 'append-me') {//if append is clicked
-							this.app.querySelectorAll('.crater-display-panel').forEach(panel => {
-								panel.remove();
-							});
-
-							element.getParents('data-key').append(
-								this.displayPanel(webpart => {
-									let container = element.getParents('.crater-panel') || element.getParents('.crater-tab') || element.getParents('.crater-section');
-
-									if (container.classList.contains('crater-section')) {
-										this.appendWebpart(container.querySelector('.crater-section-content'), webpart.dataset.webpart);
-									} else if (container.classList.contains('crater-panel')) {
-										this.appendWebpart(container.querySelector('.crater-panel-content'), webpart.dataset.webpart);
-									} else if (container.classList.contains('crater-tab')) {
-										this.appendWebpart(container.querySelector('.crater-tab-content'), webpart.dataset.webpart);
-										this.craterWebparts['tab']({ action: 'rendered', element: container, sharePoint: this });
-									}
-								})
-							);
+							this.addWebpart(element);
 						}
 						else if (element.id == 'delete-me') {// if delete is clicked
-							if (confirm("Do you want to continue with this action")) {//confirm deletion
-								let key = element.getParents('data-key').dataset.key;
-								if (element.getParents('data-key').outerHTML == this.domContent.outerHTML) {
-									//if element is the base webpart
-									this.domContent.getParents('.ControlZone').remove();
-									this.properties.dom.content = 'Webpart Deleted';
-								}
-								else if (element.getParents('data-key').classList.contains('crater-section')) {
-									//if element is a section
-									element.getParents('data-key').remove();
-									this.properties.pane.content[this.domContent.dataset['key']].settings.columns -= 1;
-									let columns = this.properties.pane.content[this.domContent.dataset['key']].settings.columns;
+							this.deleteWebpart(element);
+						}
+						else if (element.id == 'clone-me') {
+							let choose = this.elementModifier.choose({ note: 'What do you want to do?', options: ["Copy", "Clone"] });
 
-									this.properties.pane.content[this.domContent.dataset['key']].settings.columnsSizes = `repeat(${columns} 1fr)`;
-									this.craterWebparts['crater']({ action: 'rendered', element: this.domContent, sharePoint: this, resetWidth: true });
+							this.app.append(choose.display);
+							choose.choice.then((res: any) => {
+								if (res.toLowerCase() == 'clone') {
+									this.cloneWebpart(element);
 								}
-								else {
-									element = element.getParents('data-key');
-									let tab = element.getParents('.crater-tab');
-									element.remove();
-
-									if (!func.isnull(tab)) {
-										this.craterWebparts['tab']({ action: 'rendered', element: tab, sharePoint: this });
-									}
-									this.properties.dom.content = this.domContent.outerHTML;
+								else if (res.toLowerCase() == 'copy') {
+									this.pasteActive = true;
+									this.pasteElement = element.getParents('.crater-component');
 								}
-								delete this.properties.pane.content[key];
-							}
+							});
+						}
+						else if (element.id == 'paste-me') {
+							this.pasteWebpart(element);
 						}
 					}
 
@@ -151,7 +126,7 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 		if (!(element.classList.contains('crater-component'))) webpart = element.getParents('.crater-component');
 		let openAt = this.properties.pane.content[webpart.dataset.key].settings.view || 'same window';
 		if (openAt.toLowerCase() == 'pop up') {
-			let popUp = this.elementModifier.popUp({ source, close: this.images.close });
+			let popUp = this.elementModifier.popUp({ source, close: this.images.close, maximize: this.images.maximize, minimize: this.images.minimize });
 			webpart.append(popUp);
 		}
 		else if (openAt.toLowerCase() == 'new window') {
@@ -209,7 +184,11 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 		let webparts = ['Panel', 'List', 'Slider', 'Counter', 'Tiles', 'News', 'Table', 'TextArea', 'Icons', 'Button', 'Count Down', 'Tab', 'Events', 'Carousel', 'Map', 'Date List', 'Instagram', 'Facebook', 'Before After', 'Youtube', 'Event', 'Power', 'Employee Directory'];
 
 		this.displayPanelWindow = this.elementModifier.createElement({
-			element: 'div', attributes: { class: 'crater-display-panel' }, text: 'Display'
+			element: 'div', attributes: { class: 'crater-display-panel' }
+		});
+
+		let controls = this.displayPanelWindow.makeElement({
+			element: 'div', attributes: { class: 'display-pane-controls' }
 		});
 
 		//search box 
@@ -233,60 +212,21 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 
 		this.updateDisplayPaneWebPart({ webparts });
 
-		let controls = this.displayPanelWindow.makeElement({
-			element: 'div', attributes: { class: 'display-pane-controls' }
-		});
-
 		controls.makeElement({
-			element: 'button', attributes: { id: 'toggle' }, text: 'Toggle'
+			element: 'img', attributes: { id: 'toggle', src: this.images.maximize, class: 'crater-icon display-pane-controls-button' }
 		}).addEventListener('click', event => {
-
-			if (!this.displayPanelWindowExpanded) {
-				this.displayPanelWindow.css({
-					top: (innerHeight * 0.1) + 'px',
-					right: (innerWidth * 0.1) + 'px',
-				});
-
-				this.displayPanelWindow.querySelector('#search-webpart').css({
-					width: (innerWidth * 0.8) + 'px',
-				});
-
-				this.displayPanelWindow.querySelector('#select-webpart').css({
-					width: (innerWidth * 0.8) + 'px',
-					height: (innerHeight * 0.8 - this.displayPanelWindow.querySelector('.display-pane-controls').position().height) + 'px',
-				});
-
-				this.displayPanelWindow.querySelector('.display-pane-controls').css({
-					width: (innerWidth * 0.8) + 'px',
-				});
-
-				this.displayPanelWindowExpanded = true;
+			event.target.classList.toggle('wide');
+			if (event.target.classList.contains('wide')) {
+				event.target.src = this.images.minimize;
+			} else {
+				event.target.src = this.images.maximize;
 			}
-			else {
-				this.displayPanelWindow.css({
-					top: '0px',
-					right: '0px',
-				});
 
-				this.displayPanelWindow.querySelector('#search-webpart').css({
-					width: '290px',
-				});
-
-				this.displayPanelWindow.querySelector('#select-webpart').css({
-					width: '290px',
-					height: '300px',
-				});
-
-				this.displayPanelWindow.querySelector('.display-pane-controls').css({
-					width: '300px',
-				});
-
-				this.displayPanelWindowExpanded = false;
-			}
+			this.displayPanelWindow.classList.toggle('wide');
 		});
 
 		controls.makeElement({
-			element: 'button', attributes: { id: 'close' }, text: 'Close'
+			element: 'img', attributes: { id: 'close', src: this.images.close, class: 'crater-icon display-pane-controls-button' }
 		}).addEventListener('click', event => {
 			this.displayPanelWindow.remove();
 		});
@@ -311,7 +251,7 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 			this.displayPanelWindow.querySelector('#select-webpart').makeElement({
 				element: 'div', attributes: { class: 'single-webpart', 'data-webpart': func.stringReplace(single.toLowerCase(), ' ', '') }, children: [
 					this.elementModifier.createElement({//set the icon
-						element: 'img', attributes: { class: 'image' }
+						element: 'img', attributes: { class: 'image', src: this.images.append }
 					}),
 					this.elementModifier.createElement({
 						element: 'a', attributes: { class: 'title' }, text: single//set the text
@@ -329,5 +269,111 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 			});
 		}
 		return editing;
+	}
+
+	public get isLocal() {
+		let local = Environment.type == EnvironmentType.Local;
+		return local;
+	}
+
+	public addWebpart(element) {
+		this.app.querySelectorAll('.crater-display-panel').forEach(panel => {
+			panel.remove();
+		});
+
+		element.getParents('data-key').append(
+			this.displayPanel(webpart => {
+				let container = element.getParents('.crater-panel') || element.getParents('.crater-tab') || element.getParents('.crater-section');
+
+				if (container.classList.contains('crater-section')) {
+					this.appendWebpart(container.querySelector('.crater-section-content'), webpart.dataset.webpart);
+				} else if (container.classList.contains('crater-panel')) {
+					this.appendWebpart(container.querySelector('.crater-panel-content'), webpart.dataset.webpart);
+				} else if (container.classList.contains('crater-tab')) {
+					this.appendWebpart(container.querySelector('.crater-tab-content'), webpart.dataset.webpart);
+					this.craterWebparts['tab']({ action: 'rendered', element: container, sharePoint: this });
+				}
+			})
+		);
+	}
+
+	public deleteWebpart(element) {
+		if (confirm("Do you want to continue with this action")) {//confirm deletion
+			let key = element.getParents('data-key').dataset.key;
+			if (element.getParents('data-key').outerHTML == this.domContent.outerHTML) {
+				//if element is the base webpart
+				this.domContent.getParents('.ControlZone').remove();
+				this.properties.dom.content = 'Webpart Deleted';
+			}
+			else if (element.getParents('data-key').classList.contains('crater-section')) {
+				//if element is a section
+				element.getParents('data-key').remove();
+				this.properties.pane.content[this.domContent.dataset['key']].settings.columns -= 1;
+				let columns = this.properties.pane.content[this.domContent.dataset['key']].settings.columns;
+
+				this.properties.pane.content[this.domContent.dataset['key']].settings.columnsSizes = `repeat(${columns} 1fr)`;
+				this.craterWebparts['crater']({ action: 'rendered', element: this.domContent, sharePoint: this, resetWidth: true });
+			}
+			else {
+				element = element.getParents('data-key');
+				let tab = element.getParents('.crater-tab');
+				element.remove();
+
+				if (!func.isnull(tab)) {
+					this.craterWebparts['tab']({ action: 'rendered', element: tab, sharePoint: this });
+				}
+				this.properties.dom.content = this.domContent.outerHTML;
+			}
+			delete this.properties.pane.content[key];
+		}
+	}
+
+	public cloneWebpart(element) {
+		let webpart = element.getParents('.crater-component');
+		let clone = webpart.cloneNode(true);
+
+		let container = webpart.getParents('.crater-component');
+
+		let newKey = this.craterWebparts.generateKey();
+		clone.dataset.key = newKey;
+		this.properties.pane.content[newKey] = this.properties.pane.content[webpart.dataset.key];
+
+		if (container.classList.contains('crater-crater')) {
+			this.properties.pane.content[container.dataset.key].settings.columns =
+				this.properties.pane.content[container.dataset.key].settings.columns + 1;
+
+			container.querySelector('.crater-sections-container').css({ gridTemplateColumns: `repeat(${this.properties.pane.content[container.dataset.key].settings.columns}, 1fr)` });
+		}
+
+		webpart.after(clone);
+
+		this.craterWebparts[clone.dataset.type]({ action: 'rendered', element: clone, sharePoint: this });
+
+		this.craterWebparts[container.dataset.type]({ action: 'rendered', element: container, sharePoint: this });
+	}
+
+	public pasteWebpart(element) {
+		let clone = this.pasteElement.cloneNode(true);
+		let container = element.getParents('.crater-container');
+
+		let newKey = this.craterWebparts.generateKey();
+		clone.dataset.key = newKey;
+		this.properties.pane.content[newKey] = this.properties.pane.content[this.pasteElement.dataset.key];
+
+		if(container.classList.contains('crater-section')){
+			container.querySelector('.crater-section-content').append(clone);
+		}
+		else if(container.classList.contains('crater-panel')){
+			container.querySelector('.crater-panel-content').append(clone);
+		}
+		else if(container.classList.contains('crater-tab')){
+			container.querySelector('.crater-tab-content').append(clone);
+		}
+
+		this.craterWebparts[clone.dataset.type]({ action: 'rendered', element: clone, sharePoint: this });
+
+		this.craterWebparts[container.dataset.type]({ action: 'rendered', element: container, sharePoint: this });
+
+		this.pasteActive = false;
 	}
 }

@@ -13,7 +13,7 @@
     --dark-accient-color: rgb(0, 0, 0, 0.8);
     --primary-shadow: 1px 1px 5px var(--lighter-primary-color), -1px -1px 5px var(--lighter-primary-color);
     --secondary-shadow: 1px 1px 5px var(--lighter-secondary-color), -1px -1px 5px var(--lighter-secondary-color);
-    --accient-shadow: 4px 4px 10px var(--lighter-accient-color), -4px -4px 10px var(--lighter-accient-color);
+    --accient-shadow: 1px 1px 5px var(--lighter-accient-color), -1px -1px 5px var(--lighter-accient-color);
 }
 
 * {
@@ -22,7 +22,7 @@
 }
 
 .crater .btn {
-    padding: 1em;
+    padding: 0.5em 1em;
     font-size: 1em;
     font-weight: 400;
     background-color: white;
@@ -31,7 +31,7 @@
     border: 1px solid black;
 }
 
-.crater .btn {
+.crater .btn:hover {
     border: none;
     box-shadow: var(--accient-shadow);
 }

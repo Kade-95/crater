@@ -57,22 +57,48 @@
     top: 0;
     left: 0;
     display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
     align-items: center;
+    justify-content: center;
 }
 
-.crater-close-pop-up{
-    width: 30px;
-    height: auto;
+.crater-pop-up-window{
+    width: 80%;
+    height: 70vh;
+    display: grid;
+    grid-template-rows: max-content 1fr;
+    position: relative;
+}
+
+.crater-pop-up-controls{
+    top: 0;
+    position: absolute;
+    width: 100%;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    justify-content: flex-end;
+    background-color: black;
+}
+
+.crater-pop-up-controls-button{
+    width: 20px;
+    height: 20px;
     background-color: white;
     cursor: pointer;
-    border-radius: 100%;
+    margin: 0.5em;
+}
+
+#crater-pop-up-close:hover{
+    background-color: red;
+}
+
+#crater-pop-up-toggle:hover{
+    background-color: blue;
 }
 
 .crater-pop-up-content{
-    width: 80%;
-    height: 70vh;
+    width: 100%;
+    height: inherit;
     border: none;
     box-shadow: var(--secondary-shadow);
 }
@@ -83,4 +109,28 @@
     position: absolute;
     top: 0;
     bottom: 0;
+}
+
+.crater-choose{
+    width: fit-content;
+    height: fit-content;
+    padding: 1em;
+    position: fixed;
+    top: 0;
+    margin: 1em;
+    place-self: center;
+    border: 1px solid black;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    background-color: var(--secondary-color);
+}
+
+.crater-choose-control{
+    display: grid;
+    grid-gap: .5em;
+    padding: .5em;
+    margin: 1em;
+    grid-template-columns: repeat(3, max-content);
+    justify-content: left;
 }

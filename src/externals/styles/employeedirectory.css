@@ -40,9 +40,11 @@
 
 .crater-employee-directory-row{
     display: grid;
-    grid-template-columns: repeat(2, max-content);
+    grid-template-columns: max-content 1fr max-content;
     grid-gap: 1em;
     padding: 1em;
+    align-items: center;
+    position: relative;
 }
 
 .crater-employee-directory-row:hover{
@@ -61,6 +63,7 @@
     display: flex;
     flex-direction: column;
     justify-content: start;    
+    overflow: hidden;
 }
 
 .crater-employee-directory-name{
@@ -77,4 +80,28 @@
 
 .crater-employee-directory-contact{
     text-align: left;
+    display: grid;
+    grid-template-columns: repeat(3, max-content);
+    grid-gap: .5em;
+    padding: .5em;
+}
+
+.crater-employee-directory-icon{
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.crater-employee-directory-toggle-view{
+}
+
+.crater-employee-directory-other-details{
+    grid-column-start: 1;
+    grid-column-end: 3;
+    text-align: left;
+}
+
+.crater-employee-directory-hidden-detail{
+    display: inline-grid;
+    grid-template-rows: repeat(2, min-content);
 }

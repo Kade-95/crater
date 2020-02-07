@@ -1,49 +1,48 @@
+.wide.crater-display-panel{
+    width: 100vw;
+    height: 100vh;
+}
+
 .crater-display-panel{
     position: fixed;
-    box-shadow: 1px 1px black, -1px -1px #666666;
-    z-index: 1000;
-    background-color: white;
     top: 0;
     right: 0;
+    display: grid;
+    grid-template-rows: repeat(3, max-content);
+    grid-template-columns: 1fr;
+    width: fit-content;
+    z-index: 1000;
+    background-color: white;
+    border: 1px solid black;
 }
 
 .crater-display-panel #search-webpart{
-    width: 290px;
     border: 1px solid #bbbbbb;
-    padding: 4px;
-    font-size: 1.2em;
-    display: block;
+    padding: 0.5em;
+    height: 30px;
+    font-size: 1.5em;
+}
+
+.wide.crater-display-panel .select-webparts{
+    grid-template-columns: repeat(8, 1fr);
 }
 
 .crater-display-panel .select-webparts{
-    height: 300px;
-    width: 290px;
-    padding: 5px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    height: fit-content;
+    max-height: 300px;
     overflow: auto;
-    display: block;
-    text-align: left;
-}
-
-.crater-display-panel .display-pane-controls {
-    display: block;
-    width: 300px;
-}
-
-.crater-display-panel .display-pane-controls button{
-    display: inline-block;
-    width: 150px;
-    padding: .5em 0em;
+    padding: 1em;
 }
 
 .crater-display-panel .single-webpart{
-    padding: 5px;
-    display: inline-block;
-    margin: 5px;
-    text-align: center;
+    padding: .2em;
+    display: grid;
     background-color: white;
     cursor: pointer;
-    width: 40px;
-    vertical-align: top;
+    place-items: center;
+    margin: .3em;
 }
 
 .crater-display-panel .single-webpart:hover{
@@ -61,4 +60,20 @@
     text-transform: capitalize;
     word-break: break-all;
     text-overflow: clip;
+}
+
+.crater-display-panel .display-pane-controls{
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    grid-gap: .3em;
+    justify-content: right;
+    padding: .2em;
+}
+
+.crater-display-panel .display-pane-controls-button{
+    cursor: pointer;
+}
+
+.crater-display-panel .display-pane-controls-button:hover{
+    background-color: var(--lighter-accient-color);
 }

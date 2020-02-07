@@ -63,10 +63,6 @@ class ElementModifier {
         let dropDownListener = () => {
             let drop = mDrop.querySelector('#drop');
 
-            // mDrop.monitor().onChanged(value => {
-            //     mDrop.setAttribute('value', mDrop.querySelector('#drop-control').querySelector('input').value);                
-            // });
-
             drop.addEventListener('click', event => {
                 mDrop.querySelector('#drop-contents').toggle();
             });
@@ -128,7 +124,7 @@ class ElementModifier {
 
                 for (let storedImage in this.sharepoint.images) {
                     // @ts-ignore
-                    if (!allImages.includes(this.sharepoint.images[storedImage])) {
+                    if (!allImages.includes(this.sharepoint.images[storedImage]) && typeof this.sharepoint.images[storedImage] == 'string') {
                         allImages.push(this.sharepoint.images[storedImage]);
                         contents.push({
                             element: 'p', attributes: {
@@ -196,9 +192,9 @@ class ElementModifier {
 
             imageSelector.ondblclick = (event) => {
                 let clicked = event.target;
-                if(!clicked.classList.contains('single-image')) clicked = clicked.getParents('.single-image');
-                if(!func.isnull(clicked)){
-                    link.querySelector(`#submit`).click();     
+                if (!clicked.classList.contains('single-image')) clicked = clicked.getParents('.single-image');
+                if (!func.isnull(clicked)) {
+                    link.querySelector(`#submit`).click();
                 }
             };
         });
@@ -666,23 +662,77 @@ class ElementModifier {
         let popUp = this.createElement({
             element: 'div', attributes: { class: 'crater-pop-up' }, children: [
                 {
-                    element: 'span', children: [
-                        { element: 'img', attributes: { src: params.close, class: 'crater-close-pop-up' } }
+                    element: 'div', attributes: { class: 'crater-pop-up-window' }, children: [
+                        {
+                            element: 'span', attributes: { class: 'crater-pop-up-controls' }, children: [
+                                { element: 'img', attributes: { src: params.maximize, class: 'crater-pop-up-controls-button', id: 'crater-pop-up-toggle' } },
+                                { element: 'img', attributes: { src: params.close, class: 'crater-pop-up-controls-button', id: 'crater-pop-up-close' } }
+                            ]
+                        },
+                        {
+                            element: 'iframe', attributes: { class: 'crater-pop-up-content', src: params.source }
+                        }
                     ]
-                },
-                {
-                    element: 'iframe', attributes: { class: 'crater-pop-up-content', src: params.source }
                 }
             ]
         });
 
+        let window = popUp.querySelector('.crater-pop-up-window');
+
         popUp.addEventListener('click', event => {
-            if (!event.target.classList.contains('pop-up-content') && func.isnull(event.target.getParents('.pop-up-content'))) {
+            if (event.target.id == 'crater-pop-up-close') {
                 popUp.remove();
+            }
+            else if (!event.target.classList.contains('crater-pop-up-window') && func.isnull(event.target.getParents('.crater-pop-up-window'))) {
+                popUp.remove();
+            }
+            else if (event.target.id == 'crater-pop-up-toggle') {
+                window.classList.toggle('full-window');
+                if (window.classList.contains('full-window')) {
+                    window.css({ width: '100%', height: '100vh' });
+                    event.target.src = params.minimize;
+                }
+                else {
+                    window.cssRemove(['width', 'height']);
+                    event.target.src = params.maximize;
+                }
             }
         });
 
         return popUp;
+    }
+
+    public choose(params) {
+        let chooseWindow = this.createElement({
+            element: 'span', attributes: { class: 'crater-choose' }, children: [
+                { element: 'p', attributes: { class: 'crater-choose-note' }, text: params.note },
+                { element: 'span', attributes: { class: 'crater-choose-control' } },
+                { element: 'button', attributes: { id: 'crater-choose-close', class: 'btn' }, text: 'Close' }
+            ]
+        });
+
+        let chooseControl = chooseWindow.querySelector('.crater-choose-control');
+
+        chooseWindow.querySelector('#crater-choose-close').addEventListener('click', event=>{
+            chooseWindow.remove();
+        });
+
+        for (let option of params.options) {
+            chooseControl.makeElement({
+                element: 'button', attributes: { class: 'btn choose-option' }, text: option
+            });
+        }
+
+        return {
+            display: chooseWindow, choice: new Promise((resolve, reject) => {
+                chooseControl.addEventListener('click', event => {
+                    if (event.target.classList.contains('choose-option')) {
+                        resolve(event.target.textContent);
+                        chooseWindow.remove();
+                    }
+                });
+            })
+        };
     }
 }
 
