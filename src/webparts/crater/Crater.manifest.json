@@ -36,6 +36,10 @@
         "pane": {
           "generated": false,
           "content": {}
+        },
+        "states": {
+          "currentPosition": 0,
+          "data": []
         }
       }
     }

@@ -30,7 +30,7 @@ class PropertyPane {
     }
 
     public render(element): any {
-        // this.sharePoint.app.querySelectorAll('.webpart-options').forEach(option => {
+        // this.sharePoint.app.findAll('.webpart-options').forEach(option => {
         //     option.hide();
         // });
         this.element = element;
@@ -97,7 +97,7 @@ class PropertyPane {
 
             this.currentWindow = item.dataset.owner;
 
-            menus.querySelectorAll('.crater-menu-item').forEach(mItem => {
+            menus.findAll('.crater-menu-item').forEach(mItem => {
                 mItem.cssRemove(['background-color']);
             });
 
@@ -157,7 +157,7 @@ class PropertyPane {
 
         this.craterWebparts[type]({ action: 'listenPaneContent', element: this.element, draft: draftDom, sharePoint: this.sharePoint });
 
-        this.editor.querySelectorAll('.crater-color-picker').forEach(picker => {
+        this.editor.findAll('.crater-color-picker').forEach(picker => {
             picker.remove();
         });
     }
@@ -236,14 +236,14 @@ class PropertyPane {
             });
         }
 
-        let getWindow = this.paneConnection.querySelector('.crater-connection-get');
+        let getWindow = this.paneConnection.find('.crater-connection-get');
 
-        this.paneConnection.querySelector('#Type-cell').onChanged(value => {
-            this.paneConnection.querySelector('#crater-connection-type-option').innerHTML = '';
-            this.paneConnection.querySelector('#crater-connection-type-option').makeElement({ element: getDisplayOptions(value) });
+        this.paneConnection.find('#Type-cell').onChanged(value => {
+            this.paneConnection.find('#crater-connection-type-option').innerHTML = '';
+            this.paneConnection.find('#crater-connection-type-option').makeElement({ element: getDisplayOptions(value) });
         });
 
-        this.paneConnection.querySelector('.form-error').innerHTML = '';
+        this.paneConnection.find('.form-error').innerHTML = '';
 
         this.paneConnection.addEventListener('click', event => {
             let target = event.target;
@@ -266,19 +266,19 @@ class PropertyPane {
             if (target.id == 'create-connection') {
                 event.preventDefault();
                 let form = target.getParents('.form');
-                let formError = form.querySelector('.form-error');
+                let formError = form.find('.form-error');
                 formError.css({ display: 'unset' });
                 formError.textContent = 'Connecting...';
 
-                let connectionType = this.paneConnection.querySelector('#Type-cell').value;
+                let connectionType = this.paneConnection.find('#Type-cell').value;
                 if (connectionType == 'Same Site') {                    
                     let link = this.sharePoint.connection.getSite();                    
-                    let list = this.paneConnection.querySelector('#connection-list').value;
+                    let list = this.paneConnection.find('#connection-list').value;
                     fetchData(link, list, form, formError);
                 }
                 else if (connectionType == 'Other Sharepoint Site') {
-                    let link = this.paneConnection.querySelector('#connection-link').value;
-                    let list = this.paneConnection.querySelector('#connection-list').value;
+                    let link = this.paneConnection.find('#connection-link').value;
+                    let list = this.paneConnection.find('#connection-list').value;
                     fetchData(link, list, form, formError);
                 }
                 else if (connectionType == 'RSS Feed') {
@@ -288,8 +288,8 @@ class PropertyPane {
                         return;
                     }
 
-                    let url = `https://cors-anywhere.herokuapp.com/` + this.paneConnection.querySelector('#connection-link').value;
-                    let count = this.paneConnection.querySelector('#connection-count').value;
+                    let url = `https://cors-anywhere.herokuapp.com/` + this.paneConnection.find('#connection-link').value;
+                    let count = this.paneConnection.find('#connection-count').value;
 
                     this.sharePoint.connection.ajax({ method: 'GET', url }).then(result => {
                         formError.textContent = 'Connected';
@@ -389,12 +389,12 @@ class PropertyPane {
         this.editor.innerHTML = '';
         this.editor.append(this.paneStyle);
 
-        this.paneStyle.querySelectorAll('.crater-style-attr').forEach(element => {
+        this.paneStyle.findAll('.crater-style-attr').forEach(element => {
             element.onChanged(value => {
                 let action = {};
 
                 if (this.sharePoint.properties.pane.content[key].sync[element.dataset['styleSync']]) {
-                    element.getParents('.crater-style-block').querySelectorAll('.crater-style-attr').forEach(styler => {
+                    element.getParents('.crater-style-block').findAll('.crater-style-attr').forEach(styler => {
                         styler.value = value;
                         styler.setAttribute('value', value);
                         action[styler.dataset['action']] = value;
@@ -407,7 +407,7 @@ class PropertyPane {
             });
         });
 
-        this.paneStyle.querySelectorAll('.crater-toggle-style-sync').forEach(element => {
+        this.paneStyle.findAll('.crater-toggle-style-sync').forEach(element => {
             element.addEventListener('click', event => {
                 this.sharePoint.properties.pane.content[key].sync[element.dataset['style']] = !this.sharePoint.properties.pane.content[key].sync[element.dataset['style']];
                 element.src = this.sharePoint.properties.pane.content[key].sync[element.dataset['style']] ? this.sharePoint.images.sync : this.sharePoint.images.async;
@@ -416,25 +416,25 @@ class PropertyPane {
 
         this.craterWebparts.sharePoint = this.sharePoint;
 
-        let backgroundImageCell = this.paneStyle.querySelector('#Background-Image-cell').parentNode;
+        let backgroundImageCell = this.paneStyle.find('#Background-Image-cell').parentNode;
 
         this.craterWebparts.uploadImage({ parent: backgroundImageCell }, (backgroundImage) => {
             this.sharePoint.properties.pane.content[key].draft.dom.setBackgroundImage(backgroundImage.src);
-            backgroundImageCell.querySelector('#Background-Image-cell').src = backgroundImage.src;
+            backgroundImageCell.find('#Background-Image-cell').src = backgroundImage.src;
         });
 
-        let backgroundColorCell = this.paneStyle.querySelector('#Background-Color-cell').parentNode;
-        this.craterWebparts.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#Background-Color-cell') }, (backgroundColor) => {
+        let backgroundColorCell = this.paneStyle.find('#Background-Color-cell').parentNode;
+        this.craterWebparts.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#Background-Color-cell') }, (backgroundColor) => {
             this.sharePoint.properties.pane.content[key].draft.dom.css({ backgroundColor });
-            backgroundColorCell.querySelector('#Background-Color-cell').value = backgroundColor;
-            backgroundColorCell.querySelector('#Background-Color-cell').setAttribute('value', backgroundColor);
+            backgroundColorCell.find('#Background-Color-cell').value = backgroundColor;
+            backgroundColorCell.find('#Background-Color-cell').setAttribute('value', backgroundColor);
         });
 
-        let colorCell = this.paneStyle.querySelector('#Font-Color-cell').parentNode;
-        this.craterWebparts.pickColor({ parent: colorCell, cell: colorCell.querySelector('#Font-Color-cell') }, (color) => {
+        let colorCell = this.paneStyle.find('#Font-Color-cell').parentNode;
+        this.craterWebparts.pickColor({ parent: colorCell, cell: colorCell.find('#Font-Color-cell') }, (color) => {
             this.sharePoint.properties.pane.content[key].draft.dom.css({ color });
-            colorCell.querySelector('#Font-Color-cell').value = color;
-            colorCell.querySelector('#Font-Color-cell').setAttribute('value', color);
+            colorCell.find('#Font-Color-cell').value = color;
+            colorCell.find('#Font-Color-cell').setAttribute('value', color);
         });
 
         this.paneStyle.addEventListener('mutated', event => {

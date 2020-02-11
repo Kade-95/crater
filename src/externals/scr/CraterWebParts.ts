@@ -38,7 +38,7 @@ class CraterWebParts {
 	public elementModifier = new ElementModifier();
 	public sharePoint: any;
 	public connectable: any = [
-		'list', 'slider', 'counter', 'tiles', 'news', 'table', 'icons', 'button', 'events', 'carousel', 'datelist'
+		'list', 'slider', 'counter', 'tiles', 'news', 'table', 'icons', 'button', 'events', 'carousel', 'datelist', 'event'
 	];
 
 	constructor(params) {
@@ -86,7 +86,7 @@ class CraterWebParts {
 	// setup the color picker compnent
 	public pickColor(params, callBack) {
 		//remove all color pickers
-		params.parent.querySelectorAll('.pick-color').forEach(element => {
+		params.parent.findAll('.pick-color').forEach(element => {
 			element.remove();
 		});
 		this.elementModifier.sharepoint = this.sharePoint;
@@ -102,7 +102,7 @@ class CraterWebParts {
 
 			options.addEventListener('click', () => {
 				//pick the color
-				params.parent.querySelectorAll('.crater-color-picker').forEach(element => {
+				params.parent.findAll('.crater-color-picker').forEach(element => {
 					element.remove();
 				});
 				let colorPicker = new ColorPicker({ width: 200, height: 200 });
@@ -115,7 +115,7 @@ class CraterWebParts {
 		params.cell.onChanged(callBack);
 
 		params.parent.addEventListener('mouseleave', (event) => {
-			params.parent.querySelectorAll('.pick-color').forEach(element => {
+			params.parent.findAll('.pick-color').forEach(element => {
 				element.remove();
 			});
 		});
@@ -124,7 +124,7 @@ class CraterWebParts {
 	//set up the image uploader
 	public uploadImage(params, callBack) {
 		//remove all the uploader
-		params.parent.querySelectorAll('.upload-form').forEach(element => {
+		params.parent.findAll('.upload-form').forEach(element => {
 			element.remove();
 		});
 		this.elementModifier.sharepoint = this.sharePoint;
@@ -137,12 +137,12 @@ class CraterWebParts {
 			params.parent.css({ position: 'relative' });
 
 			add.addEventListener('click', () => {
-				params.parent.querySelectorAll('.upload-form').forEach(element => {
+				params.parent.findAll('.upload-form').forEach(element => {
 					element.remove();
 				});
 				//add the uploader
 				this.elementModifier.importImage({ parent: params.parent, name: 'upload', attributes: { class: 'upload-form' } }, (image) => {
-					params.parent.querySelectorAll('.upload-form').forEach(element => {
+					params.parent.findAll('.upload-form').forEach(element => {
 						element.remove();
 					});
 					callBack(image);
@@ -151,7 +151,7 @@ class CraterWebParts {
 		});
 
 		params.parent.addEventListener('mouseleave', (event) => {
-			params.parent.querySelectorAll('.upload-image').forEach(element => {
+			params.parent.findAll('.upload-image').forEach(element => {
 				element.remove();
 			});
 		});
@@ -169,7 +169,9 @@ class CraterWebParts {
 			edit: this.sharePoint.images.edit,
 			delete: this.sharePoint.images.delete,
 			clone: this.sharePoint.images.copy,
-			paste: this.sharePoint.images.paste
+			paste: this.sharePoint.images.paste,
+			undo: this.sharePoint.images.undo,
+			redo: this.sharePoint.images.redo
 		};
 
 		for (let option of params.options) {
@@ -190,37 +192,37 @@ class CraterWebParts {
 		let handlePaste = (webpart) => {
 			if (webpart.classList.contains('crater-container')) {
 				if (this.sharePoint.pasteActive) {
-					webpart.querySelector('.webpart-options').querySelector('#paste-me').show();
+					webpart.find('.webpart-options').find('#paste-me').show();
 				} else {
-					webpart.querySelector('.webpart-options').querySelector('#paste-me').hide();
+					webpart.find('.webpart-options').find('#paste-me').hide();
 				}
 			}
 		};
 
 		element.addEventListener('mouseenter', event => {
 			if (element.hasAttribute('data-key') && this.sharePoint.inEditMode()) {
-				element.querySelector('.webpart-options').show();
+				element.find('.webpart-options').show();
 				handlePaste(element);
 			}
 		});
 
 		element.addEventListener('mouseleave', event => {
 			if (element.hasAttribute('data-key')) {
-				element.querySelector('.webpart-options').hide();
+				element.find('.webpart-options').hide();
 			}
 		});
 
-		element.querySelectorAll('.keyed-element').forEach(keyedElement => {
+		element.findAll('.keyed-element').forEach(keyedElement => {
 			keyedElement.addEventListener('mouseenter', event => {
 				if (keyedElement.hasAttribute('data-key') && this.sharePoint.inEditMode()) {
-					keyedElement.querySelector('.webpart-options').show();
+					keyedElement.find('.webpart-options').show();
 					handlePaste(keyedElement);
 				}
 			});
 
 			keyedElement.addEventListener('mouseleave', event => {
 				if (keyedElement.hasAttribute('data-key')) {
-					keyedElement.querySelector('.webpart-options').hide();
+					keyedElement.find('.webpart-options').hide();
 				}
 			});
 		});
@@ -264,12 +266,12 @@ class CraterWebParts {
 		if (func.isset(params.alignOptions)) {
 			let align = {};
 			if (params.alignOptions == 'bottom') {
-				element.querySelector('.webpart-options').css({ top: 'unset' });
+				element.find('.webpart-options').css({ top: 'unset' });
 			}
 			align[params.alignOptions] = '0px';
-			element.querySelector('.webpart-options').css(align);
+			element.find('.webpart-options').css(align);
 			if (params.alignOptions == 'center') {
-				element.querySelector('.webpart-options').css({ margin: '0em 3em' });
+				element.find('.webpart-options').css({ margin: '0em 3em' });
 			}
 		}
 
@@ -448,7 +450,7 @@ class EmployeeDirectory extends CraterWebParts {
 
 		let settings = this.sharePoint.properties.pane.content[this.key].settings;
 
-		let display = this.element.querySelector('.crater-employee-directory-display');
+		let display = this.element.find('.crater-employee-directory-display');
 
 		let gmail = 'https://mail.google.com';
 		let outlook = 'https://outlook.office365.com/mail';
@@ -456,13 +458,11 @@ class EmployeeDirectory extends CraterWebParts {
 		let skype = 'https://www.skype.com/en/business/';
 		let teams = 'https://teams.microsoft.com/_#/conversations';
 
-		let me;
-
 		display.innerHTML = '';
 
 		display.makeElement({ element: 'img', attributes: { src: this.sharePoint.images.loading, class: 'crater-icon', style: { alignSelf: 'center', justifySelf: 'center' } } });
 
-		let getUsers = async () => {
+		let getUsers = () => {
 			this.sharePoint.connection.getWithGraph().then(client => {
 				client.api('/users')
 					.select('mail, displayName, givenName, id, jobTitle, mobilePhone')
@@ -471,28 +471,35 @@ class EmployeeDirectory extends CraterWebParts {
 
 						for (let employee of this.users) {
 							settings.employees[employee.id] = employee;
-							let getImage = () => {
-								client.api(`/users/${employee.id}/photo/$value`)
-									.responseType('blob')
-									.get((error: any, result: any, rawResponse?: any) => {
-										if (!func.setNotNull(result)) return;
-										settings.employees[employee.id].photo = result;
-										if (displayed) {
-											display.querySelector(`#row-${employee.id}`).querySelector('.crater-employee-directory-dp').src = window.URL.createObjectURL(result);
-										}
-									});
+
+							let getImage = (id) => {
+								return new Promise((resolve, reject) => {
+									client.api(`/users/${id}/photo/$value`)
+										.responseType('blob')
+										.get((error: any, result: any, rawResponse?: any) => {
+											if (!func.setNotNull(result)) return;
+											settings.employees[id].photo = result;
+											if (displayed) {
+												display.find(`#row-${id}`).find('.crater-employee-directory-dp').src = window.URL.createObjectURL(result);
+											}
+											resolve();
+										});
+								});
 							};
 
-							let getDepartment = () => {
-								client.api(`/users/${employee.id}/department`)
-									.get((error: any, result: any, rawResponse?: any) => {
-										if (!func.setNotNull(result)) return;
-										settings.employees[employee.id].department = result.value;
-									});
+							let getDepartment = (id) => {
+								return new Promise((resolve, reject) => {
+									client.api(`/users/${id}/department`)
+										.get((error: any, result: any, rawResponse?: any) => {
+											if (!func.setNotNull(result)) return;
+											settings.employees[employee.id].department = result.value;
+											resolve();
+										});
+								});
 							};
 
-							getImage();
-							getDepartment();
+							getImage(employee.id);
+							getDepartment(employee.id);
 						}
 
 						this.displayUsers(display);
@@ -503,11 +510,12 @@ class EmployeeDirectory extends CraterWebParts {
 
 		if (!this.sharePoint.isLocal) {
 			getUsers();
-		} else {
+		}
+		else {
 			let sample = { mail: 'kennedy.ikeka@ipigroupng.com', id: this.key, displayName: 'Ikeka Kennedy', jobTitle: 'Programmer' };
 			this.users = [];
 			settings.employees = {};
-			for (let i = 0; i < 4; i++) {
+			for (let i = 0; i < 100; i++) {
 				this.users.push(sample);
 				settings.employees[this.key] = sample;
 			}
@@ -515,9 +523,9 @@ class EmployeeDirectory extends CraterWebParts {
 			this.displayUsers(display);
 		}
 
-		let changeSearchType = this.element.querySelector('#crater-employee-directory-search-type');
-		let changeSearchQuery = this.element.querySelector('#crater-employee-directory-search-query');
-		let sync = this.element.querySelector('#crater-employee-directory-sync');
+		let changeSearchType = this.element.find('#crater-employee-directory-search-type');
+		let changeSearchQuery = this.element.find('#crater-employee-directory-search-query');
+		let sync = this.element.find('#crater-employee-directory-sync');
 
 		sync.addEventListener('click', event => {
 			getUsers();
@@ -537,7 +545,7 @@ class EmployeeDirectory extends CraterWebParts {
 			this.displayUsers(display);
 		});
 
-		let menu = this.element.querySelector('.crater-employee-directory-menu');
+		let menu = this.element.find('.crater-employee-directory-menu');
 		if (menu.position().width < 400) {
 			menu.css({ gridTemplateColumns: '1fr' });
 		} else {
@@ -551,7 +559,7 @@ class EmployeeDirectory extends CraterWebParts {
 				element.classList.toggle('open');
 				let row = element.getParents('.crater-employee-directory-row');
 
-				display.querySelectorAll('.crater-employee-directory-other-details').forEach(other => {
+				display.findAll('.crater-employee-directory-other-details').forEach(other => {
 					other.remove();
 				});
 
@@ -643,7 +651,7 @@ class EmployeeDirectory extends CraterWebParts {
 
 			display.makeElement({
 				element: 'div', attributes: { class: 'crater-employee-directory-row', id: `row-${employee.id}` }, children: [
-					{ element: 'img', attributes: { class: 'crater-employee-directory-dp', src: photo } },
+					{ element: 'img', attributes: { class: 'crater-employee-directory-dp', src: 'photo' } },
 					{
 						element: 'span', attributes: { class: 'crater-employee-directory-details' }, children: [
 							{ element: 'p', attributes: { class: 'crater-employee-directory-name' }, text: employee.displayName },
@@ -823,76 +831,76 @@ class EmployeeDirectory extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset.key;
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 		let settings = this.sharePoint.properties.pane.content[this.key].settings;
 
 		let domDraft = this.sharePoint.properties.pane.content[this.key].draft.dom;
 
-		let menuPane = this.paneContent.querySelector('.menu-pane');
-		let searchTypePane = this.paneContent.querySelector('.search-type-pane');
-		let displayPane = this.paneContent.querySelector('.display-pane');
-		let appsPane = this.paneContent.querySelector('.apps-pane');
+		let menuPane = this.paneContent.find('.menu-pane');
+		let searchTypePane = this.paneContent.find('.search-type-pane');
+		let displayPane = this.paneContent.find('.display-pane');
+		let appsPane = this.paneContent.find('.apps-pane');
 
-		appsPane.querySelector('#Mail-cell').onChanged();
-		appsPane.querySelector('#Message-cell').onChanged();
-		appsPane.querySelector('#Call-cell').onChanged();
+		appsPane.find('#Mail-cell').onChanged();
+		appsPane.find('#Message-cell').onChanged();
+		appsPane.find('#Call-cell').onChanged();
 
-		menuPane.querySelector('#Border-Color-cell').onChanged(borderColor => {
-			let borderType = menuPane.querySelector('#Border-Type-cell').value || 'solid';
-			let borderSize = menuPane.querySelector('#Border-Size-cell').value || '1px';
-			domDraft.querySelector('.crater-employee-directory-menu').css({ border: `${borderSize} ${borderType} ${borderColor}` });
+		menuPane.find('#Border-Color-cell').onChanged(borderColor => {
+			let borderType = menuPane.find('#Border-Type-cell').value || 'solid';
+			let borderSize = menuPane.find('#Border-Size-cell').value || '1px';
+			domDraft.find('.crater-employee-directory-menu').css({ border: `${borderSize} ${borderType} ${borderColor}` });
 		});
 
-		menuPane.querySelector('#Border-Size-cell').onChanged(borderSize => {
-			let borderType = menuPane.querySelector('#Border-Type-cell').value || 'solid';
-			let borderColor = menuPane.querySelector('#Border-Color-cell').value || '1px';
-			domDraft.querySelector('.crater-employee-directory-menu').css({ border: `${borderSize} ${borderType} ${borderColor}` });
+		menuPane.find('#Border-Size-cell').onChanged(borderSize => {
+			let borderType = menuPane.find('#Border-Type-cell').value || 'solid';
+			let borderColor = menuPane.find('#Border-Color-cell').value || '1px';
+			domDraft.find('.crater-employee-directory-menu').css({ border: `${borderSize} ${borderType} ${borderColor}` });
 		});
 
-		menuPane.querySelector('#Border-Type-cell').onChanged(borderType => {
-			let borderSize = menuPane.querySelector('#Border-Size-cell').value || 'solid';
-			let borderColor = menuPane.querySelector('#Border-Color-cell').value || '1px';
-			domDraft.querySelector('.crater-employee-directory-menu').css({ border: `${borderSize} ${borderType} ${borderColor}` });
+		menuPane.find('#Border-Type-cell').onChanged(borderType => {
+			let borderSize = menuPane.find('#Border-Size-cell').value || 'solid';
+			let borderColor = menuPane.find('#Border-Color-cell').value || '1px';
+			domDraft.find('.crater-employee-directory-menu').css({ border: `${borderSize} ${borderType} ${borderColor}` });
 		});
 
-		menuPane.querySelector('#Background-Color-cell').onChanged(backgroundColor => {
-			domDraft.querySelector('.crater-employee-directory-menu').css({ backgroundColor });
+		menuPane.find('#Background-Color-cell').onChanged(backgroundColor => {
+			domDraft.find('.crater-employee-directory-menu').css({ backgroundColor });
 		});
 
-		searchTypePane.querySelector('#Shadow-cell').onChanged(boxShadow => {
-			domDraft.querySelector('#crater-employee-directory-search-type').css({ boxShadow });
+		searchTypePane.find('#Shadow-cell').onChanged(boxShadow => {
+			domDraft.find('#crater-employee-directory-search-type').css({ boxShadow });
 		});
 
-		searchTypePane.querySelector('#Border-cell').onChanged(border => {
-			domDraft.querySelector('#crater-employee-directory-search-type').css({ border });
+		searchTypePane.find('#Border-cell').onChanged(border => {
+			domDraft.find('#crater-employee-directory-search-type').css({ border });
 		});
 
-		searchTypePane.querySelector('#Color-cell').onChanged(color => {
-			domDraft.querySelector('#crater-employee-directory-search-type').css({ color });
+		searchTypePane.find('#Color-cell').onChanged(color => {
+			domDraft.find('#crater-employee-directory-search-type').css({ color });
 		});
 
-		searchTypePane.querySelector('#Background-Color-cell').onChanged(backgroundColor => {
-			domDraft.querySelector('#crater-employee-directory-search-type').css({ backgroundColor });
+		searchTypePane.find('#Background-Color-cell').onChanged(backgroundColor => {
+			domDraft.find('#crater-employee-directory-search-type').css({ backgroundColor });
 		});
 
-		displayPane.querySelector('#Height-cell').onChanged(height => {
-			domDraft.querySelector('.crater-employee-directory-display').css({ height });
+		displayPane.find('#Height-cell').onChanged(height => {
+			domDraft.find('.crater-employee-directory-display').css({ height });
 		});
 
-		displayPane.querySelector('#Background-Color-cell').onChanged(backgroundColor => {
-			domDraft.querySelector('.crater-employee-directory-display').css({ backgroundColor });
+		displayPane.find('#Background-Color-cell').onChanged(backgroundColor => {
+			domDraft.find('.crater-employee-directory-display').css({ backgroundColor });
 		});
 
-		displayPane.querySelector('#Font-Color-cell').onChanged(color => {
-			domDraft.querySelector('.crater-employee-directory-display').css({ color });
+		displayPane.find('#Font-Color-cell').onChanged(color => {
+			domDraft.find('.crater-employee-directory-display').css({ color });
 		});
 
-		displayPane.querySelector('#Font-Size-cell').onChanged(fontSize => {
-			domDraft.querySelector('.crater-employee-directory-display').css({ fontSize });
+		displayPane.find('#Font-Size-cell').onChanged(fontSize => {
+			domDraft.find('.crater-employee-directory-display').css({ fontSize });
 		});
 
-		displayPane.querySelector('#Font-Style-cell').onChanged(fontFamily => {
-			domDraft.querySelector('.crater-employee-directory-display').css({ fontFamily });
+		displayPane.find('#Font-Style-cell').onChanged(fontFamily => {
+			domDraft.find('.crater-employee-directory-display').css({ fontFamily });
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
@@ -900,16 +908,16 @@ class EmployeeDirectory extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.mailApp = appsPane.querySelector('#Mail-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.mailApp = appsPane.find('#Mail-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.messageApp = appsPane.querySelector('#Message-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.messageApp = appsPane.find('#Message-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.callApp = appsPane.querySelector('#Call-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.callApp = appsPane.find('#Call-cell').value;
 		});
 	}
 }
@@ -984,10 +992,10 @@ class Carousel extends CraterWebParts {
 
 	public startSlide() {
 		this.key = this.element.dataset['key'];
-		let controller = this.element.querySelector('#crater-carousel-controller'),
-			arrows = this.element.querySelectorAll('.crater-arrow'),
+		let controller = this.element.find('#crater-carousel-controller'),
+			arrows = this.element.findAll('.crater-arrow'),
 			radios,
-			columns = this.element.querySelectorAll('.crater-carousel-column'),
+			columns = this.element.findAll('.crater-carousel-column'),
 			radio: any,
 			key = 0;
 
@@ -1004,7 +1012,7 @@ class Carousel extends CraterWebParts {
 				element: 'input', attributes: { class: 'crater-carousel-radio-toggle', type: 'radio' }
 			});
 		}
-		radios = controller.querySelectorAll('.crater-carousel-radio-toggle');
+		radios = controller.findAll('.crater-carousel-radio-toggle');
 
 		//fading and fadeout animation
 
@@ -1094,7 +1102,7 @@ class Carousel extends CraterWebParts {
 			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
 		}
 		else {
-			let columns = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelectorAll('.crater-carousel-column');
+			let columns = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-carousel-column');
 
 			this.paneContent.makeElement({
 				element: 'div', children: [
@@ -1172,16 +1180,16 @@ class Carousel extends CraterWebParts {
 				children: [
 					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-carousel-column' }),
 					this.elementModifier.cell({
-						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.columns[i].querySelector('.crater-carousel-image').src }
+						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.columns[i].find('.crater-carousel-image').src }
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Text', attributes: {}, value: params.columns[i].querySelector('.crater-carousel-text').innerText || ''
+						element: 'input', name: 'Text', attributes: {}, value: params.columns[i].find('.crater-carousel-text').innerText || ''
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Color', attributes: {}, value: params.columns[i].querySelector('.crater-carousel-text').css().color || '', list: func.colors
+						element: 'input', name: 'Color', attributes: {}, value: params.columns[i].find('.crater-carousel-text').css().color || '', list: func.colors
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'BackgroundColor', attributes: {}, value: params.columns[i].querySelector('.crater-carousel-text').css().backgroundColor || ''
+						element: 'input', name: 'BackgroundColor', attributes: {}, value: params.columns[i].find('.crater-carousel-text').css().backgroundColor || ''
 					}),
 				]
 			});
@@ -1193,11 +1201,11 @@ class Carousel extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
 		let domDraft = this.sharePoint.properties.pane.content[this.key].draft.dom;
-		let content = domDraft.querySelector('.crater-carousel-content');
-		let columns = domDraft.querySelectorAll('.crater-carousel-column');
+		let content = domDraft.find('.crater-carousel-content');
+		let columns = domDraft.findAll('.crater-carousel-column');
 
 		let columnPanePrototype = this.elementModifier.createElement({
 			element: 'div',
@@ -1230,43 +1238,43 @@ class Carousel extends CraterWebParts {
 
 		let carouselColumnHandler = (columnPane, columnDom) => {
 			columnPane.addEventListener('mouseover', event => {
-				columnPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				columnPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			columnPane.addEventListener('mouseout', event => {
-				columnPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				columnPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			let imageCell = columnPane.querySelector('#Image-cell').parentNode;
+			let imageCell = columnPane.find('#Image-cell').parentNode;
 			this.uploadImage({ parent: imageCell }, (image) => {
-				imageCell.querySelector('#Image-cell').src = image.src;
-				columnDom.querySelector('.crater-carousel-image').src = image.src;
+				imageCell.find('#Image-cell').src = image.src;
+				columnDom.find('.crater-carousel-image').src = image.src;
 			});
 
-			columnPane.querySelector('#Text-cell').onChanged(value => {
-				columnDom.querySelector('.crater-carousel-text').textContent = value;
+			columnPane.find('#Text-cell').onChanged(value => {
+				columnDom.find('.crater-carousel-text').textContent = value;
 			});
 
-			let colorCell = columnPane.querySelector('#Color-cell').parentNode;
-			this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#Color-cell') }, (color) => {
-				columnDom.querySelector('.crater-carousel-text').css({ color });
-				colorCell.querySelector('#Color-cell').value = color;
-				colorCell.querySelector('#Color-cell').setAttribute('value', color);
+			let colorCell = columnPane.find('#Color-cell').parentNode;
+			this.pickColor({ parent: colorCell, cell: colorCell.find('#Color-cell') }, (color) => {
+				columnDom.find('.crater-carousel-text').css({ color });
+				colorCell.find('#Color-cell').value = color;
+				colorCell.find('#Color-cell').setAttribute('value', color);
 			});
 
-			let backgroundColorCell = columnPane.querySelector('#BackgroundColor-cell').parentNode;
-			this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#BackgroundColor-cell') }, (backgroundColor) => {
+			let backgroundColorCell = columnPane.find('#BackgroundColor-cell').parentNode;
+			this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#BackgroundColor-cell') }, (backgroundColor) => {
 				columnDom.css({ backgroundColor });
-				backgroundColorCell.querySelector('#BackgroundColor-cell').value = backgroundColor;
-				backgroundColorCell.querySelector('#BackgroundColor-cell').setAttribute('value', backgroundColor);
+				backgroundColorCell.find('#BackgroundColor-cell').value = backgroundColor;
+				backgroundColorCell.find('#BackgroundColor-cell').setAttribute('value', backgroundColor);
 			});
 
-			columnPane.querySelector('.delete-crater-carousel-column').addEventListener('click', event => {
+			columnPane.find('.delete-crater-carousel-column').addEventListener('click', event => {
 				columnDom.remove();
 				columnPane.remove();
 			});
 
-			columnPane.querySelector('.add-before-crater-carousel-column').addEventListener('click', event => {
+			columnPane.find('.add-before-crater-carousel-column').addEventListener('click', event => {
 				let newColumnPrototype = columnPrototype.cloneNode(true);
 				let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
 
@@ -1275,7 +1283,7 @@ class Carousel extends CraterWebParts {
 				carouselColumnHandler(newColumnPanePrototype, newColumnPrototype);
 			});
 
-			columnPane.querySelector('.add-after-crater-carousel-column').addEventListener('click', event => {
+			columnPane.find('.add-after-crater-carousel-column').addEventListener('click', event => {
 				let newColumnPrototype = columnPrototype.cloneNode(true);
 				let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
 
@@ -1285,48 +1293,48 @@ class Carousel extends CraterWebParts {
 			});
 		};
 
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 			let newColumnPrototype = columnPrototype.cloneNode(true);
 			let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
 
 			content.append(newColumnPrototype);//c
-			this.paneContent.querySelector('.columns-pane').append(newColumnPanePrototype);
+			this.paneContent.find('.columns-pane').append(newColumnPanePrototype);
 
 			carouselColumnHandler(newColumnPanePrototype, newColumnPrototype);
 		});
 
-		this.paneContent.querySelectorAll('.crater-carousel-column-pane').forEach((columnPane, position) => {
+		this.paneContent.findAll('.crater-carousel-column-pane').forEach((columnPane, position) => {
 			carouselColumnHandler(columnPane, columns[position]);
 		});
 
-		let settingsPane = this.paneContent.querySelector('.settings-pane');
+		let settingsPane = this.paneContent.find('.settings-pane');
 
-		settingsPane.querySelector('#Duration-cell').onChanged();
+		settingsPane.find('#Duration-cell').onChanged();
 
-		settingsPane.querySelector('#Columns-cell').onChanged(value => {
-			domDraft.querySelector('.crater-carousel-content').css({ gridTemplateColumns: `repeat(${value}, 1fr)` });
+		settingsPane.find('#Columns-cell').onChanged(value => {
+			domDraft.find('.crater-carousel-content').css({ gridTemplateColumns: `repeat(${value}, 1fr)` });
 		});
 
-		settingsPane.querySelector('#FontSize-cell').onChanged(fontSize => {
-			domDraft.querySelectorAll('.crater-carousel-text').forEach(text => {
+		settingsPane.find('#FontSize-cell').onChanged(fontSize => {
+			domDraft.findAll('.crater-carousel-text').forEach(text => {
 				text.css({ fontSize });
 			});
 		});
 
-		settingsPane.querySelector('#FontStyle-cell').onChanged(fontFamily => {
-			domDraft.querySelectorAll('.crater-carousel-text').forEach(text => {
+		settingsPane.find('#FontStyle-cell').onChanged(fontFamily => {
+			domDraft.findAll('.crater-carousel-text').forEach(text => {
 				text.css({ fontFamily });
 			});
 		});
 
-		settingsPane.querySelector('#ImageSize-cell').onChanged(width => {
-			domDraft.querySelectorAll('.crater-carousel-image').forEach(text => {
+		settingsPane.find('#ImageSize-cell').onChanged(width => {
+			domDraft.findAll('.crater-carousel-image').forEach(text => {
 				text.css({ width });
 			});
 		});
 
-		settingsPane.querySelector('#ShowText-cell').onChanged(display => {
-			domDraft.querySelectorAll('.crater-carousel-text').forEach(text => {
+		settingsPane.find('#ShowText-cell').onChanged(display => {
+			domDraft.findAll('.crater-carousel-text').forEach(text => {
 				if (display.toLowerCase() == 'no') {
 					text.hide();
 				} else {
@@ -1335,8 +1343,8 @@ class Carousel extends CraterWebParts {
 			});
 		});
 
-		settingsPane.querySelector('#Curved-cell').onChanged(curved => {
-			domDraft.querySelectorAll('.crater-carousel-column').forEach(column => {
+		settingsPane.find('#Curved-cell').onChanged(curved => {
+			domDraft.findAll('.crater-carousel-column').forEach(column => {
 				if (curved.toLowerCase() == 'yes') {
 					column.css({ borderRadius: '10px' });
 				} else {
@@ -1345,8 +1353,8 @@ class Carousel extends CraterWebParts {
 			});
 		});
 
-		settingsPane.querySelector('#Shadow-cell').onChanged(shadow => {
-			domDraft.querySelectorAll('.crater-carousel-column').forEach(column => {
+		settingsPane.find('#Shadow-cell').onChanged(shadow => {
+			domDraft.findAll('.crater-carousel-column').forEach(column => {
 				if (shadow.toLowerCase() == 'yes') {
 					column.css({ boxShadow: 'var(--accient-shadow)' });
 				} else {
@@ -1360,13 +1368,13 @@ class Carousel extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.querySelector('#Duration-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.querySelector('#Columns-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.find('#Columns-cell').value;
 		});
 	}
 
@@ -1376,7 +1384,7 @@ class Carousel extends CraterWebParts {
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
-		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
 
 		let updateWindow = this.elementModifier.createForm({
 			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
@@ -1391,24 +1399,24 @@ class Carousel extends CraterWebParts {
 
 		let data: any = {};
 		let source: any;
-		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+		updateWindow.find('#update-element').addEventListener('click', event => {
 			event.preventDefault();
-			data.image = updateWindow.querySelector('#meta-data-image').value;
-			data.text = updateWindow.querySelector('#meta-data-text').value;
+			data.image = updateWindow.find('#meta-data-image').value;
+			data.text = updateWindow.find('#meta-data-text').value;
 			source = func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
-			draftDom.querySelector('.crater-carousel-content').innerHTML = newContent.querySelector('.crater-carousel-content').innerHTML;
+			draftDom.find('.crater-carousel-content').innerHTML = newContent.find('.crater-carousel-content').innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
 
-			this.paneContent.querySelector('.columns-pane').innerHTML = this.generatePaneContent({ columns: newContent.querySelectorAll('.crater-carousel-column') }).innerHTML;
+			this.paneContent.find('.columns-pane').innerHTML = this.generatePaneContent({ columns: newContent.findAll('.crater-carousel-column') }).innerHTML;
 
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
 		if (!func.isnull(paneConnection)) {
-			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
@@ -1453,7 +1461,7 @@ class Events extends CraterWebParts {
 			]
 		});
 
-		let content = events.querySelector('.crater-events-content');
+		let content = events.find('.crater-events-content');
 
 		for (let row of params.source) {
 			content.makeElement({
@@ -1505,11 +1513,11 @@ class Events extends CraterWebParts {
 		let detailsPosition = layout.indexOf('Details') + 1;
 		let datePosition = layout.indexOf('Date') + 1;
 
-		let rows = this.element.querySelectorAll('.crater-events-row');
+		let rows = this.element.findAll('.crater-events-row');
 		rows.forEach(row => {
-			row.querySelector('.crater-events-row-icon').css({ gridColumnStart: iconPosition, gridColumnEnd: iconPosition, gridRowStart: 1 });
-			row.querySelector('.crater-events-details').css({ gridColumnStart: detailsPosition, gridColumnEnd: detailsPosition, gridRowStart: 1 });
-			row.querySelector('.crater-events-date').css({ gridColumnStart: datePosition, gridColumnEnd: datePosition, gridRowStart: 1 });
+			row.find('.crater-events-row-icon').css({ gridColumnStart: iconPosition, gridColumnEnd: iconPosition, gridRowStart: 1 });
+			row.find('.crater-events-details').css({ gridColumnStart: detailsPosition, gridColumnEnd: detailsPosition, gridRowStart: 1 });
+			row.find('.crater-events-date').css({ gridColumnStart: datePosition, gridColumnEnd: datePosition, gridRowStart: 1 });
 		});
 
 	}
@@ -1529,8 +1537,8 @@ class Events extends CraterWebParts {
 			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
 		}
 		else {
-			let eventsContent = this.sharePoint.properties.pane.content[key].draft.dom.querySelector('.crater-events-content');
-			let eventsRows = eventsContent.querySelectorAll('.crater-events-row');
+			let eventsContent = this.sharePoint.properties.pane.content[key].draft.dom.find('.crater-events-content');
+			let eventsRows = eventsContent.findAll('.crater-events-row');
 
 			this.paneContent.makeElement({
 				element: 'div', children: [
@@ -1552,28 +1560,28 @@ class Events extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: this.element.querySelector('.crater-events-title-icon').src }
+								element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: this.element.find('.crater-events-title-icon').src }
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'iconsize', value: this.element.querySelector('.crater-events-title-icon').css()['width'] || ''
+								element: 'input', name: 'iconsize', value: this.element.find('.crater-events-title-icon').css()['width'] || ''
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'title', value: this.element.querySelector('.crater-events-title-text').textContent
+								element: 'input', name: 'title', value: this.element.find('.crater-events-title-text').textContent
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'backgroundcolor', value: this.element.querySelector('.crater-events-title').css()['background-color'], list: func.colors
+								element: 'input', name: 'backgroundcolor', value: this.element.find('.crater-events-title').css()['background-color'], list: func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.querySelector('.crater-events-title').css().color, list: func.colors
+								element: 'input', name: 'color', value: this.element.find('.crater-events-title').css().color, list: func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontsize', value: this.element.querySelector('.crater-events-title').css()['font-size']
+								element: 'input', name: 'fontsize', value: this.element.find('.crater-events-title').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontstyle', value: this.element.querySelector('.crater-events-title').css()['font-family'] || ''
+								element: 'input', name: 'fontstyle', value: this.element.find('.crater-events-title').css()['font-family'] || ''
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'height', value: this.element.querySelector('.crater-events-title').css()['height'] || ''
+								element: 'input', name: 'height', value: this.element.find('.crater-events-title').css()['height'] || ''
 							})
 						]
 					})
@@ -1759,19 +1767,19 @@ class Events extends CraterWebParts {
 				children: [
 					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-event-row' }),
 					this.elementModifier.cell({
-						element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.events[i].querySelector('#icon').src }
+						element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.events[i].find('#icon').src }
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'task', value: params.events[i].querySelector('#task').textContent
+						element: 'input', name: 'task', value: params.events[i].find('#task').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'duration', value: params.events[i].querySelector('#duration').textContent
+						element: 'input', name: 'duration', value: params.events[i].find('#duration').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'location', value: params.events[i].querySelector('#location').textContent
+						element: 'input', name: 'location', value: params.events[i].find('#location').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'date', value: params.events[i].querySelector('#date').textContent
+						element: 'input', name: 'date', value: params.events[i].find('#date').textContent
 					}),
 				]
 			});
@@ -1784,7 +1792,7 @@ class Events extends CraterWebParts {
 		this.key = params.element.dataset['key'];
 		this.element = params.element;
 		let domDraft = this.sharePoint.properties.pane.content[this.key].draft.dom;
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
 		let eventPrototype = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-events-row' }, children: [
@@ -1841,63 +1849,63 @@ class Events extends CraterWebParts {
 			]
 		});
 
-		let titlePane = this.paneContent.querySelector('.title-pane');
+		let titlePane = this.paneContent.find('.title-pane');
 
-		titlePane.querySelector('#title-cell').onChanged(value => {
-			domDraft.querySelector('.crater-events-title-text').textContent = value;
+		titlePane.find('#title-cell').onChanged(value => {
+			domDraft.find('.crater-events-title-text').textContent = value;
 		});
 
-		titlePane.querySelector('#fontsize-cell').onChanged(fontSize => {
-			domDraft.querySelector('.crater-events-title-text').css({ fontSize });
+		titlePane.find('#fontsize-cell').onChanged(fontSize => {
+			domDraft.find('.crater-events-title-text').css({ fontSize });
 		});
 
-		titlePane.querySelector('#fontstyle-cell').onChanged(fontFamily => {
-			domDraft.querySelector('.crater-events-title-text').css({ fontFamily });
+		titlePane.find('#fontstyle-cell').onChanged(fontFamily => {
+			domDraft.find('.crater-events-title-text').css({ fontFamily });
 		});
 
-		let colorCell = titlePane.querySelector('#color-cell').parentNode;
-		this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#color-cell') }, (color) => {
-			domDraft.querySelector('.crater-events-title-text').css({ color });
-			colorCell.querySelector('#color-cell').value = color;
-			colorCell.querySelector('#color-cell').setAttribute('value', color);
+		let colorCell = titlePane.find('#color-cell').parentNode;
+		this.pickColor({ parent: colorCell, cell: colorCell.find('#color-cell') }, (color) => {
+			domDraft.find('.crater-events-title-text').css({ color });
+			colorCell.find('#color-cell').value = color;
+			colorCell.find('#color-cell').setAttribute('value', color);
 		});
 
-		let iconCell = titlePane.querySelector('#icon-cell').parentNode;
+		let iconCell = titlePane.find('#icon-cell').parentNode;
 		this.uploadImage({ parent: iconCell }, (image) => {
-			iconCell.querySelector('#icon-cell').src = image.src;
-			domDraft.querySelector('.crater-events-title-icon').src = image.src;
+			iconCell.find('#icon-cell').src = image.src;
+			domDraft.find('.crater-events-title-icon').src = image.src;
 		});
 
-		titlePane.querySelector('#iconsize-cell').onChanged(width => {
-			domDraft.querySelector('.crater-events-title-icon').css({ width });
+		titlePane.find('#iconsize-cell').onChanged(width => {
+			domDraft.find('.crater-events-title-icon').css({ width });
 		});
 
-		titlePane.querySelector('#height-cell').onChanged(height => {
-			domDraft.querySelector('.crater-events-title').css({ height });
+		titlePane.find('#height-cell').onChanged(height => {
+			domDraft.find('.crater-events-title').css({ height });
 		});
 
-		let backgroundColorCell = titlePane.querySelector('#backgroundcolor-cell').parentNode;
-		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
-			domDraft.querySelector('.crater-events-title').css({ backgroundColor });
-			backgroundColorCell.querySelector('#backgroundcolor-cell').value = backgroundColor;
-			backgroundColorCell.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor);
+		let backgroundColorCell = titlePane.find('#backgroundcolor-cell').parentNode;
+		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#backgroundcolor-cell') }, (backgroundColor) => {
+			domDraft.find('.crater-events-title').css({ backgroundColor });
+			backgroundColorCell.find('#backgroundcolor-cell').value = backgroundColor;
+			backgroundColorCell.find('#backgroundcolor-cell').setAttribute('value', backgroundColor);
 		});
 
 		let eventHandler = (eventPane, eventDom) => {
 			eventPane.addEventListener('mouseover', event => {
-				eventPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				eventPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			eventPane.addEventListener('mouseout', event => {
-				eventPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				eventPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			eventPane.querySelector('.delete-crater-event-row').addEventListener('click', event => {
+			eventPane.find('.delete-crater-event-row').addEventListener('click', event => {
 				eventDom.remove();
 				eventPane.remove();
 			});
 
-			eventPane.querySelector('.add-before-crater-event-row').addEventListener('click', event => {
+			eventPane.find('.add-before-crater-event-row').addEventListener('click', event => {
 				let newEventventPrototype = eventPrototype.cloneNode(true);
 				let newEventPanePrototype = eventPanePrototype.cloneNode(true);
 
@@ -1906,7 +1914,7 @@ class Events extends CraterWebParts {
 				eventHandler(newEventPanePrototype, newEventventPrototype);
 			});
 
-			eventPane.querySelector('.add-after-crater-event-row').addEventListener('click', event => {
+			eventPane.find('.add-after-crater-event-row').addEventListener('click', event => {
 				let newEventventPrototype = eventPrototype.cloneNode(true);
 				let newEventPanePrototype = eventPanePrototype.cloneNode(true);
 
@@ -1915,103 +1923,103 @@ class Events extends CraterWebParts {
 				eventHandler(newEventPanePrototype, newEventventPrototype);
 			});
 
-			let eventIconCell = eventPane.querySelector('#icon-cell').parentNode;
+			let eventIconCell = eventPane.find('#icon-cell').parentNode;
 			this.uploadImage({ parent: eventIconCell }, (image) => {
-				eventIconCell.querySelector('#icon-cell').src = image.src;
-				domDraft.querySelector('.crater-events-row-icon').src = image.src;
+				eventIconCell.find('#icon-cell').src = image.src;
+				domDraft.find('.crater-events-row-icon').src = image.src;
 			});
 
-			eventPane.querySelector('#task-cell').onChanged(value => {
-				eventDom.querySelector('.crater-events-task').innerText = value;
+			eventPane.find('#task-cell').onChanged(value => {
+				eventDom.find('.crater-events-task').innerText = value;
 			});
 
-			eventPane.querySelector('#duration-cell').onChanged(value => {
-				eventDom.querySelector('.crater-events-duration').innerText = value;
+			eventPane.find('#duration-cell').onChanged(value => {
+				eventDom.find('.crater-events-duration').innerText = value;
 			});
 
-			eventPane.querySelector('#location-cell').onChanged(value => {
-				eventDom.querySelector('.crater-events-location').innerText = value;
+			eventPane.find('#location-cell').onChanged(value => {
+				eventDom.find('.crater-events-location').innerText = value;
 			});
-			eventPane.querySelector('#date-cell').onChanged(value => {
-				eventDom.querySelector('.crater-events-date').innerText = value;
+			eventPane.find('#date-cell').onChanged(value => {
+				eventDom.find('.crater-events-date').innerText = value;
 			});
 		};
 
-		let eventsPane = this.paneContent.querySelector('.events-pane');
+		let eventsPane = this.paneContent.find('.events-pane');
 
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 			let newevEntventPrototype = eventPrototype.cloneNode(true);
 			let newEventPanePrototype = eventPanePrototype.cloneNode(true);
 
 			eventsPane.append(newEventPanePrototype);
-			domDraft.querySelector('.crater-events-content').append(newevEntventPrototype);
+			domDraft.find('.crater-events-content').append(newevEntventPrototype);
 			eventHandler(newEventPanePrototype, newevEntventPrototype);
 		});
 
-		eventsPane.querySelectorAll('.crater-events-row-pane').forEach((eventPane, position) => {
-			eventHandler(eventPane, domDraft.querySelectorAll('.crater-events-row')[position]);
+		eventsPane.findAll('.crater-events-row-pane').forEach((eventPane, position) => {
+			eventHandler(eventPane, domDraft.findAll('.crater-events-row')[position]);
 		});
 
-		let iconsPane = this.paneContent.querySelector('.icons-pane');
+		let iconsPane = this.paneContent.find('.icons-pane');
 
-		iconsPane.querySelector('#size-cell').onChanged(width => {
-			domDraft.querySelectorAll('.crater-events-row-icon').forEach(icon => {
+		iconsPane.find('#size-cell').onChanged(width => {
+			domDraft.findAll('.crater-events-row-icon').forEach(icon => {
 				icon.css({ width });
 			});
 		});
 
-		iconsPane.querySelector('#show-cell').onChanged(display => {
-			domDraft.querySelectorAll('.crater-events-row-icon').forEach(icon => {
+		iconsPane.find('#show-cell').onChanged(display => {
+			domDraft.findAll('.crater-events-row-icon').forEach(icon => {
 				if (display.toLowerCase() == 'no') icon.css({ display: 'none' });
 				else icon.cssRemove(['display']);
 			});
 		});
 
 		let handleProperties = (property, pane) => {
-			pane.querySelector('#fontsize-cell').onChanged(fontSize => {
-				domDraft.querySelectorAll(`.crater-events-${property}-value`).forEach(value => {
+			pane.find('#fontsize-cell').onChanged(fontSize => {
+				domDraft.findAll(`.crater-events-${property}-value`).forEach(value => {
 					value.css({ fontSize });
 				});
 			});
 
-			pane.querySelector('#fontstyle-cell').onChanged(fontFamily => {
-				domDraft.querySelectorAll(`.crater-events-${property}-value`).forEach(value => {
+			pane.find('#fontstyle-cell').onChanged(fontFamily => {
+				domDraft.findAll(`.crater-events-${property}-value`).forEach(value => {
 					value.css({ fontFamily });
 				});
 			});
 
-			let paneColorCell = pane.querySelector('#color-cell').parentNode;
-			this.pickColor({ parent: paneColorCell, cell: paneColorCell.querySelector('#color-cell') }, (color) => {
-				domDraft.querySelectorAll(`.crater-events-${property}-value`).forEach(value => {
+			let paneColorCell = pane.find('#color-cell').parentNode;
+			this.pickColor({ parent: paneColorCell, cell: paneColorCell.find('#color-cell') }, (color) => {
+				domDraft.findAll(`.crater-events-${property}-value`).forEach(value => {
 					value.css({ color });
 				});
-				paneColorCell.querySelector('#color-cell').value = color;
-				paneColorCell.querySelector('#color-cell').setAttribute('value', color);
+				paneColorCell.find('#color-cell').value = color;
+				paneColorCell.find('#color-cell').setAttribute('value', color);
 			});
 
-			pane.querySelector('#show-cell').onChanged(display => {
-				domDraft.querySelectorAll(`.crater-events-${property}`).forEach(aProperty => {
+			pane.find('#show-cell').onChanged(display => {
+				domDraft.findAll(`.crater-events-${property}`).forEach(aProperty => {
 					if (display.toLowerCase() == 'no') aProperty.css({ display: 'none' });
 					else aProperty.cssRemove(['display']);
 				});
 			});
 		};
 
-		let tasksPane = this.paneContent.querySelector('.tasks-pane');
+		let tasksPane = this.paneContent.find('.tasks-pane');
 		handleProperties('task', tasksPane);
 
-		let durationsPane = this.paneContent.querySelector('.durations-pane');
+		let durationsPane = this.paneContent.find('.durations-pane');
 		handleProperties('duration', durationsPane);
 
-		let locationsPane = this.paneContent.querySelector('.locations-pane');
+		let locationsPane = this.paneContent.find('.locations-pane');
 		handleProperties('location', locationsPane);
 
-		let datesPane = this.paneContent.querySelector('.dates-pane');
+		let datesPane = this.paneContent.find('.dates-pane');
 		handleProperties('date', datesPane);
 
-		let settingsPane = this.paneContent.querySelector('.settings-pane');
+		let settingsPane = this.paneContent.find('.settings-pane');
 
-		settingsPane.querySelector('#Layout-cell').onChanged();
+		settingsPane.find('#Layout-cell').onChanged();
 
 		this.paneContent.addEventListener('mutated', event => {
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
@@ -2019,11 +2027,11 @@ class Events extends CraterWebParts {
 		});
 
 		//on save clicked save the webpart settings and re-render
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart			
-			this.sharePoint.properties.pane.content[this.key].settings.layout = settingsPane.querySelector('#Layout-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.layout = settingsPane.find('#Layout-cell').value;
 		});
 	}
 
@@ -2033,7 +2041,7 @@ class Events extends CraterWebParts {
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
-		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
 
 		let updateWindow = this.elementModifier.createForm({
 			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
@@ -2051,25 +2059,25 @@ class Events extends CraterWebParts {
 
 		let data: any = {};
 		let source: any;
-		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+		updateWindow.find('#update-element').addEventListener('click', event => {
 			event.preventDefault();
-			data.task = updateWindow.querySelector('#meta-data-task').value;
-			data.icon = updateWindow.querySelector('#meta-data-icon').value;
-			data.duration = updateWindow.querySelector('#meta-data-duration').value;
-			data.location = updateWindow.querySelector('#meta-data-location').value;
-			data.date = updateWindow.querySelector('#meta-data-date').value;
+			data.task = updateWindow.find('#meta-data-task').value;
+			data.icon = updateWindow.find('#meta-data-icon').value;
+			data.duration = updateWindow.find('#meta-data-duration').value;
+			data.location = updateWindow.find('#meta-data-location').value;
+			data.date = updateWindow.find('#meta-data-date').value;
 			source = func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
-			draftDom.querySelector('.crater-events-content').innerHTML = newContent.querySelector('.crater-events-content').innerHTML;
+			draftDom.find('.crater-events-content').innerHTML = newContent.find('.crater-events-content').innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
-			this.paneContent.querySelector('.events-pane').innerHTML = this.generatePaneContent({ events: newContent.querySelectorAll('.crater-events-row') }).innerHTML;
+			this.paneContent.find('.events-pane').innerHTML = this.generatePaneContent({ events: newContent.findAll('.crater-events-row') }).innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
 		if (!func.isnull(paneConnection)) {
-			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
@@ -2128,7 +2136,7 @@ class Button extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 
-		let buttons = this.element.querySelectorAll('.crater-button-single');
+		let buttons = this.element.findAll('.crater-button-single');
 
 		let imageDisplay = this.sharePoint.properties.pane.content[this.key].settings.imageDisplay;
 		let imageSize = this.sharePoint.properties.pane.content[this.key].settings.imageSize;
@@ -2139,10 +2147,10 @@ class Button extends CraterWebParts {
 
 		buttons.forEach(button => {
 			button.css({ height, width });
-			button.querySelector('.crater-button-text').css({ fontSize, fontFamily });
-			button.querySelector('.crater-button-icon').css({ width: imageSize });
-			if (imageDisplay == 'No') button.querySelector('.crater-button-icon').hide();
-			else button.querySelector('.crater-button-icon').show();
+			button.find('.crater-button-text').css({ fontSize, fontFamily });
+			button.find('.crater-button-icon').css({ width: imageSize });
+			if (imageDisplay == 'No') button.find('.crater-button-icon').hide();
+			else button.find('.crater-button-icon').show();
 		});
 	}
 
@@ -2167,7 +2175,7 @@ class Button extends CraterWebParts {
 		//generate new button pane
 		else {
 			let button = this.sharePoint.properties.pane.content[this.key].draft.dom;
-			let buttons = button.querySelectorAll('.crater-button-single');
+			let buttons = button.findAll('.crater-button-single');
 
 			this.paneContent.makeElement({
 				element: 'div', children: [
@@ -2234,7 +2242,7 @@ class Button extends CraterWebParts {
 				element: 'div', attributes: { class: 'row button-pane' }, children: [
 					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-single-button' }),
 					this.elementModifier.cell({
-						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: element.querySelector('.crater-button-icon').src }
+						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: element.find('.crater-button-icon').src }
 					}),
 					this.elementModifier.cell({
 						element: 'input', name: 'Text',
@@ -2259,17 +2267,17 @@ class Button extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 		//fetch panecontent and monitor it
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
 		//fetch the content of Button
-		let content = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-button-content');
-		let singleButtons = content.querySelectorAll('.crater-button-single');
+		let content = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-button-content');
+		let singleButtons = content.findAll('.crater-button-single');
 
 		//fetch the icon
-		let icons = content.querySelectorAll('.crater-button-icon');
+		let icons = content.findAll('.crater-button-icon');
 
 		//fetch the text
-		let texts = content.querySelectorAll('.crater-button-text');
+		let texts = content.findAll('.crater-button-text');
 
 		let buttonPrototype = this.elementModifier.createElement({
 			element: 'a', attributes: { class: 'crater-button-single', href: 'www.google.com', title: 'Title' }, children: [
@@ -2302,19 +2310,19 @@ class Button extends CraterWebParts {
 		let buttonHandler = (buttonPane, buttonDom) => {
 			//set the text of the button
 			buttonPane.addEventListener('mouseover', event => {
-				buttonPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				buttonPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			buttonPane.addEventListener('mouseout', event => {
-				buttonPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				buttonPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			buttonPane.querySelector('.delete-crater-single-button').addEventListener('click', event => {
+			buttonPane.find('.delete-crater-single-button').addEventListener('click', event => {
 				buttonDom.remove();
 				buttonPane.remove();
 			});
 
-			buttonPane.querySelector('.add-before-crater-single-button').addEventListener('click', event => {
+			buttonPane.find('.add-before-crater-single-button').addEventListener('click', event => {
 				let newButtonPrototype = buttonPrototype.cloneNode(true);
 				let newButtonPanePrototype = buttonPanePrototype.cloneNode(true);
 
@@ -2323,7 +2331,7 @@ class Button extends CraterWebParts {
 				buttonHandler(newButtonPanePrototype, newButtonPrototype);
 			});
 
-			buttonPane.querySelector('.add-after-crater-single-button').addEventListener('click', event => {
+			buttonPane.find('.add-after-crater-single-button').addEventListener('click', event => {
 				let newButtonPrototype = buttonPrototype.cloneNode(true);
 				let newButtonPanePrototype = buttonPanePrototype.cloneNode(true);
 
@@ -2332,63 +2340,63 @@ class Button extends CraterWebParts {
 				buttonHandler(newButtonPanePrototype, newButtonPrototype);
 			});
 
-			buttonPane.querySelector('#Text-cell').onChanged(value => {
-				buttonDom.querySelector('.crater-button-text').innerText = value;
+			buttonPane.find('#Text-cell').onChanged(value => {
+				buttonDom.find('.crater-button-text').innerText = value;
 			});
 
-			buttonPane.querySelector('#Link-cell').onChanged(href => {
+			buttonPane.find('#Link-cell').onChanged(href => {
 				buttonDom.setAttribute('href', href);
 			});
 
-			let colorCell = buttonPane.querySelector('#FontColor-cell').parentNode;
-			this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#FontColor-cell') }, (color) => {
-				buttonDom.querySelector('.crater-button-text').css({ color }); colorCell.querySelector('#FontColor-cell').value = color;
-				colorCell.querySelector('#FontColor-cell').setAttribute('value', color);
+			let colorCell = buttonPane.find('#FontColor-cell').parentNode;
+			this.pickColor({ parent: colorCell, cell: colorCell.find('#FontColor-cell') }, (color) => {
+				buttonDom.find('.crater-button-text').css({ color }); colorCell.find('#FontColor-cell').value = color;
+				colorCell.find('#FontColor-cell').setAttribute('value', color);
 			});
 
-			let backgroundColorCell = buttonPane.querySelector('#BackgroundColor-cell').parentNode;
-			this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#BackgroundColor-cell') }, (backgroundColor) => {
+			let backgroundColorCell = buttonPane.find('#BackgroundColor-cell').parentNode;
+			this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#BackgroundColor-cell') }, (backgroundColor) => {
 				buttonDom.css({ backgroundColor });
-				backgroundColorCell.querySelector('#BackgroundColor-cell').value = backgroundColor;
-				backgroundColorCell.querySelector('#BackgroundColor-cell').setAttribute('value', backgroundColor);
+				backgroundColorCell.find('#BackgroundColor-cell').value = backgroundColor;
+				backgroundColorCell.find('#BackgroundColor-cell').setAttribute('value', backgroundColor);
 			});
 
-			let imageCell = buttonPane.querySelector('#Image-cell').parentNode;
+			let imageCell = buttonPane.find('#Image-cell').parentNode;
 			//upload the icon
 			this.uploadImage({ parent: imageCell }, (image) => {
-				imageCell.querySelector('#Image-cell').src = image.src;
-				buttonDom.querySelector('.crater-button-icon').src = image.src;
+				imageCell.find('#Image-cell').src = image.src;
+				buttonDom.find('.crater-button-icon').src = image.src;
 			});
 		};
 
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 			let newButtonPrototype = buttonPrototype.cloneNode(true);
 			let newButtonPanePrototype = buttonPanePrototype.cloneNode(true);
 
 			content.append(newButtonPrototype);//c
-			this.paneContent.querySelector('.content-pane').append(newButtonPanePrototype);
+			this.paneContent.find('.content-pane').append(newButtonPanePrototype);
 
 			buttonHandler(newButtonPanePrototype, newButtonPrototype);
 		});
 
-		this.paneContent.querySelectorAll('.button-pane').forEach((singlePane, position) => {
+		this.paneContent.findAll('.button-pane').forEach((singlePane, position) => {
 			buttonHandler(singlePane, singleButtons[position]);
 		});
 
-		let settingsPane = this.paneContent.querySelector('.settings-pane');
+		let settingsPane = this.paneContent.find('.settings-pane');
 
-		settingsPane.querySelector('#Font-Size-cell').onChanged();
+		settingsPane.find('#Font-Size-cell').onChanged();
 
-		settingsPane.querySelector('#Font-Family-cell').onChanged();
+		settingsPane.find('#Font-Family-cell').onChanged();
 
-		settingsPane.querySelector('#Width-cell').onChanged();
+		settingsPane.find('#Width-cell').onChanged();
 
-		settingsPane.querySelector('#Height-cell').onChanged();
+		settingsPane.find('#Height-cell').onChanged();
 
 		//set the display of the button
-		settingsPane.querySelector('#Image-Display-cell').onChanged();
+		settingsPane.find('#Image-Display-cell').onChanged();
 
-		settingsPane.querySelector('#Image-Size-cell').onChanged();
+		settingsPane.find('#Image-Size-cell').onChanged();
 
 		// on panecontent changed set the state
 		this.paneContent.addEventListener('mutated', event => {
@@ -2397,17 +2405,17 @@ class Button extends CraterWebParts {
 		});
 
 		//on save clicked save the webpart settings and re-render
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.ImageSize = settingsPane.querySelector('#Image-Size-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.imageDisplay = settingsPane.querySelector('#Image-Display-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.fontSize = settingsPane.querySelector('#Font-Size-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.fontFamily = settingsPane.querySelector('#Font-Family-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.width = settingsPane.querySelector('#Width-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.height = settingsPane.querySelector('#Height-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.ImageSize = settingsPane.find('#Image-Size-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.imageDisplay = settingsPane.find('#Image-Display-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.fontSize = settingsPane.find('#Font-Size-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.fontFamily = settingsPane.find('#Font-Family-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.width = settingsPane.find('#Width-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.height = settingsPane.find('#Height-cell').value;
 		});
 	}
 
@@ -2417,7 +2425,7 @@ class Button extends CraterWebParts {
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
-		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
 
 		let updateWindow = this.elementModifier.createForm({
 			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
@@ -2434,26 +2442,26 @@ class Button extends CraterWebParts {
 
 		let data: any = {};
 		let source: any;
-		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+		updateWindow.find('#update-element').addEventListener('click', event => {
 			event.preventDefault();
-			data.image = updateWindow.querySelector('#meta-data-image').value;
-			data.link = updateWindow.querySelector('#meta-data-link').value;
-			data.title = updateWindow.querySelector('#meta-data-title').value;
-			data.text = updateWindow.querySelector('#meta-data-text').value;
+			data.image = updateWindow.find('#meta-data-image').value;
+			data.link = updateWindow.find('#meta-data-link').value;
+			data.title = updateWindow.find('#meta-data-title').value;
+			data.text = updateWindow.find('#meta-data-text').value;
 			source = func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
-			draftDom.querySelector('.crater-button-content').innerHTML = newContent.querySelector('.crater-button-content').innerHTML;
+			draftDom.find('.crater-button-content').innerHTML = newContent.find('.crater-button-content').innerHTML;
 
 			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
 
-			this.paneContent.querySelector('.content-pane').innerHTML = this.generatePaneContent({ buttons: newContent.querySelectorAll('.crater-button-single') }).innerHTML;
+			this.paneContent.find('.content-pane').innerHTML = this.generatePaneContent({ buttons: newContent.findAll('.crater-button-single') }).innerHTML;
 
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 		if (!func.isnull(paneConnection)) {
-			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 
 				this.element.innerHTML = draftDom.innerHTML;
 
@@ -2510,7 +2518,7 @@ class Icons extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 
-		let icons = this.element.querySelectorAll('.crater-icons-icon');
+		let icons = this.element.findAll('.crater-icons-icon');
 	}
 
 	public generatePaneContent(params) {
@@ -2535,7 +2543,7 @@ class Icons extends CraterWebParts {
 				children: [
 					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-icons-icon' }),
 					this.elementModifier.cell({
-						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.icons[i].querySelector('.crater-icons-icon-image').src }
+						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.icons[i].find('.crater-icons-icon-image').src }
 					}),
 					this.elementModifier.cell({
 						element: 'input', name: 'Title', value: params.icons[i].getAttribute('title')
@@ -2566,7 +2574,7 @@ class Icons extends CraterWebParts {
 			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
 		}
 		else {
-			let icons = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelectorAll('.crater-icons-icon');
+			let icons = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-icons-icon');
 			this.paneContent.makeElement({
 				element: 'div', children: [
 					this.elementModifier.createElement({
@@ -2618,9 +2626,9 @@ class Icons extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
-		let content = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-icons-content');
-		let icons = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelectorAll('.crater-icons-icon');
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
+		let content = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-icons-content');
+		let icons = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-icons-icon');
 
 		let iconPanePrototype = this.elementModifier.createElement({
 			element: 'div',
@@ -2649,33 +2657,33 @@ class Icons extends CraterWebParts {
 
 		let iconHandler = (iconPane, iconDom) => {
 			iconPane.addEventListener('mouseover', event => {
-				iconPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				iconPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			iconPane.addEventListener('mouseout', event => {
-				iconPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				iconPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			let imageCell = iconPane.querySelector('#Image-cell').parentNode;
+			let imageCell = iconPane.find('#Image-cell').parentNode;
 			this.uploadImage({ parent: imageCell }, (image) => {
-				imageCell.querySelector('#Image-cell').src = image.src;
-				iconDom.querySelector('.crater-icons-icon-image').src = image.src;
+				imageCell.find('#Image-cell').src = image.src;
+				iconDom.find('.crater-icons-icon-image').src = image.src;
 			});
 
-			iconPane.querySelector('#Link-cell').onChanged(value => {
+			iconPane.find('#Link-cell').onChanged(value => {
 				iconDom.setAttribute('href', value);
 			});
 
-			iconPane.querySelector('#Title-cell').onChanged(value => {
+			iconPane.find('#Title-cell').onChanged(value => {
 				iconDom.setAttribute('title', value);
 			});
 
-			iconPane.querySelector('.delete-crater-icons-icon').addEventListener('click', event => {
+			iconPane.find('.delete-crater-icons-icon').addEventListener('click', event => {
 				iconDom.remove();
 				iconPane.remove();
 			});
 
-			iconPane.querySelector('.add-before-crater-icons-icon').addEventListener('click', event => {
+			iconPane.find('.add-before-crater-icons-icon').addEventListener('click', event => {
 				let newIconPrototype = iconPrototype.cloneNode(true);
 				let newColumnPanePrototype = iconPanePrototype.cloneNode(true);
 
@@ -2684,7 +2692,7 @@ class Icons extends CraterWebParts {
 				iconHandler(newColumnPanePrototype, newIconPrototype);
 			});
 
-			iconPane.querySelector('.add-after-crater-icons-icon').addEventListener('click', event => {
+			iconPane.find('.add-after-crater-icons-icon').addEventListener('click', event => {
 				let newIconPrototype = iconPrototype.cloneNode(true);
 				let newColumnPanePrototype = iconPanePrototype.cloneNode(true);
 
@@ -2694,48 +2702,48 @@ class Icons extends CraterWebParts {
 			});
 		};
 
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 			let newIconPrototype = iconPrototype.cloneNode(true);
 			let newIconPanePrototype = iconPanePrototype.cloneNode(true);
 
 			content.append(newIconPrototype);//c
-			this.paneContent.querySelector('.counter-pane').append(newIconPanePrototype);
+			this.paneContent.find('.counter-pane').append(newIconPanePrototype);
 
 			iconHandler(newIconPanePrototype, newIconPrototype);
 		});
 
-		this.paneContent.querySelectorAll('.crater-icons-icon-pane').forEach((iconPane, position) => {
+		this.paneContent.findAll('.crater-icons-icon-pane').forEach((iconPane, position) => {
 			iconHandler(iconPane, icons[position]);
 		});
 
-		this.paneContent.querySelector('#Width-cell').onChanged();
-		this.paneContent.querySelector('#Height-cell').onChanged();
-		this.paneContent.querySelector('#SpaceBetween-cell').onChanged();
-		this.paneContent.querySelector('#Curved-cell').onChanged();
+		this.paneContent.find('#Width-cell').onChanged();
+		this.paneContent.find('#Height-cell').onChanged();
+		this.paneContent.find('#SpaceBetween-cell').onChanged();
+		this.paneContent.find('#Curved-cell').onChanged();
 
 
-		let backgroundColorCell = this.paneContent.querySelector('#BackgroundColor-cell').parentNode;
+		let backgroundColorCell = this.paneContent.find('#BackgroundColor-cell').parentNode;
 
-		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#BackgroundColor-cell') }, (backgroundColor) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelectorAll('.crater-icons-icon').forEach(icon => {
+		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#BackgroundColor-cell') }, (backgroundColor) => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-icons-icon').forEach(icon => {
 				icon.css({
 					backgroundColor
 				});
 			});
-			backgroundColorCell.querySelector('#BackgroundColor-cell').value = backgroundColor;
-			backgroundColorCell.querySelector('#BackgroundColor-cell').setAttribute('value', backgroundColor);
+			backgroundColorCell.find('#BackgroundColor-cell').value = backgroundColor;
+			backgroundColorCell.find('#BackgroundColor-cell').setAttribute('value', backgroundColor);
 		});
 
-		let colorCell = this.paneContent.querySelector('#Color-cell').parentNode;
+		let colorCell = this.paneContent.find('#Color-cell').parentNode;
 
-		this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#Color-cell') }, (color) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelectorAll('.crater-icons-icon').forEach(icon => {
+		this.pickColor({ parent: colorCell, cell: colorCell.find('#Color-cell') }, (color) => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-icons-icon').forEach(icon => {
 				icon.css({
 					color
 				});
 			});
-			colorCell.querySelector('#Color-cell').value = color;
-			colorCell.querySelector('#Color-cell').setAttribute('value', color);
+			colorCell.find('#Color-cell').value = color;
+			colorCell.find('#Color-cell').setAttribute('value', color);
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
@@ -2743,22 +2751,22 @@ class Icons extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.element.querySelectorAll('.crater-icons-icon').forEach(icon => {
-				if (this.paneContent.querySelector('#Curved-cell').value == 'Yes') {
+			this.element.findAll('.crater-icons-icon').forEach(icon => {
+				if (this.paneContent.find('#Curved-cell').value == 'Yes') {
 					icon.classList.add('crater-curve');
 				} else {
 					icon.classList.remove('crater-curve');
 				}
 
 				icon.css({
-					width: this.paneContent.querySelector('#Width-cell').value,
-					height: this.paneContent.querySelector('#Height-cell').value,
-					margin: this.paneContent.querySelector('#SpaceBetween-cell').value
+					width: this.paneContent.find('#Width-cell').value,
+					height: this.paneContent.find('#Height-cell').value,
+					margin: this.paneContent.find('#SpaceBetween-cell').value
 				});
 			});
 		});
@@ -2770,7 +2778,7 @@ class Icons extends CraterWebParts {
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
-		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
 
 		let updateWindow = this.elementModifier.createForm({
 			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
@@ -2786,25 +2794,25 @@ class Icons extends CraterWebParts {
 
 		let data: any = {};
 		let source: any;
-		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+		updateWindow.find('#update-element').addEventListener('click', event => {
 			event.preventDefault();
-			data.image = updateWindow.querySelector('#meta-data-image').value;
-			data.title = updateWindow.querySelector('#meta-data-title').value;
-			data.link = updateWindow.querySelector('#meta-data-link').value;
+			data.image = updateWindow.find('#meta-data-image').value;
+			data.title = updateWindow.find('#meta-data-title').value;
+			data.link = updateWindow.find('#meta-data-link').value;
 			source = func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
-			draftDom.querySelector('.crater-icons-content').innerHTML = newContent.querySelector('.crater-icons-content').innerHTML;
+			draftDom.find('.crater-icons-content').innerHTML = newContent.find('.crater-icons-content').innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
 
-			this.paneContent.querySelector('.counter-pane').innerHTML = this.generatePaneContent({ icons: newContent.querySelectorAll('.crater-icons-icon') }).innerHTML;
+			this.paneContent.find('.counter-pane').innerHTML = this.generatePaneContent({ icons: newContent.findAll('.crater-icons-icon') }).innerHTML;
 
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
 		if (!func.isnull(paneConnection)) {
-			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
@@ -2863,7 +2871,7 @@ class TextArea extends CraterWebParts {
 				element: 'textarea', attributes: { class: 'crater-textarea-pane', id: this.key }
 			});
 
-			textAreaPane.innerHTML = this.element.querySelector('.crater-textarea-content').innerHTML;
+			textAreaPane.innerHTML = this.element.find('.crater-textarea-content').innerHTML;
 		}
 
 		return this.paneContent;
@@ -2872,15 +2880,15 @@ class TextArea extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset.key;
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let frBoxes = this.paneContent.querySelectorAll('.fr-box');
+		let frBoxes = this.paneContent.findAll('.fr-box');
 
 		for (let frBox of frBoxes) {
 			frBox.remove();
 		}
 
-		this.paneContent.querySelector('textarea').innerHTML = this.element.querySelector('.crater-textarea-content').innerHTML;
+		this.paneContent.find('textarea').innerHTML = this.element.find('.crater-textarea-content').innerHTML;
 		//Set the text editor
 		let fr = new FroalaEditor('textarea#' + this.key);
 
@@ -2902,12 +2910,12 @@ class TextArea extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
-			this.element.querySelector('.crater-textarea-content').innerHTML = '';
-			let children = this.paneContent.querySelector('.fr-element').childNodes;
+			this.element.find('.crater-textarea-content').innerHTML = '';
+			let children = this.paneContent.find('.fr-element').childNodes;
 			for (let i of children) {
-				this.element.querySelector('.crater-textarea-content').append(i);
+				this.element.find('.crater-textarea-content').append(i);
 			}
 
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
@@ -2940,13 +2948,13 @@ class Section extends CraterWebParts {
 		let view = this.sharePoint.properties.pane.content[this.key].settings.view;
 
 		//fetch the section menu
-		let menu = this.element.querySelector('.crater-section-menu');
+		let menu = this.element.find('.crater-section-menu');
 
 		if (!func.isnull(menu) && func.isset(this.element.dataset.view) && this.element.dataset.view == 'Tabbed') {//if menu exists and section is tabbed
-			menu.querySelectorAll('li').forEach(li => {
+			menu.findAll('li').forEach(li => {
 				let found = false;
 				let owner = li.dataset.owner;
-				for (let keyedElement of this.element.querySelector('.crater-section-content').querySelectorAll('.keyed-element')) {
+				for (let keyedElement of this.element.find('.crater-section-content').findAll('.keyed-element')) {
 					if (owner == keyedElement.dataset.key) {
 						found = true;
 						li.innerText = func.isset(keyedElement.dataset.title) ? keyedElement.dataset.title : keyedElement.dataset.type;
@@ -2961,7 +2969,7 @@ class Section extends CraterWebParts {
 			menu.addEventListener('click', event => {
 				if (event.target.nodeName == 'LI') {
 					let li = event.target;
-					this.element.querySelectorAll('.keyed-element').forEach(keyedElement => {
+					this.element.findAll('.keyed-element').forEach(keyedElement => {
 						keyedElement.classList.add('in-active');
 						if (li.dataset.owner == keyedElement.dataset.key) {
 							keyedElement.classList.remove('in-active');
@@ -2971,7 +2979,7 @@ class Section extends CraterWebParts {
 			});
 			if (this.element.dataset.view == 'Tabbed') {
 				//click the last menu
-				let menuButtons = menu.querySelectorAll('li');
+				let menuButtons = menu.findAll('li');
 				menuButtons[menuButtons.length - 1].click();
 			}
 		}
@@ -3035,7 +3043,7 @@ class Section extends CraterWebParts {
 				]
 			});
 
-			let elementContents = this.element.querySelector('.crater-section-content').querySelectorAll('.keyed-element');
+			let elementContents = this.element.find('.crater-section-content').findAll('.keyed-element');
 
 			this.paneContent.append(this.generatePaneContent({ source: elementContents }));
 
@@ -3052,8 +3060,8 @@ class Section extends CraterWebParts {
 			});
 		}
 
-		let contents = this.element.querySelector('.crater-section-content').querySelectorAll('.keyed-element');
-		this.paneContent.querySelector('.section-contents-pane').innerHTML = this.generatePaneContent({ source: contents }).innerHTML;
+		let contents = this.element.find('.crater-section-content').findAll('.keyed-element');
+		this.paneContent.find('.section-contents-pane').innerHTML = this.generatePaneContent({ source: contents }).innerHTML;
 
 		return this.paneContent;
 	}
@@ -3062,12 +3070,12 @@ class Section extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let sectionContents = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-section-content');
+		let sectionContents = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-section-content');
 
 		let sectionContentDom = sectionContents.childNodes;
-		let sectionContentPane = this.paneContent.querySelector('.section-contents-pane');
+		let sectionContentPane = this.paneContent.find('.section-contents-pane');
 
 		//create section content pane prototype
 		let sectionContentPanePrototype = this.elementModifier.createElement({
@@ -3087,21 +3095,21 @@ class Section extends CraterWebParts {
 		let sectionContentRowHandler = (sectionContentRowPane, sectionContentRowDom) => {
 
 			sectionContentRowPane.addEventListener('mouseover', event => {
-				sectionContentRowPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				sectionContentRowPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			sectionContentRowPane.addEventListener('mouseout', event => {
-				sectionContentRowPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				sectionContentRowPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			sectionContentRowPane.querySelector('.crater-section-webpart-name').textContent = sectionContentRowDom.dataset.type;
+			sectionContentRowPane.find('.crater-section-webpart-name').textContent = sectionContentRowDom.dataset.type;
 
-			sectionContentRowPane.querySelector('.delete-crater-section-content-row').addEventListener('click', event => {
+			sectionContentRowPane.find('.delete-crater-section-content-row').addEventListener('click', event => {
 				sectionContentRowDom.remove();
 				sectionContentRowPane.remove();
 			});
 
-			sectionContentRowPane.querySelector('.add-before-crater-section-content-row').addEventListener('click', event => {
+			sectionContentRowPane.find('.add-before-crater-section-content-row').addEventListener('click', event => {
 				this.paneContent.append(
 					this.sharePoint.displayPanel(webpart => {
 						let newSectionContent = this.sharePoint.appendWebpart(sectionContents, webpart.dataset.webpart);
@@ -3116,7 +3124,7 @@ class Section extends CraterWebParts {
 				);
 			});
 
-			sectionContentRowPane.querySelector('.add-after-crater-section-content-row').addEventListener('click', event => {
+			sectionContentRowPane.find('.add-after-crater-section-content-row').addEventListener('click', event => {
 				this.paneContent.append(
 					this.sharePoint.displayPanel(webpart => {
 						let newSectionContent = this.sharePoint.appendWebpart(sectionContents, webpart.dataset.webpart);
@@ -3133,7 +3141,7 @@ class Section extends CraterWebParts {
 		};
 
 		//add new webpart to the section
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 			this.paneContent.append(
 				//show the display panel and add the selected webpart
 				this.sharePoint.displayPanel(webpart => {
@@ -3147,7 +3155,7 @@ class Section extends CraterWebParts {
 			);
 		});
 
-		this.paneContent.querySelectorAll('.crater-section-content-row-pane').forEach((sectionContent, position) => {
+		this.paneContent.findAll('.crater-section-content-row-pane').forEach((sectionContent, position) => {
 			//listen for events on all webparts
 			sectionContentRowHandler(sectionContent, sectionContentDom[position]);
 		});
@@ -3159,13 +3167,13 @@ class Section extends CraterWebParts {
 		});
 
 		//save the the noted changes when save button is clicked
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 
-			for (let keyedElement of this.element.querySelectorAll('.keyed-element')) {
+			for (let keyedElement of this.element.findAll('.keyed-element')) {
 				this[keyedElement.dataset.type]({ action: 'rendered', element: keyedElement, sharePoint: this.sharePoint });
 			}
 		});
@@ -3203,12 +3211,12 @@ class Tab extends CraterWebParts {
 		this.key = this.element.dataset.key;
 
 		//fetch the section menu
-		let menu = this.element.querySelector('.crater-menu');
+		let menu = this.element.find('.crater-menu');
 
 		let list = [];
 		let showIcons = this.sharePoint.properties.pane.content[this.key].settings.showMenuIcons;
 
-		for (let keyedElement of this.element.querySelector('.crater-tab-content').childNodes) {
+		for (let keyedElement of this.element.find('.crater-tab-content').childNodes) {
 			if (keyedElement.classList.contains('keyed-element')) {
 				list.push({
 					name: keyedElement.dataset.title || keyedElement.dataset.type,
@@ -3221,7 +3229,7 @@ class Tab extends CraterWebParts {
 		menu.innerHTML = this.elementModifier.menu({ content: list }).innerHTML;
 		menu.css({ gridTemplateColumns: `repeat(${list.length}, 1fr)` });
 
-		menu.querySelectorAll('.crater-menu-item-icon').forEach(icon => {
+		menu.findAll('.crater-menu-item-icon').forEach(icon => {
 			let width = this.sharePoint.properties.pane.content[this.key].settings.iconSize || '2em';
 			icon.css({ width });
 		});
@@ -3230,7 +3238,7 @@ class Tab extends CraterWebParts {
 		menu.addEventListener('click', event => {
 			if (event.target.classList.contains('crater-menu-item')) {
 				let item = event.target;
-				for (let keyedElement of this.element.querySelector('.crater-tab-content').childNodes) {
+				for (let keyedElement of this.element.find('.crater-tab-content').childNodes) {
 					if (keyedElement.classList.contains('keyed-element')) {
 						keyedElement.classList.add('in-active');
 						if (item.dataset.owner == keyedElement.dataset.key) {
@@ -3241,7 +3249,7 @@ class Tab extends CraterWebParts {
 			}
 		});
 
-		let menuButtons = menu.querySelectorAll('.crater-menu-item');
+		let menuButtons = menu.findAll('.crater-menu-item');
 		if (func.setNotNull(menuButtons[menuButtons.length - 1])) menuButtons[menuButtons.length - 1].click();
 
 		this.showOptions(this.element);
@@ -3308,7 +3316,7 @@ class Tab extends CraterWebParts {
 				]
 			});
 
-			let menus = tab.querySelector('.crater-menu');
+			let menus = tab.find('.crater-menu');
 
 			let menuPane = this.paneContent.makeElement({
 				element: 'div', attributes: { class: 'menu-pane card', style: { margin: '1em', display: 'block' } }, sync: true, children: [
@@ -3344,7 +3352,7 @@ class Tab extends CraterWebParts {
 				]
 			});
 
-			let elementContents = tab.querySelector('.crater-tab-content').childNodes;
+			let elementContents = tab.find('.crater-tab-content').childNodes;
 
 			this.paneContent.append(this.generatePaneContent({ source: elementContents }));
 
@@ -3366,8 +3374,8 @@ class Tab extends CraterWebParts {
 			});
 		}
 
-		let contents = tab.querySelector('.crater-tab-content').childNodes;
-		this.paneContent.querySelector('.tab-contents-pane').innerHTML = this.generatePaneContent({ source: contents }).innerHTML;
+		let contents = tab.find('.crater-tab-content').childNodes;
+		this.paneContent.find('.tab-contents-pane').innerHTML = this.generatePaneContent({ source: contents }).innerHTML;
 
 		return this.paneContent;
 	}
@@ -3376,13 +3384,13 @@ class Tab extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let menu = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-menu');
-		let tabContents = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-tab-content');
+		let menu = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-menu');
+		let tabContents = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-tab-content');
 
 		let tabContentDom = tabContents.childNodes;
-		let tabContentPane = this.paneContent.querySelector('.tab-contents-pane');
+		let tabContentPane = this.paneContent.find('.tab-contents-pane');
 
 		//fetch the current view of the section
 		//create section content pane prototype
@@ -3406,30 +3414,30 @@ class Tab extends CraterWebParts {
 		let tabContentRowHandler = (tabContentRowPane, tabContentRowDom) => {
 
 			tabContentRowPane.addEventListener('mouseover', event => {
-				tabContentRowPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				tabContentRowPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			tabContentRowPane.addEventListener('mouseout', event => {
-				tabContentRowPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				tabContentRowPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			let iconCell = tabContentRowPane.querySelector('#Icon-cell').parentNode;
+			let iconCell = tabContentRowPane.find('#Icon-cell').parentNode;
 
 			this.uploadImage({ parent: iconCell }, (image) => {
-				iconCell.querySelector('#Icon-cell').src = image.src;
+				iconCell.find('#Icon-cell').src = image.src;
 				tabContentRowDom.dataset.icon = image.src;
 			});
 
-			tabContentRowPane.querySelector('#Title-cell').onChanged(value => {
+			tabContentRowPane.find('#Title-cell').onChanged(value => {
 				tabContentRowDom.dataset.title = value;
 			});
 
-			tabContentRowPane.querySelector('.delete-crater-tab-content-row').addEventListener('click', event => {
+			tabContentRowPane.find('.delete-crater-tab-content-row').addEventListener('click', event => {
 				tabContentRowDom.remove();
 				tabContentRowPane.remove();
 			});
 
-			tabContentRowPane.querySelector('.add-before-crater-tab-content-row').addEventListener('click', event => {
+			tabContentRowPane.find('.add-before-crater-tab-content-row').addEventListener('click', event => {
 				this.paneContent.append(
 					this.sharePoint.displayPanel(webpart => {
 						let newTabContent = this.sharePoint.appendWebpart(tabContents, webpart.dataset.webpart);
@@ -3444,7 +3452,7 @@ class Tab extends CraterWebParts {
 				);
 			});
 
-			tabContentRowPane.querySelector('.add-after-crater-tab-content-row').addEventListener('click', event => {
+			tabContentRowPane.find('.add-after-crater-tab-content-row').addEventListener('click', event => {
 				this.paneContent.append(
 					this.sharePoint.displayPanel(webpart => {
 						let newSectionContent = this.sharePoint.appendWebpart(tabContents, webpart.dataset.webpart);
@@ -3460,35 +3468,35 @@ class Tab extends CraterWebParts {
 			});
 		};
 
-		let menuPane = this.paneContent.querySelector('.menu-pane');
+		let menuPane = this.paneContent.find('.menu-pane');
 
-		menuPane.querySelector('#FontSize-cell').onChanged(fontSize => {
+		menuPane.find('#FontSize-cell').onChanged(fontSize => {
 			menu.css({ fontSize });
 		});
 
-		menuPane.querySelector('#FontStyle-cell').onChanged(fontFamily => {
+		menuPane.find('#FontStyle-cell').onChanged(fontFamily => {
 			menu.css({ fontFamily });
 		});
 
-		menuPane.querySelector('#IconSize-cell').onChanged();
-		menuPane.querySelector('#ShowIcons-cell').onChanged();
+		menuPane.find('#IconSize-cell').onChanged();
+		menuPane.find('#ShowIcons-cell').onChanged();
 
-		let backgroundColorCell = menuPane.querySelector('#BackgroundColor-cell').parentNode;
-		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#BackgroundColor-cell') }, (backgroundColor) => {
+		let backgroundColorCell = menuPane.find('#BackgroundColor-cell').parentNode;
+		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#BackgroundColor-cell') }, (backgroundColor) => {
 			menu.css({ backgroundColor });
-			backgroundColorCell.querySelector('#BackgroundColor-cell').value = backgroundColor;
-			backgroundColorCell.querySelector('#BackgroundColor-cell').setAttribute('value', backgroundColor);
+			backgroundColorCell.find('#BackgroundColor-cell').value = backgroundColor;
+			backgroundColorCell.find('#BackgroundColor-cell').setAttribute('value', backgroundColor);
 		});
 
-		let colorCell = menuPane.querySelector('#Color-cell').parentNode;
-		this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#Color-cell') }, (color) => {
+		let colorCell = menuPane.find('#Color-cell').parentNode;
+		this.pickColor({ parent: colorCell, cell: colorCell.find('#Color-cell') }, (color) => {
 			menu.css({ color });
-			colorCell.querySelector('#Color-cell').value = color;
-			colorCell.querySelector('#Color-cell').setAttribute('value', color);
+			colorCell.find('#Color-cell').value = color;
+			colorCell.find('#Color-cell').setAttribute('value', color);
 		});
 
 		//add new webpart to the section
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 			this.paneContent.append(
 				//show the display panel and add the selected webpart
 				this.sharePoint.displayPanel(webpart => {
@@ -3502,7 +3510,7 @@ class Tab extends CraterWebParts {
 			);
 		});
 
-		this.paneContent.querySelectorAll('.crater-tab-content-row-pane').forEach((sectionContent, position) => {
+		this.paneContent.findAll('.crater-tab-content-row-pane').forEach((sectionContent, position) => {
 			//listen for events on all webparts
 			tabContentRowHandler(sectionContent, tabContentDom[position]);
 		});
@@ -3514,20 +3522,20 @@ class Tab extends CraterWebParts {
 		});
 
 		//save the the noted changes when save button is clicked
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 
-			for (let keyedElement of this.element.querySelectorAll('.keyed-element')) {
+			for (let keyedElement of this.element.findAll('.keyed-element')) {
 				this[keyedElement.dataset.type]({ action: 'rendered', element: keyedElement, sharePoint: this.sharePoint });
 				console.log(keyedElement);
 
 			}
 
-			this.sharePoint.properties.pane.content[this.key].settings.showMenuIcons = menuPane.querySelector('#ShowIcons-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.iconSize = menuPane.querySelector('#IconSize-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.showMenuIcons = menuPane.find('#ShowIcons-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.iconSize = menuPane.find('#IconSize-cell').value;
 		});
 	}
 }
@@ -3604,33 +3612,33 @@ class Slider extends CraterWebParts {
 
 		//show controllers and arrows
 		this.element.addEventListener('mouseenter', () => {
-			this.element.querySelectorAll('.crater-arrow').forEach(arrow => {
+			this.element.findAll('.crater-arrow').forEach(arrow => {
 				arrow.css({ visibility: 'visible' });
 			});
-			this.element.querySelector('.crater-top-right').css({ visibility: 'visible' });
+			this.element.find('.crater-top-right').css({ visibility: 'visible' });
 		});
 
 		//hide controllers and arrows
 		this.element.addEventListener('mouseleave', () => {
-			this.element.querySelectorAll('.crater-arrow').forEach(arrow => {
+			this.element.findAll('.crater-arrow').forEach(arrow => {
 				arrow.css({ visibility: 'hidden' });
 			});
-			this.element.querySelector('.crater-top-right').css({ visibility: 'hidden' });
+			this.element.find('.crater-top-right').css({ visibility: 'hidden' });
 		});
 
 		//make slides and images same as that of slider
-		this.element.querySelectorAll('.crater-slide').forEach(slide => {
+		this.element.findAll('.crater-slide').forEach(slide => {
 			slide.css({ height: this.element.position().height + 'px' });
-			slide.querySelectorAll('img').forEach(img => {
+			slide.findAll('img').forEach(img => {
 				img.css({ height: this.element.position().height + 'px', filter });
 			});
 		});
 
-		this.element.querySelectorAll('.crater-slide-quote').forEach(quote => {
+		this.element.findAll('.crater-slide-quote').forEach(quote => {
 			quote.css({ fontFamily: settings.textFontStyle, fontSize: settings.textFontSize, color: settings.textColor });
 		});
 
-		this.element.querySelectorAll('.crater-slide-link').forEach(link => {
+		this.element.findAll('.crater-slide-link').forEach(link => {
 			link.css({ fontFamily: settings.linkFontStyle, fontSize: settings.linkFontStyle, color: settings.linkColor, backgroundColor: settings.linkBackgroundColor, border: settings.linkBorder });
 
 			if (settings.linkShow == 'No') {
@@ -3640,7 +3648,7 @@ class Slider extends CraterWebParts {
 			}
 		});
 
-		this.element.querySelectorAll('.crater-slide-sub-title').forEach(subTitle => {
+		this.element.findAll('.crater-slide-sub-title').forEach(subTitle => {
 			subTitle.css({ fontFamily: settings.subTitleFontStyle, fontSize: settings.subTitleFontStyle, color: settings.subTitleColor });
 
 			if (settings.subTitleShow == 'No') {
@@ -3655,7 +3663,7 @@ class Slider extends CraterWebParts {
 		if (contentLocation == 'Top') alignSelf = 'flex-start';
 		else if (contentLocation == 'Bottom') alignSelf = 'flex-end';
 
-		this.element.querySelectorAll('.crater-slide-details').forEach(detail => {
+		this.element.findAll('.crater-slide-details').forEach(detail => {
 			detail.css({ alignSelf });
 		});
 	}
@@ -3663,10 +3671,10 @@ class Slider extends CraterWebParts {
 	//start the slider animation
 	public startSlide() {
 		this.key = this.element.dataset['key'];
-		let controller = this.element.querySelector('#crater-slide-controller'),
-			arrows = this.element.querySelectorAll('.crater-arrow'),
+		let controller = this.element.find('#crater-slide-controller'),
+			arrows = this.element.findAll('.crater-arrow'),
 			radios,
-			slides = this.element.querySelectorAll('.crater-slide'),
+			slides = this.element.findAll('.crater-slide'),
 			radio: any,
 			current = 0,
 			key = current;
@@ -3684,7 +3692,7 @@ class Slider extends CraterWebParts {
 				element: 'input', attributes: { class: 'crater-slide-radio-toggle', type: 'radio' }
 			});
 		}
-		radios = controller.querySelectorAll('.crater-slide-radio-toggle');
+		radios = controller.findAll('.crater-slide-radio-toggle');
 
 		//fading and fadeout animation
 		let runFading = () => {
@@ -3761,7 +3769,7 @@ class Slider extends CraterWebParts {
 				]
 			});
 
-			let slides = this.sharePoint.properties.pane.content[key].draft.dom.querySelectorAll('.crater-slide');
+			let slides = this.sharePoint.properties.pane.content[key].draft.dom.findAll('.crater-slide');
 
 			this.paneContent.append(this.generatePaneContent({ slides }));
 
@@ -3907,19 +3915,19 @@ class Slider extends CraterWebParts {
 				children: [
 					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-slide-content-row' }),
 					this.elementModifier.cell({
-						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.slides[i].querySelector('img').src }
+						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.slides[i].find('img').src }
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Quote', value: params.slides[i].querySelector('.crater-slide-quote').innerText
+						element: 'input', name: 'Quote', value: params.slides[i].find('.crater-slide-quote').innerText
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Link', value: params.slides[i].querySelector('.crater-slide-link').href
+						element: 'input', name: 'Link', value: params.slides[i].find('.crater-slide-link').href
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Link Text', value: params.slides[i].querySelector('.crater-slide-link').innerText
+						element: 'input', name: 'Link Text', value: params.slides[i].find('.crater-slide-link').innerText
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Sub Title', value: params.slides[i].querySelector('.crater-slide-sub-title').innerText
+						element: 'input', name: 'Sub Title', value: params.slides[i].find('.crater-slide-sub-title').innerText
 					}),
 				]
 			});
@@ -3930,11 +3938,11 @@ class Slider extends CraterWebParts {
 	private listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let slides = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-slides');
+		let slides = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-slides');
 
-		let slideListRows = slides.querySelectorAll('.crater-slide');
+		let slideListRows = slides.findAll('.crater-slide');
 
 		let listRowPrototype = this.elementModifier.createElement({
 			element: 'div',
@@ -3976,41 +3984,41 @@ class Slider extends CraterWebParts {
 
 		let listRowHandler = (listRowPane, listRowDom) => {
 			listRowPane.addEventListener('mouseover', event => {
-				listRowPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				listRowPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			listRowPane.addEventListener('mouseout', event => {
-				listRowPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				listRowPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			let imageCell = listRowPane.querySelector('#Image-cell').parentNode;
+			let imageCell = listRowPane.find('#Image-cell').parentNode;
 			this.uploadImage({ parent: imageCell }, (image) => {
-				imageCell.querySelector('#Image-cell').src = image.src;
-				listRowDom.querySelector('img').src = image.src;
+				imageCell.find('#Image-cell').src = image.src;
+				listRowDom.find('img').src = image.src;
 			});
 
-			listRowPane.querySelector('#Quote-cell').onChanged(value => {
-				listRowDom.querySelector('.crater-slide-quote').innerHTML = value;
+			listRowPane.find('#Quote-cell').onChanged(value => {
+				listRowDom.find('.crater-slide-quote').innerHTML = value;
 			});
 
-			listRowPane.querySelector('#Link-cell').onChanged(value => {
-				listRowDom.querySelector('.crater-slide-link').href = value;
+			listRowPane.find('#Link-cell').onChanged(value => {
+				listRowDom.find('.crater-slide-link').href = value;
 			});
 
-			listRowPane.querySelector('#Link-Text-cell').onChanged(value => {
-				listRowDom.querySelector('.crater-slide-link').innerText = value;
+			listRowPane.find('#Link-Text-cell').onChanged(value => {
+				listRowDom.find('.crater-slide-link').innerText = value;
 			});
 
-			listRowPane.querySelector('#Sub-Title-cell').onChanged(value => {
-				listRowDom.querySelector('.crater-slide-sub-title').innerText = value;
+			listRowPane.find('#Sub-Title-cell').onChanged(value => {
+				listRowDom.find('.crater-slide-sub-title').innerText = value;
 			});
 
-			listRowPane.querySelector('.delete-crater-slide-content-row').addEventListener('click', event => {
+			listRowPane.find('.delete-crater-slide-content-row').addEventListener('click', event => {
 				listRowDom.remove();
 				listRowPane.remove();
 			});
 
-			listRowPane.querySelector('.add-before-crater-slide-content-row').addEventListener('click', event => {
+			listRowPane.find('.add-before-crater-slide-content-row').addEventListener('click', event => {
 				let newSlide = slidePrototype.cloneNode(true);
 				let newListRow = listRowPrototype.cloneNode(true);
 
@@ -4019,7 +4027,7 @@ class Slider extends CraterWebParts {
 				listRowHandler(newListRow, newSlide);
 			});
 
-			listRowPane.querySelector('.add-after-crater-slide-content-row').addEventListener('click', event => {
+			listRowPane.find('.add-after-crater-slide-content-row').addEventListener('click', event => {
 				let newSlide = slidePrototype.cloneNode(true);
 				let newListRow = listRowPrototype.cloneNode(true);
 
@@ -4030,92 +4038,92 @@ class Slider extends CraterWebParts {
 			});
 		};
 
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 			let newSlide = slidePrototype.cloneNode(true);
 			let newListRow = listRowPrototype.cloneNode(true);
 
 			slides.append(newSlide);
-			this.paneContent.querySelector('.list-pane').append(newListRow);
+			this.paneContent.find('.list-pane').append(newListRow);
 
 			listRowHandler(newListRow, newSlide);
 		});
 
-		this.paneContent.querySelectorAll('.crater-slide-row-pane').forEach((listRow, position) => {
+		this.paneContent.findAll('.crater-slide-row-pane').forEach((listRow, position) => {
 			listRowHandler(listRow, slideListRows[position]);
 		});
 
-		this.paneContent.querySelector('#Duration-cell').onChanged();
-		this.paneContent.querySelector('#Content-Location-cell').onChanged();
-		this.paneContent.querySelector('#View-cell').onChanged();
-		this.paneContent.querySelector('#Image-Brightness-cell').onChanged();
-		this.paneContent.querySelector('#Image-Blur-cell').onChanged();
+		this.paneContent.find('#Duration-cell').onChanged();
+		this.paneContent.find('#Content-Location-cell').onChanged();
+		this.paneContent.find('#View-cell').onChanged();
+		this.paneContent.find('#Image-Brightness-cell').onChanged();
+		this.paneContent.find('#Image-Blur-cell').onChanged();
 
-		let textSettings = this.paneContent.querySelector('.text-settings');
-		let linkSettings = this.paneContent.querySelector('.link-settings');
-		let subTitleSettings = this.paneContent.querySelector('.sub-title-settings');
+		let textSettings = this.paneContent.find('.text-settings');
+		let linkSettings = this.paneContent.find('.link-settings');
+		let subTitleSettings = this.paneContent.find('.sub-title-settings');
 
-		textSettings.querySelector('#Font-Style-cell').onChanged();
-		textSettings.querySelector('#Color-cell').onChanged();
-		textSettings.querySelector('#Font-Size-cell').onChanged();
+		textSettings.find('#Font-Style-cell').onChanged();
+		textSettings.find('#Color-cell').onChanged();
+		textSettings.find('#Font-Size-cell').onChanged();
 
-		linkSettings.querySelector('#Font-Style-cell').onChanged();
-		linkSettings.querySelector('#Color-cell').onChanged();
-		linkSettings.querySelector('#Font-Size-cell').onChanged();
-		linkSettings.querySelector('#Show-cell').onChanged();
-		linkSettings.querySelector('#Background-Color-cell').onChanged();
-		linkSettings.querySelector('#Border-cell').onChanged();
+		linkSettings.find('#Font-Style-cell').onChanged();
+		linkSettings.find('#Color-cell').onChanged();
+		linkSettings.find('#Font-Size-cell').onChanged();
+		linkSettings.find('#Show-cell').onChanged();
+		linkSettings.find('#Background-Color-cell').onChanged();
+		linkSettings.find('#Border-cell').onChanged();
 
-		subTitleSettings.querySelector('#Font-Style-cell').onChanged();
-		subTitleSettings.querySelector('#Color-cell').onChanged();
-		subTitleSettings.querySelector('#Font-Size-cell').onChanged();
-		subTitleSettings.querySelector('#Show-cell').onChanged();
+		subTitleSettings.find('#Font-Style-cell').onChanged();
+		subTitleSettings.find('#Color-cell').onChanged();
+		subTitleSettings.find('#Font-Size-cell').onChanged();
+		subTitleSettings.find('#Show-cell').onChanged();
 
 		this.paneContent.addEventListener('mutated', event => {
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.querySelector('#Duration-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.view = this.paneContent.querySelector('#View-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.view = this.paneContent.find('#View-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.imageBrightness = this.paneContent.querySelector('#Image-Brightness-cell').value + '%';
+			this.sharePoint.properties.pane.content[this.key].settings.imageBrightness = this.paneContent.find('#Image-Brightness-cell').value + '%';
 
-			this.sharePoint.properties.pane.content[this.key].settings.imageBlur = this.paneContent.querySelector('#Image-Blur-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.imageBlur = this.paneContent.find('#Image-Blur-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.contentLocation = this.paneContent.querySelector('#Content-Location-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.contentLocation = this.paneContent.find('#Content-Location-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.textFontStyle = textSettings.querySelector('#Font-Style-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.textFontStyle = textSettings.find('#Font-Style-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.textColor = textSettings.querySelector('#Color-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.textColor = textSettings.find('#Color-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.textFontSize = textSettings.querySelector('#Font-Size-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.textFontSize = textSettings.find('#Font-Size-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.linkFontStyle = linkSettings.querySelector('#Font-Style-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.linkFontStyle = linkSettings.find('#Font-Style-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.linkColor = linkSettings.querySelector('#Color-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.linkColor = linkSettings.find('#Color-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.linkFontSize = linkSettings.querySelector('#Font-Size-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.linkFontSize = linkSettings.find('#Font-Size-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.linkShow = linkSettings.querySelector('#Show-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.linkShow = linkSettings.find('#Show-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.linkBackgroundColor = linkSettings.querySelector('#Background-Color-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.linkBackgroundColor = linkSettings.find('#Background-Color-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.linkBorder = linkSettings.querySelector('#Border-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.linkBorder = linkSettings.find('#Border-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.subTitleFontStyle = subTitleSettings.querySelector('#Font-Style-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.subTitleFontStyle = subTitleSettings.find('#Font-Style-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.subTitleColor = subTitleSettings.querySelector('#Color-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.subTitleColor = subTitleSettings.find('#Color-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.subTitleFontSize = subTitleSettings.querySelector('#Font-Size-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.subTitleFontSize = subTitleSettings.find('#Font-Size-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.subTitleShow = subTitleSettings.querySelector('#Show-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.subTitleShow = subTitleSettings.find('#Show-cell').value;
 		});
 	}
 
@@ -4125,7 +4133,7 @@ class Slider extends CraterWebParts {
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
-		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
 
 		let updateWindow = this.elementModifier.createForm({
 			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
@@ -4140,25 +4148,25 @@ class Slider extends CraterWebParts {
 
 		let data: any = {};
 		let source: any;
-		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+		updateWindow.find('#update-element').addEventListener('click', event => {
 			event.preventDefault();
-			data.image = updateWindow.querySelector('#meta-data-image').value;
-			data.text = updateWindow.querySelector('#meta-data-text').value;
+			data.image = updateWindow.find('#meta-data-image').value;
+			data.text = updateWindow.find('#meta-data-text').value;
 
 			source = func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
-			draftDom.querySelector('.crater-slides').innerHTML = newContent.querySelector('.crater-slides').innerHTML;
+			draftDom.find('.crater-slides').innerHTML = newContent.find('.crater-slides').innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
 
-			this.paneContent.querySelector('.list-pane').innerHTML = this.generatePaneContent({ slides: draftDom.querySelectorAll('.crater-slide') }).innerHTML;
+			this.paneContent.find('.list-pane').innerHTML = this.generatePaneContent({ slides: draftDom.findAll('.crater-slide') }).innerHTML;
 
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
 		if (!func.isnull(paneConnection)) {
-			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
@@ -4240,8 +4248,8 @@ class List extends CraterWebParts {
 			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
 		}
 		else {
-			let peopleList = this.sharePoint.properties.pane.content[key].draft.dom.querySelector('.crater-list-content');
-			let peopleListRows = peopleList.querySelectorAll('.crater-list-content-row');
+			let peopleList = this.sharePoint.properties.pane.content[key].draft.dom.find('.crater-list-content');
+			let peopleListRows = peopleList.findAll('.crater-list-content-row');
 			this.paneContent.makeElement({
 				element: 'div', children: [
 					this.elementModifier.createElement({
@@ -4262,22 +4270,22 @@ class List extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: this.element.querySelector('.crater-list-title-icon').src }
+								element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: this.element.find('.crater-list-title-icon').src }
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'title', value: this.element.querySelector('.crater-list-title').textContent
+								element: 'input', name: 'title', value: this.element.find('.crater-list-title').textContent
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'backgroundcolor', value: this.element.querySelector('.crater-list-title').css()['background-color'], list: func.colors
+								element: 'input', name: 'backgroundcolor', value: this.element.find('.crater-list-title').css()['background-color'], list: func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.querySelector('.crater-list-title').css().color, list: func.colors
+								element: 'input', name: 'color', value: this.element.find('.crater-list-title').css().color, list: func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontsize', value: this.element.querySelector('.crater-list-title').css()['font-size']
+								element: 'input', name: 'fontsize', value: this.element.find('.crater-list-title').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'height', value: this.element.querySelector('.crater-list-title').css()['height'] || ''
+								element: 'input', name: 'height', value: this.element.find('.crater-list-title').css()['height'] || ''
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'Show', options: ['Yes', 'No']
@@ -4313,16 +4321,16 @@ class List extends CraterWebParts {
 				children: [
 					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-list-content-row' }),
 					this.elementModifier.cell({
-						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.list[i].querySelector('#image').src }
+						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.list[i].find('#image').src }
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Title', value: params.list[i].querySelector('#title').textContent
+						element: 'input', name: 'Title', value: params.list[i].find('#title').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Job', value: params.list[i].querySelector('#job').textContent
+						element: 'input', name: 'Job', value: params.list[i].find('#job').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Link', value: params.list[i].querySelector('#link').href
+						element: 'input', name: 'Link', value: params.list[i].find('#link').href
 					}),
 				]
 			});
@@ -4334,12 +4342,12 @@ class List extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 
-		let peopleList = draftDom.querySelector('.crater-list-content');
-		let peopleListRows = peopleList.querySelectorAll('.crater-list-content-row');
+		let peopleList = draftDom.find('.crater-list-content');
+		let peopleListRows = peopleList.findAll('.crater-list-content-row');
 
 		let listRowPrototype = this.elementModifier.createElement({
 			element: 'div',
@@ -4378,37 +4386,37 @@ class List extends CraterWebParts {
 
 		let listRowHandler = (listRowPane, listRowDom) => {
 			listRowPane.addEventListener('mouseover', event => {
-				listRowPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				listRowPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			listRowPane.addEventListener('mouseout', event => {
-				listRowPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				listRowPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			let imageCell = listRowPane.querySelector('#Image-cell').parentNode;
+			let imageCell = listRowPane.find('#Image-cell').parentNode;
 			this.uploadImage({ parent: imageCell }, (image) => {
-				imageCell.querySelector('#Image-cell').src = image.src;
-				listRowDom.querySelector('.crater-list-content-row-image').src = image.src;
+				imageCell.find('#Image-cell').src = image.src;
+				listRowDom.find('.crater-list-content-row-image').src = image.src;
 			});
 
-			listRowPane.querySelector('#Title-cell').onChanged(value => {
-				listRowDom.querySelector('.crater-list-content-row-details-title').innerHTML = value;
+			listRowPane.find('#Title-cell').onChanged(value => {
+				listRowDom.find('.crater-list-content-row-details-title').innerHTML = value;
 			});
 
-			listRowPane.querySelector('#Job-cell').onChanged(value => {
-				listRowDom.querySelector('.crater-list-content-row-details-job').innerHTML = value;
+			listRowPane.find('#Job-cell').onChanged(value => {
+				listRowDom.find('.crater-list-content-row-details-job').innerHTML = value;
 			});
 
-			listRowPane.querySelector('#Link-cell').onChanged(value => {
-				listRowDom.querySelector('.crater-list-content-row-details-link').href = value;
+			listRowPane.find('#Link-cell').onChanged(value => {
+				listRowDom.find('.crater-list-content-row-details-link').href = value;
 			});
 
-			listRowPane.querySelector('.delete-crater-list-content-row').addEventListener('click', event => {
+			listRowPane.find('.delete-crater-list-content-row').addEventListener('click', event => {
 				listRowDom.remove();
 				listRowPane.remove();
 			});
 
-			listRowPane.querySelector('.add-before-crater-list-content-row').addEventListener('click', event => {
+			listRowPane.find('.add-before-crater-list-content-row').addEventListener('click', event => {
 				let newPeopleListRow = peopleContentRowPrototype.cloneNode(true);
 				let newListRow = listRowPrototype.cloneNode(true);
 
@@ -4417,7 +4425,7 @@ class List extends CraterWebParts {
 				listRowHandler(newListRow, newPeopleListRow);
 			});
 
-			listRowPane.querySelector('.add-after-crater-list-content-row').addEventListener('click', event => {
+			listRowPane.find('.add-after-crater-list-content-row').addEventListener('click', event => {
 				let newPeopleListRow = peopleContentRowPrototype.cloneNode(true);
 				let newListRow = listRowPrototype.cloneNode(true);
 
@@ -4428,59 +4436,59 @@ class List extends CraterWebParts {
 			});
 		};
 
-		let titlePane = this.paneContent.querySelector('.title-pane');
-		let iconCell = titlePane.querySelector('#icon-cell').parentNode;
+		let titlePane = this.paneContent.find('.title-pane');
+		let iconCell = titlePane.find('#icon-cell').parentNode;
 
 		this.uploadImage({ parent: iconCell }, (image) => {
-			iconCell.querySelector('#icon-cell').src = image.src;
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-title-icon').src = image.src;
+			iconCell.find('#icon-cell').src = image.src;
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title-icon').src = image.src;
 		});
 
-		titlePane.querySelector('#title-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-title').innerHTML = value;
+		titlePane.find('#title-cell').onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').innerHTML = value;
 		});
 
-		titlePane.querySelector('#Show-cell').onChanged(value => {
+		titlePane.find('#Show-cell').onChanged(value => {
 			if (value == 'No') {
-				this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-title').hide();
+				this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').hide();
 			} else {
-				this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-title').show();
+				this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').show();
 			}
 		});
 
-		let backgroundColorCell = titlePane.querySelector('#backgroundcolor-cell').parentNode;
-		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-title').css({ backgroundColor });
-			backgroundColorCell.querySelector('#backgroundcolor-cell').value = backgroundColor;
-			backgroundColorCell.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor);
+		let backgroundColorCell = titlePane.find('#backgroundcolor-cell').parentNode;
+		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#backgroundcolor-cell') }, (backgroundColor) => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').css({ backgroundColor });
+			backgroundColorCell.find('#backgroundcolor-cell').value = backgroundColor;
+			backgroundColorCell.find('#backgroundcolor-cell').setAttribute('value', backgroundColor);
 		});
 
-		let colorCell = titlePane.querySelector('#color-cell').parentNode;
-		this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#color-cell') }, (color) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-title').css({ color });
-			colorCell.querySelector('#color-cell').value = color;
-			colorCell.querySelector('#color-cell').setAttribute('value', color);
+		let colorCell = titlePane.find('#color-cell').parentNode;
+		this.pickColor({ parent: colorCell, cell: colorCell.find('#color-cell') }, (color) => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').css({ color });
+			colorCell.find('#color-cell').value = color;
+			colorCell.find('#color-cell').setAttribute('value', color);
 		});
 
-		this.paneContent.querySelector('.title-pane').querySelector('#fontsize-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-title').css({ fontSize: value });
+		this.paneContent.find('.title-pane').find('#fontsize-cell').onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').css({ fontSize: value });
 		});
 
-		this.paneContent.querySelector('.title-pane').querySelector('#height-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-title').css({ height: value });
+		this.paneContent.find('.title-pane').find('#height-cell').onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').css({ height: value });
 		});
 
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 			let newPeopleListRow = peopleContentRowPrototype.cloneNode(true);
 			let newListRow = listRowPrototype.cloneNode(true);
 
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-list-content').append(newPeopleListRow);//c
-			this.paneContent.querySelector('.list-pane').append(newListRow);
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-content').append(newPeopleListRow);//c
+			this.paneContent.find('.list-pane').append(newListRow);
 
 			listRowHandler(newListRow, newPeopleListRow);
 		});
 
-		this.paneContent.querySelectorAll('.crater-list-row-pane').forEach((listRow, position) => {
+		this.paneContent.findAll('.crater-list-row-pane').forEach((listRow, position) => {
 			listRowHandler(listRow, peopleListRows[position]);
 		});
 
@@ -4489,7 +4497,7 @@ class List extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = draftDom.innerHTML;
 
 			this.element.css(draftDom.css());
@@ -4504,7 +4512,7 @@ class List extends CraterWebParts {
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
-		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
 
 		let updateWindow = this.elementModifier.createForm({
 			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
@@ -4521,26 +4529,26 @@ class List extends CraterWebParts {
 
 		let data: any = {};
 		let source: any;
-		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+		updateWindow.find('#update-element').addEventListener('click', event => {
 			event.preventDefault();
-			data.image = updateWindow.querySelector('#meta-data-image').value;
-			data.title = updateWindow.querySelector('#meta-data-title').value;
-			data.job = updateWindow.querySelector('#meta-data-job').value;
-			data.link = updateWindow.querySelector('#meta-data-link').value;
+			data.image = updateWindow.find('#meta-data-image').value;
+			data.title = updateWindow.find('#meta-data-title').value;
+			data.job = updateWindow.find('#meta-data-job').value;
+			data.link = updateWindow.find('#meta-data-link').value;
 			source = func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
-			draftDom.querySelector('.crater-list-content').innerHTML = newContent.querySelector('.crater-list-content').innerHTML;
+			draftDom.find('.crater-list-content').innerHTML = newContent.find('.crater-list-content').innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
 
-			this.paneContent.querySelector('.list-pane').innerHTML = this.generatePaneContent({ list: newContent.querySelectorAll('.crater-list-content-row') }).innerHTML;
+			this.paneContent.find('.list-pane').innerHTML = this.generatePaneContent({ list: newContent.findAll('.crater-list-content-row') }).innerHTML;
 
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
 		if (!func.isnull(paneConnection)) {
-			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
@@ -4625,7 +4633,7 @@ class Tiles extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 		//at most 3 in a row
 		//if not upto 3 make it to match parents width
-		let tiles = this.element.querySelectorAll('.crater-tiles-content-column');
+		let tiles = this.element.findAll('.crater-tiles-content-column');
 		let length: number = tiles.length;
 		let currentContent;
 
@@ -4638,7 +4646,7 @@ class Tiles extends CraterWebParts {
 
 		this.height = this.element.css().height;
 
-		this.element.querySelectorAll('.crater-tiles-content').forEach(content => {
+		this.element.findAll('.crater-tiles-content').forEach(content => {
 			content.remove();
 		});
 
@@ -4659,8 +4667,8 @@ class Tiles extends CraterWebParts {
 			currentContent.append(tile);
 			//set tile background position [left, right, center]
 			let tileBackground: any = {};
-			tile.querySelector('.crater-tiles-content-column-image').cssRemove(['margin-left']);
-			tile.querySelector('.crater-tiles-content-column-image').cssRemove(['margin-right']);
+			tile.find('.crater-tiles-content-column-image').cssRemove(['margin-left']);
+			tile.find('.crater-tiles-content-column-image').cssRemove(['margin-right']);
 
 			let getPosition = position => {
 				if (position == 'left') return 'right';
@@ -4674,7 +4682,7 @@ class Tiles extends CraterWebParts {
 			tileBackground.width = this.backgroundWidth;
 			tileBackground.height = this.backgroundHeight;
 
-			tile.querySelector('.crater-tiles-content-column-image').css(tileBackground);
+			tile.find('.crater-tiles-content-column-image').css(tileBackground);
 
 			if (!func.isset(this.height) || tile.position().height > this.height) {
 				this.height = tile.position().height;
@@ -4697,19 +4705,19 @@ class Tiles extends CraterWebParts {
 			tile.css({ height: this.height });// set the gotten height
 
 			//reset tile view to un-hovered
-			tile.querySelector('.crater-tiles-content-column-details').classList.add('crater-tiles-content-column-details-short');
+			tile.find('.crater-tiles-content-column-details').classList.add('crater-tiles-content-column-details-short');
 
-			tile.querySelector('.crater-tiles-content-column-details').classList.remove('crater-tiles-content-column-details-full');
+			tile.find('.crater-tiles-content-column-details').classList.remove('crater-tiles-content-column-details-full');
 
 			//animate when hovered
 			tile.addEventListener('mouseenter', event => {
-				tile.querySelector('.crater-tiles-content-column-details').classList.add('crater-tiles-content-column-details-full');
-				tile.querySelector('.crater-tiles-content-column-details').classList.remove('crater-tiles-content-column-details-short');
+				tile.find('.crater-tiles-content-column-details').classList.add('crater-tiles-content-column-details-full');
+				tile.find('.crater-tiles-content-column-details').classList.remove('crater-tiles-content-column-details-short');
 			});
 
 			tile.addEventListener('mouseleave', event => {
-				tile.querySelector('.crater-tiles-content-column-details').classList.add('crater-tiles-content-column-details-short');
-				tile.querySelector('.crater-tiles-content-column-details').classList.remove('crater-tiles-content-column-details-full');
+				tile.find('.crater-tiles-content-column-details').classList.add('crater-tiles-content-column-details-short');
+				tile.find('.crater-tiles-content-column-details').classList.remove('crater-tiles-content-column-details-full');
 			});
 		}
 	}
@@ -4730,7 +4738,7 @@ class Tiles extends CraterWebParts {
 			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
 		}
 		else {
-			let tiles = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelectorAll('.crater-tiles-content-column');
+			let tiles = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-tiles-content-column');
 			this.paneContent.makeElement({
 				element: 'div', children: [
 					this.elementModifier.createElement({
@@ -4777,17 +4785,17 @@ class Tiles extends CraterWebParts {
 		}
 
 		//upload the settings
-		this.paneContent.querySelector('#Duration-cell').value = this.sharePoint.properties.pane.content[this.key].settings.duration || '';
+		this.paneContent.find('#Duration-cell').value = this.sharePoint.properties.pane.content[this.key].settings.duration || '';
 
-		this.paneContent.querySelector('#Columns-cell').value = this.sharePoint.properties.pane.content[this.key].settings.columns || '';
+		this.paneContent.find('#Columns-cell').value = this.sharePoint.properties.pane.content[this.key].settings.columns || '';
 
-		this.paneContent.querySelector('#BackgroundPosition-cell').value = this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition || '';
+		this.paneContent.find('#BackgroundPosition-cell').value = this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition || '';
 
-		this.paneContent.querySelector('#BackgroundWidth-cell').value = this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth || '';
+		this.paneContent.find('#BackgroundWidth-cell').value = this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth || '';
 
-		this.paneContent.querySelector('#BackgroundHeight-cell').value = this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight || '';
+		this.paneContent.find('#BackgroundHeight-cell').value = this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight || '';
 
-		this.paneContent.querySelector('#Height-cell').value = this.sharePoint.properties.pane.content[this.key].settings.height || '';
+		this.paneContent.find('#Height-cell').value = this.sharePoint.properties.pane.content[this.key].settings.height || '';
 
 		return this.paneContent;
 	}
@@ -4814,13 +4822,13 @@ class Tiles extends CraterWebParts {
 				children: [
 					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-tiles-content-column' }),
 					this.elementModifier.cell({
-						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.tiles[i].querySelector('.crater-tiles-content-column-image').src }
+						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.tiles[i].find('.crater-tiles-content-column-image').src }
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Name', value: params.tiles[i].querySelector('#name').textContent
+						element: 'input', name: 'Name', value: params.tiles[i].find('#name').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'About', value: params.tiles[i].querySelector('#about').textContent
+						element: 'input', name: 'About', value: params.tiles[i].find('#about').textContent
 					}),
 					this.elementModifier.cell({
 						element: 'input', name: 'Color', value: func.isset(params.tiles[i].css().color) ? params.tiles[i].css().color : this.color, list: func.colors
@@ -4838,10 +4846,10 @@ class Tiles extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let content = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-tiles-content');
-		let tiles = content.querySelectorAll('.crater-tiles-content-column');
+		let content = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-tiles-content');
+		let tiles = content.findAll('.crater-tiles-content-column');
 
 		let columnPanePrototype = this.elementModifier.createElement({
 			element: 'div',
@@ -4886,48 +4894,48 @@ class Tiles extends CraterWebParts {
 
 		let tilescolumnHandler = (tilesColumnPane, tilesColumnDom) => {
 			tilesColumnPane.addEventListener('mouseover', event => {
-				tilesColumnPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				tilesColumnPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			tilesColumnPane.addEventListener('mouseout', event => {
-				tilesColumnPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				tilesColumnPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			let imageCell = tilesColumnPane.querySelector('#Image-cell').parentNode;
+			let imageCell = tilesColumnPane.find('#Image-cell').parentNode;
 			this.uploadImage({ parent: imageCell }, (image) => {
-				imageCell.querySelector('#Image-cell').src = image.src;
-				tilesColumnDom.querySelector('.crater-tiles-content-column-image').src = image.src;
+				imageCell.find('#Image-cell').src = image.src;
+				tilesColumnDom.find('.crater-tiles-content-column-image').src = image.src;
 			});
 
 
-			tilesColumnPane.querySelector('#Name-cell').onChanged(value => {
-				tilesColumnDom.querySelector('.crater-tiles-content-column-details-name').innerHTML = value;
+			tilesColumnPane.find('#Name-cell').onChanged(value => {
+				tilesColumnDom.find('.crater-tiles-content-column-details-name').innerHTML = value;
 			});
 
-			tilesColumnPane.querySelector('#About-cell').onChanged(value => {
-				tilesColumnDom.querySelector('.crater-tiles-content-column-details-about').innerHTML = value;
+			tilesColumnPane.find('#About-cell').onChanged(value => {
+				tilesColumnDom.find('.crater-tiles-content-column-details-about').innerHTML = value;
 			});
 
-			let colorCell = tilesColumnPane.querySelector('#Color-cell').parentNode;
-			this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#Color-cell') }, (color) => {
+			let colorCell = tilesColumnPane.find('#Color-cell').parentNode;
+			this.pickColor({ parent: colorCell, cell: colorCell.find('#Color-cell') }, (color) => {
 				tilesColumnDom.css({ color });
-				colorCell.querySelector('#Color-cell').value = color;
-				colorCell.querySelector('#Color-cell').setAttribute('value', color);
+				colorCell.find('#Color-cell').value = color;
+				colorCell.find('#Color-cell').setAttribute('value', color);
 			});
 
-			let backgroundColorCell = tilesColumnPane.querySelector('#Background-cell').parentNode;
-			this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#Background-cell') }, (backgroundColor) => {
+			let backgroundColorCell = tilesColumnPane.find('#Background-cell').parentNode;
+			this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#Background-cell') }, (backgroundColor) => {
 				tilesColumnDom.css({ backgroundColor });
-				backgroundColorCell.querySelector('#Background-cell').value = backgroundColor;
-				backgroundColorCell.querySelector('#Background-cell').setAttribute('value', backgroundColor);
+				backgroundColorCell.find('#Background-cell').value = backgroundColor;
+				backgroundColorCell.find('#Background-cell').setAttribute('value', backgroundColor);
 			});
 
-			tilesColumnPane.querySelector('.delete-crater-tiles-content-column').addEventListener('click', event => {
+			tilesColumnPane.find('.delete-crater-tiles-content-column').addEventListener('click', event => {
 				tilesColumnDom.remove();
 				tilesColumnPane.remove();
 			});
 
-			tilesColumnPane.querySelector('.add-before-crater-tiles-content-column').addEventListener('click', event => {
+			tilesColumnPane.find('.add-before-crater-tiles-content-column').addEventListener('click', event => {
 				let newColumnPrototype = columnPrototype.cloneNode(true);
 				let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
 
@@ -4936,7 +4944,7 @@ class Tiles extends CraterWebParts {
 				tilescolumnHandler(newColumnPanePrototype, newColumnPrototype);
 			});
 
-			tilesColumnPane.querySelector('.add-after-crater-tiles-content-column').addEventListener('click', event => {
+			tilesColumnPane.find('.add-after-crater-tiles-content-column').addEventListener('click', event => {
 				let newColumnPrototype = columnPrototype.cloneNode(true);
 				let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
 
@@ -4946,17 +4954,17 @@ class Tiles extends CraterWebParts {
 			});
 		};
 
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 			let newColumnPrototype = columnPrototype.cloneNode(true);
 			let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
 
 			content.append(newColumnPrototype);//c
-			this.paneContent.querySelector('.tiles-pane').append(newColumnPanePrototype);
+			this.paneContent.find('.tiles-pane').append(newColumnPanePrototype);
 
 			tilescolumnHandler(newColumnPanePrototype, newColumnPrototype);
 		});
 
-		this.paneContent.querySelectorAll('.crater-tiles-content-column-pane').forEach((tilesColumnPane, position) => {
+		this.paneContent.findAll('.crater-tiles-content-column-pane').forEach((tilesColumnPane, position) => {
 			tilescolumnHandler(tilesColumnPane, tiles[position]);
 		});
 
@@ -4965,7 +4973,7 @@ class Tiles extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			//update webpart            
 
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
@@ -4974,17 +4982,17 @@ class Tiles extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
 
 			//save the new settings
-			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.querySelector('#Duration-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.querySelector('#Columns-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.find('#Columns-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition = this.paneContent.querySelector('#BackgroundPosition-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition = this.paneContent.find('#BackgroundPosition-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight = this.paneContent.querySelector('#BackgroundHeight-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight = this.paneContent.find('#BackgroundHeight-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth = this.paneContent.querySelector('#BackgroundWidth-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth = this.paneContent.find('#BackgroundWidth-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.height = this.paneContent.querySelector('#Height-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.height = this.paneContent.find('#Height-cell').value;
 		});
 	}
 
@@ -4994,7 +5002,7 @@ class Tiles extends CraterWebParts {
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
-		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
 
 		let updateWindow = this.elementModifier.createForm({
 			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
@@ -5011,26 +5019,26 @@ class Tiles extends CraterWebParts {
 
 		let data: any = {};
 		let source: any;
-		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+		updateWindow.find('#update-element').addEventListener('click', event => {
 			event.preventDefault();
-			data.image = updateWindow.querySelector('#meta-data-image').value;
-			data.name = updateWindow.querySelector('#meta-data-name').value;
-			data.about = updateWindow.querySelector('#meta-data-about').value;
-			data.color = updateWindow.querySelector('#meta-data-color').value;
+			data.image = updateWindow.find('#meta-data-image').value;
+			data.name = updateWindow.find('#meta-data-name').value;
+			data.about = updateWindow.find('#meta-data-about').value;
+			data.color = updateWindow.find('#meta-data-color').value;
 			source = func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
-			draftDom.querySelector('.crater-tiles-content').innerHTML = newContent.querySelector('.crater-tiles-content').innerHTML;
+			draftDom.find('.crater-tiles-content').innerHTML = newContent.find('.crater-tiles-content').innerHTML;
 
 			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
 
-			this.paneContent.querySelector('.tiles-pane').innerHTML = this.generatePaneContent({ tiles: newContent.querySelectorAll('.crater-tiles-content-column') }).innerHTML;
+			this.paneContent.find('.tiles-pane').innerHTML = this.generatePaneContent({ tiles: newContent.findAll('.crater-tiles-content-column') }).innerHTML;
 
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 		if (!func.isnull(paneConnection)) {
-			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 
 				this.element.innerHTML = draftDom.innerHTML;
 
@@ -5120,7 +5128,7 @@ class Counter extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 		let settings = this.sharePoint.properties.pane.content[this.key].settings;
 
-		let counters = this.element.querySelectorAll('.crater-counter-content-column');
+		let counters = this.element.findAll('.crater-counter-content-column');
 		let length = counters.length;
 		let currentContent;
 
@@ -5132,7 +5140,7 @@ class Counter extends CraterWebParts {
 
 		this.height = this.element.css().height;
 
-		this.element.querySelectorAll('.crater-counter-content').forEach(content => {
+		this.element.findAll('.crater-counter-content').forEach(content => {
 			content.remove();
 		});
 
@@ -5151,32 +5159,32 @@ class Counter extends CraterWebParts {
 			}
 
 			currentContent.append(counter);
-			counter.querySelector('.crater-counter-content-column-image').css({ height: this.backgroundHeight, width: this.backgroundWidth, filter: `blur(${settings.backgroundFilter})` });
+			counter.find('.crater-counter-content-column-image').css({ height: this.backgroundHeight, width: this.backgroundWidth, filter: `blur(${settings.backgroundFilter})` });
 
 			if (settings.showIcons == 'No') {
-				counter.querySelector('.crater-counter-content-column-image').hide();
+				counter.find('.crater-counter-content-column-image').hide();
 			} else {
-				counter.querySelector('.crater-counter-content-column-image').show();
+				counter.find('.crater-counter-content-column-image').show();
 			}
 
 			if (this.backgroundPosition != 'Right') {
-				counter.querySelector('.crater-counter-content-column-image').css({ gridColumnStart: 1, gridRowStart: 1 });
-				counter.querySelector('.crater-counter-content-column-details').css({ gridColumnStart: 2, gridRowStart: 1 });
+				counter.find('.crater-counter-content-column-image').css({ gridColumnStart: 1, gridRowStart: 1 });
+				counter.find('.crater-counter-content-column-details').css({ gridColumnStart: 2, gridRowStart: 1 });
 
 			} else {
-				counter.querySelector('.crater-counter-content-column-image').css({ gridColumnStart: 2, gridRowStart: 1 });
-				counter.querySelector('.crater-counter-content-column-details').css({ gridColumnStart: 1, gridRowStart: 1 });
+				counter.find('.crater-counter-content-column-image').css({ gridColumnStart: 2, gridRowStart: 1 });
+				counter.find('.crater-counter-content-column-details').css({ gridColumnStart: 1, gridRowStart: 1 });
 			}
 
-			let count = counter.querySelector('#count').dataset['count'];
+			let count = counter.find('#count').dataset['count'];
 
-			counter.querySelector('#count').innerHTML = 0;
-			counter.querySelector('#unit').css({ visibility: 'hidden' });
+			counter.find('#count').innerHTML = 0;
+			counter.find('#unit').css({ visibility: 'hidden' });
 
 			let interval = setInterval(() => {
-				counter.querySelector('#count').innerHTML = counter.querySelector('#count').innerHTML / 1 + 1 / 1;
-				if (counter.querySelector('#count').innerHTML == count) {
-					counter.querySelector('#unit').css({ visibility: 'unset' });
+				counter.find('#count').innerHTML = counter.find('#count').innerHTML / 1 + 1 / 1;
+				if (counter.find('#count').innerHTML == count) {
+					counter.find('#unit').css({ visibility: 'unset' });
 					clearInterval(interval);
 				}
 			}, this.duration / count);
@@ -5217,7 +5225,7 @@ class Counter extends CraterWebParts {
 			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
 		}
 		else {
-			let counters = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelectorAll('.crater-counter-content-column');
+			let counters = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-counter-content-column');
 
 			this.paneContent.makeElement({
 				element: 'div', children: [
@@ -5273,7 +5281,7 @@ class Counter extends CraterWebParts {
 			});
 		}
 
-		this.paneContent.querySelector('#Box-Height-cell').value = this.sharePoint.properties.pane.content[this.key].settings.height || '';
+		this.paneContent.find('#Box-Height-cell').value = this.sharePoint.properties.pane.content[this.key].settings.height || '';
 
 		return this.paneContent;
 	}
@@ -5300,19 +5308,19 @@ class Counter extends CraterWebParts {
 				children: [
 					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-counter-content-column' }),
 					this.elementModifier.cell({
-						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.counters[i].querySelector('.crater-counter-content-column-image').src }
+						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.counters[i].find('.crater-counter-content-column-image').src }
 					}),
 					this.elementModifier.cell({
 						element: 'img', name: 'BackgroundImage', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.counters[i].css()['background-image'] || '' }
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Count', value: params.counters[i].querySelector('#count').textContent
+						element: 'input', name: 'Count', value: params.counters[i].find('#count').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Unit', value: params.counters[i].querySelector('#unit').textContent
+						element: 'input', name: 'Unit', value: params.counters[i].find('#unit').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Name', value: params.counters[i].querySelector('#name').textContent
+						element: 'input', name: 'Name', value: params.counters[i].find('#name').textContent
 					}),
 					this.elementModifier.cell({
 						element: 'input', name: 'Color', value: func.isset(params.counters[i].css().color) ? params.counters[i].css().color : this.color, list: func.colors
@@ -5330,9 +5338,9 @@ class Counter extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
-		let content = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-counter-content');
-		let counters = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelectorAll('.crater-counter-content-column');
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
+		let content = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-counter-content');
+		let counters = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-counter-content-column');
 
 		let columnPanePrototype = this.elementModifier.createElement({
 			element: 'div',
@@ -5386,61 +5394,61 @@ class Counter extends CraterWebParts {
 
 		let countercolumnHandler = (counterColumnPane, counterColumnDom) => {
 			counterColumnPane.addEventListener('mouseover', event => {
-				counterColumnPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				counterColumnPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			counterColumnPane.addEventListener('mouseout', event => {
-				counterColumnPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				counterColumnPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			counterColumnPane.querySelector('#Image-cell').onChanged(value => {
+			counterColumnPane.find('#Image-cell').onChanged(value => {
 				counterColumnDom.css({ backgroundImage: `url('${value}')` });
 			});
 
-			let imageCell = counterColumnPane.querySelector('#Image-cell').parentNode;
+			let imageCell = counterColumnPane.find('#Image-cell').parentNode;
 			this.uploadImage({ parent: imageCell }, (image) => {
-				imageCell.querySelector('#Image-cell').src = image.src;
-				counterColumnDom.querySelector('.crater-counter-content-column-image').src = image.src;
+				imageCell.find('#Image-cell').src = image.src;
+				counterColumnDom.find('.crater-counter-content-column-image').src = image.src;
 			});
 
-			let backgroundImageCell = counterColumnPane.querySelector('#BackgroundImage-cell').parentNode;
+			let backgroundImageCell = counterColumnPane.find('#BackgroundImage-cell').parentNode;
 			this.uploadImage({ parent: backgroundImageCell }, (backgroundImage) => {
-				backgroundImageCell.querySelector('#BackgroundImage-cell').src = backgroundImage.src;
+				backgroundImageCell.find('#BackgroundImage-cell').src = backgroundImage.src;
 				counterColumnDom.setBackgroundImage(backgroundImage.src);
 			});
 
-			counterColumnPane.querySelector('#Count-cell').onChanged(value => {
-				counterColumnDom.querySelector('.crater-counter-content-column-details-value-count').dataset['count'] = value;
+			counterColumnPane.find('#Count-cell').onChanged(value => {
+				counterColumnDom.find('.crater-counter-content-column-details-value-count').dataset['count'] = value;
 			});
 
-			counterColumnPane.querySelector('#Unit-cell').onChanged(value => {
-				counterColumnDom.querySelector('.crater-counter-content-column-details-value-unit').innerHTML = value;
+			counterColumnPane.find('#Unit-cell').onChanged(value => {
+				counterColumnDom.find('.crater-counter-content-column-details-value-unit').innerHTML = value;
 			});
 
-			counterColumnPane.querySelector('#Name-cell').onChanged(value => {
-				counterColumnDom.querySelector('.crater-counter-content-column-details-name').innerHTML = value;
+			counterColumnPane.find('#Name-cell').onChanged(value => {
+				counterColumnDom.find('.crater-counter-content-column-details-name').innerHTML = value;
 			});
 
-			let colorCell = counterColumnPane.querySelector('#Color-cell').parentNode;
-			this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#Color-cell') }, (color) => {
+			let colorCell = counterColumnPane.find('#Color-cell').parentNode;
+			this.pickColor({ parent: colorCell, cell: colorCell.find('#Color-cell') }, (color) => {
 				counterColumnDom.css({ color });
-				colorCell.querySelector('#Color-cell').value = color;
-				colorCell.querySelector('#Color-cell').setAttribute('value', color);
+				colorCell.find('#Color-cell').value = color;
+				colorCell.find('#Color-cell').setAttribute('value', color);
 			});
 
-			let backgroundColorCell = counterColumnPane.querySelector('#Background-cell').parentNode;
-			this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#Background-cell') }, (backgroundColor) => {
+			let backgroundColorCell = counterColumnPane.find('#Background-cell').parentNode;
+			this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#Background-cell') }, (backgroundColor) => {
 				counterColumnDom.css({ backgroundColor });
-				backgroundColorCell.querySelector('#Background-cell').value = backgroundColor;
-				backgroundColorCell.querySelector('#Background-cell').setAttribute('value', backgroundColor);
+				backgroundColorCell.find('#Background-cell').value = backgroundColor;
+				backgroundColorCell.find('#Background-cell').setAttribute('value', backgroundColor);
 			});
 
-			counterColumnPane.querySelector('.delete-crater-counter-content-column').addEventListener('click', event => {
+			counterColumnPane.find('.delete-crater-counter-content-column').addEventListener('click', event => {
 				counterColumnDom.remove();
 				counterColumnPane.remove();
 			});
 
-			counterColumnPane.querySelector('.add-before-crater-counter-content-column').addEventListener('click', event => {
+			counterColumnPane.find('.add-before-crater-counter-content-column').addEventListener('click', event => {
 				let newColumnPrototype = columnPrototype.cloneNode(true);
 				let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
 
@@ -5449,7 +5457,7 @@ class Counter extends CraterWebParts {
 				countercolumnHandler(newColumnPanePrototype, newColumnPrototype);
 			});
 
-			counterColumnPane.querySelector('.add-after-crater-counter-content-column').addEventListener('click', event => {
+			counterColumnPane.find('.add-after-crater-counter-content-column').addEventListener('click', event => {
 				let newColumnPrototype = columnPrototype.cloneNode(true);
 				let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
 
@@ -5459,61 +5467,61 @@ class Counter extends CraterWebParts {
 			});
 		};
 
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 			let newColumnPrototype = columnPrototype.cloneNode(true);
 			let newColumnPanePrototype = columnPanePrototype.cloneNode(true);
 
 			content.append(newColumnPrototype);//c
-			this.paneContent.querySelector('.counter-pane').append(newColumnPanePrototype);
+			this.paneContent.find('.counter-pane').append(newColumnPanePrototype);
 
 			countercolumnHandler(newColumnPanePrototype, newColumnPrototype);
 		});
 
-		this.paneContent.querySelectorAll('.crater-counter-content-column-pane').forEach((counterColumnPane, position) => {
+		this.paneContent.findAll('.crater-counter-content-column-pane').forEach((counterColumnPane, position) => {
 			countercolumnHandler(counterColumnPane, counters[position]);
 		});
 
-		this.paneContent.querySelector('#Duration-cell').onChanged();
-		this.paneContent.querySelector('#Columns-cell').onChanged();
-		this.paneContent.querySelector('#Box-Height-cell').onChanged();
-		this.paneContent.querySelector('#Gap-cell').onChanged();
-		this.paneContent.querySelector('#Show-Icons-cell').onChanged();
-		this.paneContent.querySelector('#Background-Filter-cell').onChanged();
-		this.paneContent.querySelector('#BackgroundWidth-cell').onChanged();
-		this.paneContent.querySelector('#BackgroundHeight-cell').onChanged();
+		this.paneContent.find('#Duration-cell').onChanged();
+		this.paneContent.find('#Columns-cell').onChanged();
+		this.paneContent.find('#Box-Height-cell').onChanged();
+		this.paneContent.find('#Gap-cell').onChanged();
+		this.paneContent.find('#Show-Icons-cell').onChanged();
+		this.paneContent.find('#Background-Filter-cell').onChanged();
+		this.paneContent.find('#BackgroundWidth-cell').onChanged();
+		this.paneContent.find('#BackgroundHeight-cell').onChanged();
 
-		this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition = this.paneContent.querySelector('#BackgroundPosition-cell').value;
+		this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition = this.paneContent.find('#BackgroundPosition-cell').value;
 
 		this.paneContent.addEventListener('mutated', event => {
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.querySelector('#Duration-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.querySelector('#Columns-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.find('#Columns-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.height = this.paneContent.querySelector('#Box-Height-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.height = this.paneContent.find('#Box-Height-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.gap = this.paneContent.querySelector('#Gap-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.gap = this.paneContent.find('#Gap-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.showIcons = this.paneContent.querySelector('#Show-Icons-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.showIcons = this.paneContent.find('#Show-Icons-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundFilter = this.paneContent.querySelector('#Background-Filter-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.backgroundFilter = this.paneContent.find('#Background-Filter-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth = this.paneContent.querySelector('#BackgroundWidth-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth = this.paneContent.find('#BackgroundWidth-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight = this.paneContent.querySelector('#BackgroundHeight-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight = this.paneContent.find('#BackgroundHeight-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition = this.paneContent.querySelector('#BackgroundPosition-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition = this.paneContent.find('#BackgroundPosition-cell').value;
 
-			this.element.querySelectorAll('.crater-counter-content-column').forEach((element, position) => {
-				let pane = this.paneContent.querySelectorAll('.crater-counter-content-column-pane')[position];
+			this.element.findAll('.crater-counter-content-column').forEach((element, position) => {
+				let pane = this.paneContent.findAll('.crater-counter-content-column-pane')[position];
 
 				if (func.isset(pane.dataset.backgroundImage)) {
 					element.setBackgroundImage(pane.dataset.backgroundImage);
@@ -5528,7 +5536,7 @@ class Counter extends CraterWebParts {
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
-		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
 
 		let updateWindow = this.elementModifier.createForm({
 			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
@@ -5546,27 +5554,27 @@ class Counter extends CraterWebParts {
 
 		let data: any = {};
 		let source: any;
-		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+		updateWindow.find('#update-element').addEventListener('click', event => {
 			event.preventDefault();
-			data.image = updateWindow.querySelector('#meta-data-image').value;
-			data.name = updateWindow.querySelector('#meta-data-name').value;
-			data.count = updateWindow.querySelector('#meta-data-count').value;
-			data.unit = updateWindow.querySelector('#meta-data-unit').value;
-			data.color = updateWindow.querySelector('#meta-data-color').value;
+			data.image = updateWindow.find('#meta-data-image').value;
+			data.name = updateWindow.find('#meta-data-name').value;
+			data.count = updateWindow.find('#meta-data-count').value;
+			data.unit = updateWindow.find('#meta-data-unit').value;
+			data.color = updateWindow.find('#meta-data-color').value;
 			source = func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
-			draftDom.querySelector('.crater-counter-content').innerHTML = newContent.querySelector('.crater-counter-content').innerHTML;
+			draftDom.find('.crater-counter-content').innerHTML = newContent.find('.crater-counter-content').innerHTML;
 
 			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
 
-			this.paneContent.querySelector('.counter-pane').innerHTML = this.generatePaneContent({ counters: newContent.querySelectorAll('.crater-counter-content-column') }).innerHTML;
+			this.paneContent.find('.counter-pane').innerHTML = this.generatePaneContent({ counters: newContent.findAll('.crater-counter-content-column') }).innerHTML;
 
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 		if (!func.isnull(paneConnection)) {
-			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 
 				this.element.innerHTML = draftDom.innerHTML;
 
@@ -5622,7 +5630,7 @@ class News extends CraterWebParts {
 			]
 		});
 
-		let newsContainer = news.querySelector('.crater-ticker-news-container');
+		let newsContainer = news.find('.crater-ticker-news-container');
 
 		this.sharePoint.properties.pane.content[news.dataset['key']].settings.duration = 10000;
 		this.sharePoint.properties.pane.content[news.dataset['key']].settings.animationType = 'Fade';
@@ -5641,20 +5649,20 @@ class News extends CraterWebParts {
 	public rendered(params) {
 		this.element = params.element;
 		this.startSlide();
-		this.element.querySelector('.crater-ticker-title').css({ height: this.element.position().height + 'px' });
+		this.element.find('.crater-ticker-title').css({ height: this.element.position().height + 'px' });
 	}
 
 	public startSlide() {
 		this.key = this.element.dataset['key'];
 
-		let news = this.element.querySelectorAll('.crater-ticker-news'),
+		let news = this.element.findAll('.crater-ticker-news'),
 			action = this.sharePoint.properties.pane.content[this.key].settings.animationType.toLowerCase();
 
 		if (news.length < 2) return;
 
 		let current = 0,
 			key = 0,
-			title = this.element.querySelector('.crater-ticker-title-text').position();
+			title = this.element.find('.crater-ticker-title-text').position();
 
 		for (let count = 0; count < news.length; count++) {
 			news[count].innerHTML = news[count].dataset.text;
@@ -5690,7 +5698,7 @@ class News extends CraterWebParts {
 			}, this.sharePoint.properties.pane.content[this.key].settings.duration);
 		};
 
-		this.element.querySelectorAll('.crater-arrow').forEach(arrow => {
+		this.element.findAll('.crater-arrow').forEach(arrow => {
 			arrow.addEventListener('click', event => {
 				if (event.target.getParents('.crater-ticker') == this.element) {
 					if (event.target.classList.contains('crater-down-arrow')) {
@@ -5705,7 +5713,7 @@ class News extends CraterWebParts {
 			});
 		});
 
-		this.element.querySelectorAll('.crater-arrow')[current].click();
+		this.element.findAll('.crater-arrow')[current].click();
 
 		keepAnimating();
 	}
@@ -5743,20 +5751,20 @@ class News extends CraterWebParts {
 					{
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Title', value: this.element.querySelector('.crater-ticker-title-text').innerText
+								element: 'input', name: 'Title', value: this.element.find('.crater-ticker-title-text').innerText
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'BackgroundColor', value: this.element.querySelector('.crater-ticker-title').css()['background-color'], list: func.colors
+								element: 'input', name: 'BackgroundColor', value: this.element.find('.crater-ticker-title').css()['background-color'], list: func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'TextColor', value: this.element.querySelector('.crater-ticker-title').css()['color'], list: func.colors
+								element: 'input', name: 'TextColor', value: this.element.find('.crater-ticker-title').css()['color'], list: func.colors
 							}),
 						]
 					}
 				]
 			});
 
-			let news = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelectorAll('.crater-ticker-news');
+			let news = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-ticker-news');
 
 			this.paneContent.append(this.generatePaneContent({ news }));
 
@@ -5828,12 +5836,12 @@ class News extends CraterWebParts {
 	private listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 		let domDraft = this.sharePoint.properties.pane.content[this.key].draft.dom;
 
-		let tickerNewsContainer = domDraft.querySelector('.crater-ticker-news-container');
+		let tickerNewsContainer = domDraft.find('.crater-ticker-news-container');
 
-		let news = tickerNewsContainer.querySelectorAll('.crater-ticker-news');
+		let news = tickerNewsContainer.findAll('.crater-ticker-news');
 
 		let newsPanePrototye = this.elementModifier.createElement({
 			element: 'div',
@@ -5857,28 +5865,28 @@ class News extends CraterWebParts {
 
 		let newsHandler = (newsPane, newsDom) => {
 			newsPane.addEventListener('mouseover', event => {
-				newsPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				newsPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			newsPane.addEventListener('mouseout', event => {
-				newsPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				newsPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			newsPane.querySelector('#Link-cell').onChanged(value => {
+			newsPane.find('#Link-cell').onChanged(value => {
 				newsDom.setAttribute('href', value);
 			});
 
-			newsPane.querySelector('#Text-cell').onChanged(value => {
+			newsPane.find('#Text-cell').onChanged(value => {
 				newsDom.dataset.text = value;
 			});
 
 
-			newsPane.querySelector('.delete-crater-ticker-content-row').addEventListener('click', event => {
+			newsPane.find('.delete-crater-ticker-content-row').addEventListener('click', event => {
 				newsDom.remove();
 				newsPane.remove();
 			});
 
-			newsPane.querySelector('.add-before-crater-ticker-content-row').addEventListener('click', event => {
+			newsPane.find('.add-before-crater-ticker-content-row').addEventListener('click', event => {
 				let newSlide = newsPrototype.cloneNode(true);
 				let newListRow = newsPanePrototye.cloneNode(true);
 
@@ -5887,7 +5895,7 @@ class News extends CraterWebParts {
 				newsHandler(newListRow, newSlide);
 			});
 
-			newsPane.querySelector('.add-after-crater-ticker-content-row').addEventListener('click', event => {
+			newsPane.find('.add-after-crater-ticker-content-row').addEventListener('click', event => {
 				let newSlide = newsPrototype.cloneNode(true);
 				let newListRow = newsPanePrototye.cloneNode(true);
 
@@ -5898,39 +5906,39 @@ class News extends CraterWebParts {
 			});
 		};
 
-		this.paneContent.querySelector('#Animation-cell').onChanged();
-		this.paneContent.querySelector('#Duration-cell').onChanged();
-		this.paneContent.querySelector('#View-cell').onChanged();
+		this.paneContent.find('#Animation-cell').onChanged();
+		this.paneContent.find('#Duration-cell').onChanged();
+		this.paneContent.find('#View-cell').onChanged();
 
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 			let newSlide = newsPrototype.cloneNode(true);
 			let newListRow = newsPanePrototye.cloneNode(true);
 
 			tickerNewsContainer.append(newSlide);//c
-			this.paneContent.querySelector('.news-pane').append(newListRow);
+			this.paneContent.find('.news-pane').append(newListRow);
 
 			newsHandler(newListRow, newSlide);
 		});
 
-		let backgroundColorCell = this.paneContent.querySelector('.title-pane').querySelector('#BackgroundColor-cell').parentNode;
-		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#BackgroundColor-cell') }, (backgroundColor) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-ticker-title').css({ backgroundColor });
-			backgroundColorCell.querySelector('#BackgroundColor-cell').value = backgroundColor;
-			backgroundColorCell.querySelector('#BackgroundColor-cell').setAttribute('value', backgroundColor);
+		let backgroundColorCell = this.paneContent.find('.title-pane').find('#BackgroundColor-cell').parentNode;
+		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#BackgroundColor-cell') }, (backgroundColor) => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-ticker-title').css({ backgroundColor });
+			backgroundColorCell.find('#BackgroundColor-cell').value = backgroundColor;
+			backgroundColorCell.find('#BackgroundColor-cell').setAttribute('value', backgroundColor);
 		});
 
-		let colorCell = this.paneContent.querySelector('.title-pane').querySelector('#TextColor-cell').parentNode;
-		this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#TextColor-cell') }, (color) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-ticker-title').css({ color });
-			colorCell.querySelector('#TextColor-cell').value = color;
-			colorCell.querySelector('#TextColor-cell').setAttribute('value', color);
+		let colorCell = this.paneContent.find('.title-pane').find('#TextColor-cell').parentNode;
+		this.pickColor({ parent: colorCell, cell: colorCell.find('#TextColor-cell') }, (color) => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-ticker-title').css({ color });
+			colorCell.find('#TextColor-cell').value = color;
+			colorCell.find('#TextColor-cell').setAttribute('value', color);
 		});
 
-		this.paneContent.querySelector('.title-pane').querySelector('#Title-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-ticker-title-text').innerText = value;
+		this.paneContent.find('.title-pane').find('#Title-cell').onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-ticker-title-text').innerText = value;
 		});
 
-		this.paneContent.querySelectorAll('.crater-ticker-news-pane').forEach((newsPane, position) => {
+		this.paneContent.findAll('.crater-ticker-news-pane').forEach((newsPane, position) => {
 			newsHandler(newsPane, news[position]);
 		});
 
@@ -5939,17 +5947,17 @@ class News extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.querySelector('#Duration-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.animationType = this.paneContent.querySelector('#Animation-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.animationType = this.paneContent.find('#Animation-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.view = this.paneContent.querySelector('#View-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.view = this.paneContent.find('#View-cell').value;
 		});
 	}
 
@@ -5959,7 +5967,7 @@ class News extends CraterWebParts {
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
-		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
 
 		let updateWindow = this.elementModifier.createForm({
 			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
@@ -5974,24 +5982,24 @@ class News extends CraterWebParts {
 
 		let data: any = {};
 		let source: any;
-		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+		updateWindow.find('#update-element').addEventListener('click', event => {
 			event.preventDefault();
-			data.link = updateWindow.querySelector('#meta-data-link').value;
-			data.details = updateWindow.querySelector('#meta-data-details').value;
+			data.link = updateWindow.find('#meta-data-link').value;
+			data.details = updateWindow.find('#meta-data-details').value;
 			source = func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
-			draftDom.querySelector('.crater-ticker-news-container').innerHTML = newContent.querySelector('.crater-ticker-news-container').innerHTML;
+			draftDom.find('.crater-ticker-news-container').innerHTML = newContent.find('.crater-ticker-news-container').innerHTML;
 
 			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
 
-			this.paneContent.querySelector('.news-pane').innerHTML = this.generatePaneContent({ news: newContent.querySelectorAll('.crater-ticker-news') }).innerHTML;
+			this.paneContent.find('.news-pane').innerHTML = this.generatePaneContent({ news: newContent.findAll('.crater-ticker-news') }).innerHTML;
 
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 		if (!func.isnull(paneConnection)) {
-			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 
 				this.element.innerHTML = draftDom.innerHTML;
 
@@ -6022,7 +6030,7 @@ class Crater extends CraterWebParts {
 
 	public render() {
 		this.element = this.createKeyedElement({
-			element: 'div', attributes: { class: 'crater-crater crater-component', style: { display: 'block', minHeight: '100px', width: '100%' }, 'data-type': 'crater' }, options: ['Edit', 'Delete'], children: [
+			element: 'div', attributes: { class: 'crater-crater crater-component', style: { display: 'block', minHeight: '100px', width: '100%' }, 'data-type': 'crater' }, options: ['Edit', 'Delete', 'Undo', 'Redo'], children: [
 				{ element: 'div', attributes: { class: 'crater-sections-container' } }
 			], alignOptions: 'left',
 		});
@@ -6041,11 +6049,11 @@ class Crater extends CraterWebParts {
 
 		this.resetSections({ resetWidth: params.resetWidth });
 		this.showOptions(this.element);
-		let sections = this.element.querySelectorAll('section.crater-section');
+		let sections = this.element.findAll('section.crater-section');
 		let currentSection: any;
 		let currentSibling: any;
 		let otherDirection: any;
-		let craterSectionsContainer = this.element.querySelector('.crater-sections-container');
+		let craterSectionsContainer = this.element.find('.crater-sections-container');
 
 		// return;
 
@@ -6132,7 +6140,7 @@ class Crater extends CraterWebParts {
 			} else {
 				this.element.addEventListener('mousemove', adjustHeight, false);
 			}
-			this.element.querySelectorAll('.crater-section').forEach(section => {
+			this.element.findAll('.crater-section').forEach(section => {
 				if (section != currentSection) section.css({ visibility: 'hidden' });
 			});
 			this.element.css({ cursor: 'ew-resize' });
@@ -6145,7 +6153,7 @@ class Crater extends CraterWebParts {
 			this.element.removeEventListener('mousemove', adjustHeight, false);
 			this.element.removeEventListener('mousedown', dragSection, false);
 			dragging = false;
-			this.element.querySelectorAll('.crater-section').forEach(section => {
+			this.element.findAll('.crater-section').forEach(section => {
 				section.css({ visibility: 'visible' });
 			});
 			if (!func.isnull(currentSection)) currentSection.cssRemove('box-shadow');
@@ -6253,9 +6261,9 @@ class Crater extends CraterWebParts {
 			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
 		}
 		else {
-			let container = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-sections-container');
+			let container = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-sections-container');
 
-			let elementContents = container.querySelectorAll('.crater-section');
+			let elementContents = container.findAll('.crater-section');
 
 			this.paneContent.append(this.generatePaneContent({ source: elementContents }));
 
@@ -6284,13 +6292,13 @@ class Crater extends CraterWebParts {
 		}
 
 		// upload the settings
-		this.paneContent.querySelector('#Columns-cell').value = this.sharePoint.properties.pane.content[this.key].settings.columns;
+		this.paneContent.find('#Columns-cell').value = this.sharePoint.properties.pane.content[this.key].settings.columns;
 
-		this.paneContent.querySelector('#Columns-Sizes-cell').value = this.sharePoint.properties.pane.content[this.key].settings.columnsSizes;
+		this.paneContent.find('#Columns-Sizes-cell').value = this.sharePoint.properties.pane.content[this.key].settings.columnsSizes;
 
-		let contents = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-sections-container').querySelectorAll('.crater-section');
+		let contents = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-sections-container').findAll('.crater-section');
 
-		this.paneContent.querySelector('.sections-pane').innerHTML = this.generatePaneContent({ source: contents }).innerHTML;
+		this.paneContent.find('.sections-pane').innerHTML = this.generatePaneContent({ source: contents }).innerHTML;
 
 		return this.paneContent;
 	}
@@ -6298,22 +6306,22 @@ class Crater extends CraterWebParts {
 	public listenPaneContent(params?) {
 		this.key = params.element.dataset['key'];
 		this.element = params.element;
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content');
+		this.paneContent = this.sharePoint.app.find('.crater-property-content');
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 
-		let sectionRowPanes = this.paneContent.querySelectorAll('.crater-section-row-pane');
-		let sections = draftDom.querySelectorAll('.crater-section');
+		let sectionRowPanes = this.paneContent.findAll('.crater-section-row-pane');
+		let sections = draftDom.findAll('.crater-section');
 
-		let settingsPane = this.paneContent.querySelector('.settings-pane');
+		let settingsPane = this.paneContent.find('.settings-pane');
 
-		settingsPane.querySelector('#Columns-Sizes-cell').onChanged();
+		settingsPane.find('#Columns-Sizes-cell').onChanged();
 
-		settingsPane.querySelector('#Columns-cell').onChanged(value => {
-			settingsPane.querySelector('#Columns-Sizes-cell').setAttribute('value', `repeat(${value}, 1fr)`);
-			settingsPane.querySelector('#Columns-Sizes-cell').value = `repeat(${value}, 1fr)`;
+		settingsPane.find('#Columns-cell').onChanged(value => {
+			settingsPane.find('#Columns-Sizes-cell').setAttribute('value', `repeat(${value}, 1fr)`);
+			settingsPane.find('#Columns-Sizes-cell').value = `repeat(${value}, 1fr)`;
 		});
 
-		settingsPane.querySelector('#Scroll-cell').onChanged(scroll => {
+		settingsPane.find('#Scroll-cell').onChanged(scroll => {
 			sections.forEach(section => {
 				if (scroll.toLowerCase() == 'yes') {
 					section.css({ overflowY: 'auto' });
@@ -6328,21 +6336,21 @@ class Crater extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.columnsSizes = settingsPane.querySelector('#Columns-Sizes-cell').value;
+			this.sharePoint.properties.pane.content[this.key].settings.columnsSizes = settingsPane.find('#Columns-Sizes-cell').value;
 
-			if (this.sharePoint.properties.pane.content[this.key].settings.columns < this.paneContent.querySelector('#Columns-cell').value) {
-				this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.querySelector('#Columns-cell').value;
+			if (this.sharePoint.properties.pane.content[this.key].settings.columns < this.paneContent.find('#Columns-cell').value) {
+				this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.find('#Columns-cell').value;
 				this.sharePoint.properties.pane.content[this.key].settings.resetWidth = true;
 
 				this.resetSections({ resetWidth: true });
 			}
-			else if (this.sharePoint.properties.pane.content[this.key].settings.columns > this.paneContent.querySelector('#Columns-cell').value) { //check if the columns is less than current
+			else if (this.sharePoint.properties.pane.content[this.key].settings.columns > this.paneContent.find('#Columns-cell').value) { //check if the columns is less than current
 				alert("New number of column should be more than current");
 			}
 		});
@@ -6350,22 +6358,22 @@ class Crater extends CraterWebParts {
 
 	private resetSections(params) {
 		params = func.isset(params) ? params : {};
-		let craterSectionsContainer = this.element.querySelector('.crater-sections-container');
-		let sections = craterSectionsContainer.querySelectorAll('.crater-section');
+		let craterSectionsContainer = this.element.find('.crater-sections-container');
+		let sections = craterSectionsContainer.findAll('.crater-section');
 		let count = sections.length;
 
 		let number = this.sharePoint.properties.pane.content[this.key].settings.columns - count;
-		let newSections = this.createSections({ number, height: '100px' }).querySelectorAll('.crater-section');
+		let newSections = this.createSections({ number, height: '100px' }).findAll('.crater-section');
 		//copy the current contents of the sections into the newly created sections
 		for (let i = 0; i < newSections.length; i++) {
 			craterSectionsContainer.append(newSections[i]);
 		}
 
 		// reset count
-		count = craterSectionsContainer.querySelectorAll('.crater-section').length;
+		count = craterSectionsContainer.findAll('.crater-section').length;
 
 		craterSectionsContainer.css({ gridTemplateColumns: `repeat(${count}, 1fr` });
-		craterSectionsContainer.querySelectorAll('.crater-section').forEach((section, position) => {
+		craterSectionsContainer.findAll('.crater-section').forEach((section, position) => {
 			//section has been rendered
 			this[section.dataset.type]({ action: 'rendered', element: section, sharePoint: this.sharePoint });
 			section.css({ width: '100%' });
@@ -6430,7 +6438,7 @@ class Table extends CraterWebParts {
 		this.sharePoint.properties.pane.content[tableContainer.dataset.key].settings.sorting = this.sharePoint.properties.pane.content[tableContainer.dataset.key].settings.sorting || {};
 		this.sharePoint.properties.pane.content[tableContainer.dataset.key].settings.headers = [];
 
-		let headers = table.querySelectorAll('th');
+		let headers = table.findAll('th');
 		for (let i = 0; i < headers.length; i++) {
 			this.sharePoint.properties.pane.content[tableContainer.dataset.key].settings.headers.push(headers[i].textContent);
 		}
@@ -6460,7 +6468,7 @@ class Table extends CraterWebParts {
 			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
 		}
 		else {
-			let table = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('table');
+			let table = this.sharePoint.properties.pane.content[this.key].draft.dom.find('table');
 
 			this.paneContent.append(this.generatePaneContent({ table }));
 
@@ -6555,7 +6563,7 @@ class Table extends CraterWebParts {
 			}
 		});
 
-		this.paneContent.querySelector('tbody').querySelectorAll('tr').forEach(tr => {
+		this.paneContent.find('tbody').findAll('tr').forEach(tr => {
 			tr.makeElement({
 				element: this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-table-content-row' })
 			});
@@ -6572,10 +6580,10 @@ class Table extends CraterWebParts {
 		});
 
 		if (func.isset(params.header)) {
-			tablePane.querySelector('thead').innerHTML = params.header;
+			tablePane.find('thead').innerHTML = params.header;
 		}
 
-		tablePane.querySelector('thead').querySelectorAll('th').forEach(th => {
+		tablePane.find('thead').findAll('th').forEach(th => {
 			th.css({ position: 'relative' });
 			let order = this.sharePoint.properties.pane.content[this.key].settings.sorting[th.dataset.name] == 1 ? 'crater-up-arrow' : 'crater-down-arrow';
 
@@ -6597,8 +6605,8 @@ class Table extends CraterWebParts {
 			th.append(data);
 		});
 
-		tablePane.querySelector('tbody').querySelectorAll('tr').forEach(tr => {
-			tr.querySelectorAll('td').forEach(td => {
+		tablePane.find('tbody').findAll('tr').forEach(tr => {
+			tr.findAll('td').forEach(td => {
 				let data = this.elementModifier.createElement({
 					element: 'input', attributes: { value: td.textContent }
 				});
@@ -6613,28 +6621,28 @@ class Table extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
-		let table = draftDom.querySelector('table');
-		let tableBody = table.querySelector('tbody');
+		let table = draftDom.find('table');
+		let tableBody = table.find('tbody');
 
-		let tableRows = tableBody.querySelectorAll('tr');
+		let tableRows = tableBody.findAll('tr');
 
 		let tableRowHandler = (tableRowPane, tableRowDom) => {
 			tableRowPane.addEventListener('mouseover', event => {
-				tableRowPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				tableRowPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			tableRowPane.addEventListener('mouseout', event => {
-				tableRowPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				tableRowPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			tableRowPane.querySelector('.delete-crater-table-content-row').addEventListener('click', event => {
+			tableRowPane.find('.delete-crater-table-content-row').addEventListener('click', event => {
 				tableRowDom.remove();
 				tableRowPane.remove();
 			});
 
-			tableRowPane.querySelector('.add-before-crater-table-content-row').addEventListener('click', event => {
+			tableRowPane.find('.add-before-crater-table-content-row').addEventListener('click', event => {
 				let newRow = tableRowDom.cloneNode(true);
 				let newRowPane = tableRowPane.cloneNode(true);
 
@@ -6643,7 +6651,7 @@ class Table extends CraterWebParts {
 				tableRowHandler(newRowPane, newRow);
 			});
 
-			tableRowPane.querySelector('.add-after-crater-table-content-row').addEventListener('click', event => {
+			tableRowPane.find('.add-after-crater-table-content-row').addEventListener('click', event => {
 				let newRow = tableRowDom.cloneNode(true);
 				let newRowPane = tableRowPane.cloneNode(true);
 
@@ -6652,53 +6660,53 @@ class Table extends CraterWebParts {
 				tableRowHandler(newRowPane, newRow);
 			});
 
-			tableRowPane.querySelectorAll('td').forEach((td, position) => {
-				td.querySelector('input').onChanged(value => {
-					tableRowDom.querySelectorAll('td')[position].textContent = value;
+			tableRowPane.findAll('td').forEach((td, position) => {
+				td.find('input').onChanged(value => {
+					tableRowDom.findAll('td')[position].textContent = value;
 				});
 			});
 		};
 
 		let dataName = 'crater-table-data-sample';//sample name
 
-		this.paneContent.querySelector('tbody').querySelectorAll('tr').forEach((tableRow, position) => {
+		this.paneContent.find('tbody').findAll('tr').forEach((tableRow, position) => {
 			tableRowHandler(tableRow, tableRows[position]);
 		});
 
 		let tableHeadHandler = (thPane, thDom) => {
 			thPane.addEventListener('mouseover', event => {
-				thPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
-				thPane.querySelector('.crater-table-sorter').css({ visibility: 'visible' });
+				thPane.find('.crater-content-options').css({ visibility: 'visible' });
+				thPane.find('.crater-table-sorter').css({ visibility: 'visible' });
 			});
 
 			thPane.addEventListener('mouseout', event => {
-				thPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
-				thPane.querySelector('.crater-table-sorter').css({ visibility: 'hidden' });
+				thPane.find('.crater-content-options').css({ visibility: 'hidden' });
+				thPane.find('.crater-table-sorter').css({ visibility: 'hidden' });
 			});
 
-			thPane.querySelector('.crater-table-sorter').addEventListener('click', event => {
-				let order = thPane.querySelector('.crater-table-sorter').classList.contains('crater-up-arrow') ? -1 : 1;
+			thPane.find('.crater-table-sorter').addEventListener('click', event => {
+				let order = thPane.find('.crater-table-sorter').classList.contains('crater-up-arrow') ? -1 : 1;
 				let name = thPane.dataset.name.split('crater-table-data-')[1];
 				let data = this.elementModifier.sortTable(table, name, order);
 				let newContent = this.render({ source: data });
 
-				this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-table').innerHTML = newContent.querySelector('.crater-table').innerHTML;
+				this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-table').innerHTML = newContent.find('.crater-table').innerHTML;
 
-				thPane.querySelector('.crater-table-sorter').classList.toggle('crater-up-arrow');
-				thPane.querySelector('.crater-table-sorter').classList.toggle('crater-down-arrow');
+				thPane.find('.crater-table-sorter').classList.toggle('crater-up-arrow');
+				thPane.find('.crater-table-sorter').classList.toggle('crater-down-arrow');
 
 				this.sharePoint.properties.pane.content[this.key].settings.sorting[thPane.dataset.name] = order;
 
-				this.paneContent.querySelector('.table-pane').innerHTML = this.generatePaneContent({ table: newContent.querySelector('.table') }).innerHTML;
+				this.paneContent.find('.table-pane').innerHTML = this.generatePaneContent({ table: newContent.find('.table') }).innerHTML;
 
-				this.paneContent.querySelector('thead').querySelectorAll('th').forEach((_thPane, position) => {
-					tableHeadHandler(_thPane, table.querySelector('thead').querySelectorAll('th')[position]);
+				this.paneContent.find('thead').findAll('th').forEach((_thPane, position) => {
+					tableHeadHandler(_thPane, table.find('thead').findAll('th')[position]);
 				});
 			});
 
-			thPane.querySelector('input').onChanged(value => {
+			thPane.find('input').onChanged(value => {
 				let name = 'crater-table-data-' + value.toLowerCase();
-				let ths = this.paneContent.querySelector('thead').querySelectorAll('th');
+				let ths = this.paneContent.find('thead').findAll('th');
 
 				for (let sibling of ths) {
 					if (sibling != thPane && sibling.dataset.name == name) {
@@ -6707,13 +6715,13 @@ class Table extends CraterWebParts {
 					}
 				}
 
-				let tds = this.paneContent.querySelectorAll('td');
+				let tds = this.paneContent.findAll('td');
 
 				for (let i in tds) {
 					let td = tds[i];
 					if (td.nodeName == 'TD' && td.dataset.name == thPane.dataset.name) {
 						td.dataset.name = name;
-						table.querySelectorAll('td')[i].dataset.name = name;
+						table.findAll('td')[i].dataset.name = name;
 					}
 				}
 
@@ -6723,34 +6731,34 @@ class Table extends CraterWebParts {
 			});
 		};
 
-		this.paneContent.querySelector('thead').querySelectorAll('th').forEach((thPane, position) => {
-			tableHeadHandler(thPane, table.querySelector('thead').querySelectorAll('th')[position]);
+		this.paneContent.find('thead').findAll('th').forEach((thPane, position) => {
+			tableHeadHandler(thPane, table.find('thead').findAll('th')[position]);
 		});
 
 		let tableBodyDataHandler = (td) => {
 			td.addEventListener('mouseover', event => {
-				for (let th of this.paneContent.querySelector('thead').querySelectorAll('th')) {
+				for (let th of this.paneContent.find('thead').findAll('th')) {
 					if (th.dataset.name == td.dataset.name) {
-						th.querySelector('.crater-content-options').css({ visibility: 'visible' });
+						th.find('.crater-content-options').css({ visibility: 'visible' });
 					}
 				}
 			});
 
 			td.addEventListener('mouseout', event => {
-				for (let th of this.paneContent.querySelector('thead').querySelectorAll('th')) {
+				for (let th of this.paneContent.find('thead').findAll('th')) {
 					if (th.dataset.name == td.dataset.name) {
-						th.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+						th.find('.crater-content-options').css({ visibility: 'hidden' });
 					}
 				}
 			});
 		};
 
-		this.paneContent.querySelector('tbody').querySelectorAll('td').forEach(td => {
+		this.paneContent.find('tbody').findAll('td').forEach(td => {
 			tableBodyDataHandler(td);
 		});
 
 		let getName = () => {
-			let otherThs = this.paneContent.querySelectorAll('th');
+			let otherThs = this.paneContent.findAll('th');
 			let copyName = dataName;
 			let found = true;
 
@@ -6768,7 +6776,7 @@ class Table extends CraterWebParts {
 			return copyName;
 		};
 
-		this.paneContent.querySelector('thead').addEventListener('click', event => {
+		this.paneContent.find('thead').addEventListener('click', event => {
 			let target = event.target;
 			if (target.classList.contains('delete-crater-table-content-column')) {
 				if (!confirm("Do you really want to delete this column")) {
@@ -6780,20 +6788,20 @@ class Table extends CraterWebParts {
 				let name = th.dataset.name;
 
 				//remove the tds
-				this.paneContent.querySelectorAll('td').forEach((td) => {
+				this.paneContent.findAll('td').forEach((td) => {
 					if (td.nodeName == 'TD' && td.dataset.name == name) {
 						td.remove();
 					}
 				});
 
-				table.querySelectorAll('td').forEach((td) => {
+				table.findAll('td').forEach((td) => {
 					if (td.nodeName == 'TD' && td.dataset.name == name) {
 						td.remove();
 					}
 				});
 
 				//remove the TH
-				table.querySelector('thead').querySelectorAll('th').forEach(aTH => {
+				table.find('thead').findAll('th').forEach(aTH => {
 					if (aTH.dataset.name == name) {
 						aTH.remove();
 					}
@@ -6804,7 +6812,7 @@ class Table extends CraterWebParts {
 				let th = target.getParents('TH');
 				let copyName = getName();
 				//remove the tds
-				this.paneContent.querySelectorAll('td').forEach((td) => {
+				this.paneContent.findAll('td').forEach((td) => {
 					if (td.nodeName == 'TD' && td.dataset.name == th.dataset.name) {
 						let aTDClone = td.cloneNode(true);
 						aTDClone.dataset.name = copyName;
@@ -6813,7 +6821,7 @@ class Table extends CraterWebParts {
 					}
 				});
 
-				table.querySelectorAll('td').forEach((td) => {
+				table.findAll('td').forEach((td) => {
 					if (td.nodeName == 'TD' && td.dataset.name == th.dataset.name) {
 						let aTDClone = td.cloneNode(true);
 						aTDClone.dataset.name = copyName;
@@ -6823,7 +6831,7 @@ class Table extends CraterWebParts {
 
 				//remove the TH
 				let newPaneTH: any;
-				table.querySelector('thead').querySelectorAll('th').forEach(aTH => {
+				table.find('thead').findAll('th').forEach(aTH => {
 					if (aTH.dataset.name == th.dataset.name) {
 						let aTHclone = aTH.cloneNode(true);
 						aTHclone.dataset.name = copyName;
@@ -6835,7 +6843,7 @@ class Table extends CraterWebParts {
 
 				let aTHPaneClone = th.cloneNode(true);
 				aTHPaneClone.dataset.name = copyName;
-				aTHPaneClone.querySelector('input').setAttribute('value', `${'SAMPLE'}${copyName.slice(dataName.length)}`);
+				aTHPaneClone.find('input').setAttribute('value', `${'SAMPLE'}${copyName.slice(dataName.length)}`);
 				th.before(aTHPaneClone);
 				tableHeadHandler(aTHPaneClone, newPaneTH);
 			}
@@ -6843,7 +6851,7 @@ class Table extends CraterWebParts {
 				let th = target.getParents('TH');
 				let copyName = getName();
 				//remove the tds
-				this.paneContent.querySelectorAll('td').forEach((td) => {
+				this.paneContent.findAll('td').forEach((td) => {
 					if (td.nodeName == 'TD' && td.dataset.name == th.dataset.name) {
 						let aTDClone = td.cloneNode(true);
 						aTDClone.dataset.name = copyName;
@@ -6852,7 +6860,7 @@ class Table extends CraterWebParts {
 					}
 				});
 
-				table.querySelectorAll('td').forEach((td) => {
+				table.findAll('td').forEach((td) => {
 					if (td.nodeName == 'TD' && td.dataset.name == th.dataset.name) {
 						let aTDClone = td.cloneNode(true);
 						aTDClone.dataset.name = copyName;
@@ -6862,7 +6870,7 @@ class Table extends CraterWebParts {
 
 				//remove the TH
 				let newPaneTH: any;
-				table.querySelector('thead').querySelectorAll('th').forEach(aTH => {
+				table.find('thead').findAll('th').forEach(aTH => {
 					if (aTH.dataset.name == th.dataset.name) {
 						let aTHclone = aTH.cloneNode(true);
 						aTHclone.dataset.name = copyName;
@@ -6874,7 +6882,7 @@ class Table extends CraterWebParts {
 
 				let aTHPaneClone = th.cloneNode(true);
 				aTHPaneClone.dataset.name = copyName;
-				aTHPaneClone.querySelector('input').setAttribute('value', `${'SAMPLE'}${copyName.slice(dataName.length)}`);
+				aTHPaneClone.find('input').setAttribute('value', `${'SAMPLE'}${copyName.slice(dataName.length)}`);
 				th.after(aTHPaneClone);
 				tableHeadHandler(aTHPaneClone, newPaneTH);
 			}
@@ -6885,104 +6893,104 @@ class Table extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart            
 		});
 
-		let tableSettings = this.paneContent.querySelector('.table-settings');
-		let tableHeaderSettings = this.paneContent.querySelector('.table-header-settings');
-		let tableBodyDataSettings = this.paneContent.querySelector('.table-data-settings');
+		let tableSettings = this.paneContent.find('.table-settings');
+		let tableHeaderSettings = this.paneContent.find('.table-header-settings');
+		let tableBodyDataSettings = this.paneContent.find('.table-data-settings');
 
-		tableHeaderSettings.querySelector('#fontsize-cell').onChanged(value => {
-			table.querySelectorAll('th').forEach(th => {
+		tableHeaderSettings.find('#fontsize-cell').onChanged(value => {
+			table.findAll('th').forEach(th => {
 				th.css({ fontSize: value });
 			});
 		});
 
-		tableHeaderSettings.querySelector('#show-cell').onChanged(value => {
+		tableHeaderSettings.find('#show-cell').onChanged(value => {
 			if (value == 'No') {
-				table.querySelector('thead').hide();
+				table.find('thead').hide();
 			} else {
-				table.querySelector('thead').show();
+				table.find('thead').show();
 			}
 		});
 
-		let headerColorCell = tableHeaderSettings.querySelector('#color-cell').parentNode;
-		this.pickColor({ parent: headerColorCell, cell: headerColorCell.querySelector('#color-cell') }, (color) => {
-			table.querySelectorAll('th').forEach(th => {
+		let headerColorCell = tableHeaderSettings.find('#color-cell').parentNode;
+		this.pickColor({ parent: headerColorCell, cell: headerColorCell.find('#color-cell') }, (color) => {
+			table.findAll('th').forEach(th => {
 				th.css({ color });
 			});
-			headerColorCell.querySelector('#color-cell').value = color;
-			headerColorCell.querySelector('#color-cell').setAttribute('value', color);
+			headerColorCell.find('#color-cell').value = color;
+			headerColorCell.find('#color-cell').setAttribute('value', color);
 		});
 
-		let headerBackgroundColorCell = tableHeaderSettings.querySelector('#backgroundcolor-cell').parentNode;
-		this.pickColor({ parent: headerBackgroundColorCell, cell: headerBackgroundColorCell.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
-			table.querySelector('thead').querySelector('tr').css({ backgroundColor });
-			headerBackgroundColorCell.querySelector('#backgroundcolor-cell').value = backgroundColor;
-			headerBackgroundColorCell.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor);
+		let headerBackgroundColorCell = tableHeaderSettings.find('#backgroundcolor-cell').parentNode;
+		this.pickColor({ parent: headerBackgroundColorCell, cell: headerBackgroundColorCell.find('#backgroundcolor-cell') }, (backgroundColor) => {
+			table.find('thead').find('tr').css({ backgroundColor });
+			headerBackgroundColorCell.find('#backgroundcolor-cell').value = backgroundColor;
+			headerBackgroundColorCell.find('#backgroundcolor-cell').setAttribute('value', backgroundColor);
 		});
 
-		tableHeaderSettings.querySelector('#height-cell').onChanged(value => {
-			table.querySelector('thead').querySelector('tr').css({ height: value });
+		tableHeaderSettings.find('#height-cell').onChanged(value => {
+			table.find('thead').find('tr').css({ height: value });
 		});
 
-		tableBodyDataSettings.querySelector('#fontsize-cell').onChanged(value => {
-			table.querySelectorAll('td').forEach(th => {
+		tableBodyDataSettings.find('#fontsize-cell').onChanged(value => {
+			table.findAll('td').forEach(th => {
 				th.css({ fontSize: value });
 			});
 		});
 
-		let dataColorCell = tableBodyDataSettings.querySelector('#color-cell').parentNode;
-		this.pickColor({ parent: dataColorCell, cell: dataColorCell.querySelector('#color-cell') }, (color) => {
-			table.querySelectorAll('td').forEach(td => {
+		let dataColorCell = tableBodyDataSettings.find('#color-cell').parentNode;
+		this.pickColor({ parent: dataColorCell, cell: dataColorCell.find('#color-cell') }, (color) => {
+			table.findAll('td').forEach(td => {
 				td.css({ color });
 			});
-			dataColorCell.querySelector('#color-cell').value = color;
-			dataColorCell.querySelector('#color-cell').setAttribute('value', color);
+			dataColorCell.find('#color-cell').value = color;
+			dataColorCell.find('#color-cell').setAttribute('value', color);
 		});
 
-		let dataBackgroundColorCell = tableBodyDataSettings.querySelector('#backgroundcolor-cell').parentNode;
-		this.pickColor({ parent: dataBackgroundColorCell, cell: dataBackgroundColorCell.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
-			table.querySelector('tbody').querySelectorAll('tr').forEach(tr => {
+		let dataBackgroundColorCell = tableBodyDataSettings.find('#backgroundcolor-cell').parentNode;
+		this.pickColor({ parent: dataBackgroundColorCell, cell: dataBackgroundColorCell.find('#backgroundcolor-cell') }, (backgroundColor) => {
+			table.find('tbody').findAll('tr').forEach(tr => {
 				tr.css({ backgroundColor });
 			});
-			dataBackgroundColorCell.querySelector('#backgroundcolor-cell').value = backgroundColor;
-			dataBackgroundColorCell.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor);
+			dataBackgroundColorCell.find('#backgroundcolor-cell').value = backgroundColor;
+			dataBackgroundColorCell.find('#backgroundcolor-cell').setAttribute('value', backgroundColor);
 		});
 
-		tableBodyDataSettings.querySelector('#backgroundcolor-cell').onChanged(value => {
-			table.querySelector('tbody').querySelectorAll('tr').forEach(tr => {
+		tableBodyDataSettings.find('#backgroundcolor-cell').onChanged(value => {
+			table.find('tbody').findAll('tr').forEach(tr => {
 				tr.css({ backgroundColor: value });
 			});
 		});
 
-		tableBodyDataSettings.querySelector('#height-cell').onChanged(value => {
-			table.querySelector('tbody').querySelectorAll('tr').forEach(tr => {
+		tableBodyDataSettings.find('#height-cell').onChanged(value => {
+			table.find('tbody').findAll('tr').forEach(tr => {
 				tr.css({ height: value });
 			});
 		});
 
-		tableSettings.querySelector('#bordersize-cell').onChanged(value => {
-			table.querySelectorAll('tr').forEach(tr => {
+		tableSettings.find('#bordersize-cell').onChanged(value => {
+			table.findAll('tr').forEach(tr => {
 				tr.css({ borderWidth: value });
 			});
 		});
 
-		let borderColorCell = tableSettings.querySelector('#bordercolor-cell').parentNode;
-		this.pickColor({ parent: borderColorCell, cell: borderColorCell.querySelector('#bordercolor-cell') }, (borderColor) => {
-			table.querySelectorAll('tr').forEach(tr => {
+		let borderColorCell = tableSettings.find('#bordercolor-cell').parentNode;
+		this.pickColor({ parent: borderColorCell, cell: borderColorCell.find('#bordercolor-cell') }, (borderColor) => {
+			table.findAll('tr').forEach(tr => {
 				tr.css({ borderColor });
 			});
-			borderColorCell.querySelector('#bordercolor-cell').value = borderColor;
-			borderColorCell.querySelector('#bordercolor-cell').setAttribute('value', borderColor);
+			borderColorCell.find('#bordercolor-cell').value = borderColor;
+			borderColorCell.find('#bordercolor-cell').setAttribute('value', borderColor);
 		});
 
-		tableSettings.querySelector('#borderstyle-cell').onChanged(value => {
-			table.querySelectorAll('tr').forEach(tr => {
+		tableSettings.find('#borderstyle-cell').onChanged(value => {
+			table.findAll('tr').forEach(tr => {
 				tr.css({ borderStyle: value });
 			});
 		});
@@ -6996,7 +7004,7 @@ class Table extends CraterWebParts {
 
 		let headers = this.sharePoint.properties.pane.content[this.key].settings.headers.toString();
 
-		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
 
 		let metaWindow = this.elementModifier.createForm({
 			title: 'Set Table Sample', attributes: { id: 'meta-form', class: 'form' },
@@ -7008,10 +7016,10 @@ class Table extends CraterWebParts {
 			}
 		});
 
-		metaWindow.querySelector('#set-meta').addEventListener('click', event => {
+		metaWindow.find('#set-meta').addEventListener('click', event => {
 			event.preventDefault();
 
-			let names = metaWindow.querySelector('#meta-data-names').value.split(',');
+			let names = metaWindow.find('#meta-data-names').value.split(',');
 			let contents = {};
 
 			for (let i in names) {
@@ -7032,9 +7040,9 @@ class Table extends CraterWebParts {
 			let data: any = {};
 			let source: any;
 
-			updateWindow.querySelector('#update-element').addEventListener('click', updateEvent => {
+			updateWindow.find('#update-element').addEventListener('click', updateEvent => {
 				event.preventDefault();
-				let formData = updateWindow.querySelectorAll('.form-data');
+				let formData = updateWindow.findAll('.form-data');
 
 				for (let i = 0; i < formData.length; i++) {
 					data[formData[i].name.toLowerCase()] = formData[i].value;
@@ -7043,11 +7051,11 @@ class Table extends CraterWebParts {
 				source = func.extractFromJsonArray(data, params.source);
 
 				let newContent = this.render({ source });
-				draftDom.querySelector('.crater-table').innerHTML = newContent.querySelector('.crater-table').innerHTML;
+				draftDom.find('.crater-table').innerHTML = newContent.find('.crater-table').innerHTML;
 
 				this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
 
-				this.paneContent.querySelector('.table-pane').innerHTML = this.generatePaneContent({ table: newContent.querySelector('table') }).innerHTML;
+				this.paneContent.find('.table-pane').innerHTML = this.generatePaneContent({ table: newContent.find('table') }).innerHTML;
 
 				this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 			});
@@ -7058,7 +7066,7 @@ class Table extends CraterWebParts {
 		});
 
 		if (!func.isnull(paneConnection)) {
-			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 
 				this.element.innerHTML = draftDom.innerHTML;
 
@@ -7144,22 +7152,22 @@ class Panel extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'title', value: this.element.querySelector('.crater-panel-title').textContent
+								element: 'input', name: 'title', value: this.element.find('.crater-panel-title').textContent
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'backgroundcolor', value: this.element.querySelector('.crater-panel-title').css()['background-color'], list: func.colors
+								element: 'input', name: 'backgroundcolor', value: this.element.find('.crater-panel-title').css()['background-color'], list: func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.querySelector('.crater-panel-title').css().color, list: func.colors
+								element: 'input', name: 'color', value: this.element.find('.crater-panel-title').css().color, list: func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontsize', value: this.element.querySelector('.crater-panel-title').css()['font-size']
+								element: 'input', name: 'fontsize', value: this.element.find('.crater-panel-title').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'height', value: this.element.querySelector('.crater-panel-title').css()['height']
+								element: 'input', name: 'height', value: this.element.find('.crater-panel-title').css()['height']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'width', value: this.element.querySelector('.crater-panel-title').css()['width']
+								element: 'input', name: 'width', value: this.element.find('.crater-panel-title').css()['width']
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'layout', options: ['Full', 'Left', 'Center', 'Right']
@@ -7218,7 +7226,7 @@ class Panel extends CraterWebParts {
 				]
 			});
 
-			let contents = this.element.querySelector('.crater-panel-content').querySelectorAll('.keyed-element');
+			let contents = this.element.find('.crater-panel-content').findAll('.keyed-element');
 
 			for (let i = 0; i < contents.length; i++) {
 				sectionContentsPane.makeElement({
@@ -7261,10 +7269,10 @@ class Panel extends CraterWebParts {
 	private listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
-		let panelContents = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-content');
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
+		let panelContents = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-content');
 		let panelContentDom = panelContents.childNodes;
-		let panelContentPane = this.paneContent.querySelector('.panel-contents-pane');
+		let panelContentPane = this.paneContent.find('.panel-contents-pane');
 
 		let view = this.sharePoint.properties.pane.content[this.key].settings.view;
 		let panelContentPanePrototype = this.elementModifier.createElement({
@@ -7282,22 +7290,22 @@ class Panel extends CraterWebParts {
 
 		let panelContentRowHandler = (panelContentRowPane, panelContentRowDom) => {
 
-			panelContentRowPane.querySelector('#name').innerHTML = panelContentRowDom.dataset.type.toUpperCase();
+			panelContentRowPane.find('#name').innerHTML = panelContentRowDom.dataset.type.toUpperCase();
 
 			panelContentRowPane.addEventListener('mouseover', event => {
-				panelContentRowPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				panelContentRowPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			panelContentRowPane.addEventListener('mouseout', event => {
-				panelContentRowPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				panelContentRowPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			panelContentRowPane.querySelector('.delete-crater-panel-content-row').addEventListener('click', event => {
+			panelContentRowPane.find('.delete-crater-panel-content-row').addEventListener('click', event => {
 				panelContentRowDom.remove();
 				panelContentRowPane.remove();
 			});
 
-			panelContentRowPane.querySelector('.add-before-crater-panel-content-row').addEventListener('click', event => {
+			panelContentRowPane.find('.add-before-crater-panel-content-row').addEventListener('click', event => {
 				this.paneContent.append(
 					this.sharePoint.displayPanel(webpart => {
 						let newPanelContent = this.sharePoint.appendWebpart(panelContents, webpart.dataset.webpart);
@@ -7312,7 +7320,7 @@ class Panel extends CraterWebParts {
 				);
 			});
 
-			panelContentRowPane.querySelector('.add-after-crater-panel-content-row').addEventListener('click', event => {
+			panelContentRowPane.find('.add-after-crater-panel-content-row').addEventListener('click', event => {
 				this.paneContent.append(
 					this.sharePoint.displayPanel(webpart => {
 						let newPanelContent = this.sharePoint.appendWebpart(panelContents, webpart.dataset.webpart);
@@ -7328,20 +7336,20 @@ class Panel extends CraterWebParts {
 			});
 		};
 
-		let titlePane = this.paneContent.querySelector('.title-pane');
-		let titleLinkPane = this.paneContent.querySelector('.title-link-pane');
-		let settingsPane = this.paneContent.querySelector('.settings-pane');
+		let titlePane = this.paneContent.find('.title-pane');
+		let titleLinkPane = this.paneContent.find('.title-link-pane');
+		let settingsPane = this.paneContent.find('.settings-pane');
 
-		let title = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title');
-		titlePane.querySelector('#height-cell').onChanged(height => {
+		let title = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-title');
+		titlePane.find('#height-cell').onChanged(height => {
 			title.css({ height });
 		});
 
-		titlePane.querySelector('#width-cell').onChanged(width => {
+		titlePane.find('#width-cell').onChanged(width => {
 			title.css({ width });
 		});
 
-		titlePane.querySelector('#position-cell').onChanged(position => {
+		titlePane.find('#position-cell').onChanged(position => {
 			if (position == 'Center') {
 				title.css({ alignSelf: 'Center' });
 			}
@@ -7353,7 +7361,7 @@ class Panel extends CraterWebParts {
 			}
 		});
 
-		titlePane.querySelector('#layout-cell').onChanged(layout => {
+		titlePane.find('#layout-cell').onChanged(layout => {
 			if (layout == 'Left') {
 				title.css({ justifyContent: 'flex-start' });
 			}
@@ -7368,75 +7376,75 @@ class Panel extends CraterWebParts {
 			}
 		});
 
-		titlePane.querySelector('#title-cell').onChanged(value => {
-			title.querySelector('.crater-panel-title-text').innerText = value;
+		titlePane.find('#title-cell').onChanged(value => {
+			title.find('.crater-panel-title-text').innerText = value;
 		});
 
-		titleLinkPane.querySelector('#text-cell').onChanged(value => {
-			title.querySelector('.crater-panel-title-link').innerText = value;
+		titleLinkPane.find('#text-cell').onChanged(value => {
+			title.find('.crater-panel-title-link').innerText = value;
 		});
 
-		titleLinkPane.querySelector('#color-cell').onChanged(color => {
-			title.querySelector('.crater-panel-title-link').css({ color });
+		titleLinkPane.find('#color-cell').onChanged(color => {
+			title.find('.crater-panel-title-link').css({ color });
 		});
 
-		titleLinkPane.querySelector('#background-color-cell').onChanged(backgroundColor => {
-			title.querySelector('.crater-panel-title-link').css({ backgroundColor });
+		titleLinkPane.find('#background-color-cell').onChanged(backgroundColor => {
+			title.find('.crater-panel-title-link').css({ backgroundColor });
 		});
 
-		titleLinkPane.querySelector('#border-cell').onChanged(border => {
-			title.querySelector('.crater-panel-title-link').css({ border });
+		titleLinkPane.find('#border-cell').onChanged(border => {
+			title.find('.crater-panel-title-link').css({ border });
 		});
 
-		titleLinkPane.querySelector('#url-cell').onChanged(value => {
-			title.querySelector('.crater-panel-title-link').href = value;
+		titleLinkPane.find('#url-cell').onChanged(value => {
+			title.find('.crater-panel-title-link').href = value;
 		});
 
-		titleLinkPane.querySelector('#Show-cell').onChanged(value => {
+		titleLinkPane.find('#Show-cell').onChanged(value => {
 			if (value == 'No') {
-				title.querySelector('.crater-panel-title-link').css({ display: 'none' });
+				title.find('.crater-panel-title-link').css({ display: 'none' });
 			}
 			else {
-				title.querySelector('.crater-panel-title-link').cssRemove(['display']);
+				title.find('.crater-panel-title-link').cssRemove(['display']);
 			}
 		});
 
-		let backgroundColorCell = titlePane.querySelector('#backgroundcolor-cell').parentNode;
-		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({ backgroundColor });
-			backgroundColorCell.querySelector('#backgroundcolor-cell').value = backgroundColor;
-			backgroundColorCell.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor);
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-content').css({
+		let backgroundColorCell = titlePane.find('#backgroundcolor-cell').parentNode;
+		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#backgroundcolor-cell') }, (backgroundColor) => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-title').css({ backgroundColor });
+			backgroundColorCell.find('#backgroundcolor-cell').value = backgroundColor;
+			backgroundColorCell.find('#backgroundcolor-cell').setAttribute('value', backgroundColor);
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-content').css({
 				borderColor: backgroundColor
 			});
 		});
 
-		let colorCell = titlePane.querySelector('#color-cell').parentNode;
-		this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#color-cell') }, (color) => {
-			title.querySelector('.crater-panel-title-text').css({ color });
-			colorCell.querySelector('#color-cell').value = color;
-			colorCell.querySelector('#color-cell').setAttribute('value', color);
+		let colorCell = titlePane.find('#color-cell').parentNode;
+		this.pickColor({ parent: colorCell, cell: colorCell.find('#color-cell') }, (color) => {
+			title.find('.crater-panel-title-text').css({ color });
+			colorCell.find('#color-cell').value = color;
+			colorCell.find('#color-cell').setAttribute('value', color);
 		});
 
-		titlePane.querySelector('#fontsize-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-title').css({ fontSize: value });
+		titlePane.find('#fontsize-cell').onChanged(value => {
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-title').css({ fontSize: value });
 		});
 
-		settingsPane.querySelector('#Box-Content-cell').onChanged(value => {
+		settingsPane.find('#Box-Content-cell').onChanged(value => {
 			if (value == 'Yes') {
-				this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-content').css({
+				this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-content').css({
 					borderColor: title.css().backgroundColor
 				});
 			} else {
-				this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-panel-content').css({
+				this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-content').css({
 					borderColor: 'transparent'
 				});
 			}
 		});
 
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 
-			this.sharePoint.app.querySelectorAll('.crater-display-panel').forEach(panel => {
+			this.sharePoint.app.findAll('.crater-display-panel').forEach(panel => {
 				panel.remove();
 			});
 
@@ -7449,7 +7457,7 @@ class Panel extends CraterWebParts {
 			}));
 		});
 
-		this.paneContent.querySelectorAll('.crater-panel-content-row-pane').forEach((panelContent, position) => {
+		this.paneContent.findAll('.crater-panel-content-row-pane').forEach((panelContent, position) => {
 			panelContentRowHandler(panelContent, panelContentDom[position]);
 		});
 
@@ -7458,13 +7466,13 @@ class Panel extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 
-			for (let keyedElement of this.element.querySelectorAll('.keyed-element')) {
+			for (let keyedElement of this.element.findAll('.keyed-element')) {
 				this[keyedElement.dataset.type]({ action: 'rendered', element: keyedElement, sharePoint: this.sharePoint });
 			}
 		});
@@ -7559,13 +7567,13 @@ class CountDown extends CraterWebParts {
 
 		date = this.getDate(secondsTogoCurrently);
 
-		this.element.querySelector('.crater-countdown-days').querySelector('.crater-countdown-counting').innerText = date.days;
+		this.element.find('.crater-countdown-days').find('.crater-countdown-counting').innerText = date.days;
 
-		this.element.querySelector('.crater-countdown-hours').querySelector('.crater-countdown-counting').innerText = date.hours;
+		this.element.find('.crater-countdown-hours').find('.crater-countdown-counting').innerText = date.hours;
 
-		this.element.querySelector('.crater-countdown-minutes').querySelector('.crater-countdown-counting').innerText = date.minutes;
+		this.element.find('.crater-countdown-minutes').find('.crater-countdown-counting').innerText = date.minutes;
 
-		this.element.querySelector('.crater-countdown-seconds').querySelector('.crater-countdown-counting').innerText = date.seconds;
+		this.element.find('.crater-countdown-seconds').find('.crater-countdown-counting').innerText = date.seconds;
 
 		this.sharePoint.properties.pane.content[this.key].settings.interval = setInterval(() => {
 			date = this.getDate(secondsTogoCurrently);
@@ -7576,13 +7584,13 @@ class CountDown extends CraterWebParts {
 				this.element.classList.remove('crater-countdown-past');
 			}
 
-			this.element.querySelector('.crater-countdown-days').querySelector('.crater-countdown-counting').innerText = date.days;
+			this.element.find('.crater-countdown-days').find('.crater-countdown-counting').innerText = date.days;
 
-			this.element.querySelector('.crater-countdown-hours').querySelector('.crater-countdown-counting').innerText = date.hours;
+			this.element.find('.crater-countdown-hours').find('.crater-countdown-counting').innerText = date.hours;
 
-			this.element.querySelector('.crater-countdown-minutes').querySelector('.crater-countdown-counting').innerText = date.minutes;
+			this.element.find('.crater-countdown-minutes').find('.crater-countdown-counting').innerText = date.minutes;
 
-			this.element.querySelector('.crater-countdown-seconds').querySelector('.crater-countdown-counting').innerText = date.seconds;
+			this.element.find('.crater-countdown-seconds').find('.crater-countdown-counting').innerText = date.seconds;
 		}, 1000);
 	}
 
@@ -7694,80 +7702,80 @@ class CountDown extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 
-		let countingPane = this.paneContent.querySelector('.counting-pane');
+		let countingPane = this.paneContent.find('.counting-pane');
 
-		let countingColorCell = countingPane.querySelector('#Color-cell').parentNode;
-		this.pickColor({ parent: countingColorCell, cell: countingColorCell.querySelector('#Color-cell') }, (color) => {
-			draftDom.querySelectorAll('.crater-countdown-counting').forEach(element => {
+		let countingColorCell = countingPane.find('#Color-cell').parentNode;
+		this.pickColor({ parent: countingColorCell, cell: countingColorCell.find('#Color-cell') }, (color) => {
+			draftDom.findAll('.crater-countdown-counting').forEach(element => {
 				element.css({ color });
 			});
-			countingColorCell.querySelector('#Color-cell').value = color;
-			countingColorCell.querySelector('#Color-cell').setAttribute('value', color);
+			countingColorCell.find('#Color-cell').value = color;
+			countingColorCell.find('#Color-cell').setAttribute('value', color);
 		});
 
-		let countingBackgroundColorCell = countingPane.querySelector('#BackgroundColor-cell').parentNode;
-		this.pickColor({ parent: countingBackgroundColorCell, cell: countingBackgroundColorCell.querySelector('#BackgroundColor-cell') }, (backgroundColor) => {
-			draftDom.querySelectorAll('.crater-countdown-counting').forEach(element => {
+		let countingBackgroundColorCell = countingPane.find('#BackgroundColor-cell').parentNode;
+		this.pickColor({ parent: countingBackgroundColorCell, cell: countingBackgroundColorCell.find('#BackgroundColor-cell') }, (backgroundColor) => {
+			draftDom.findAll('.crater-countdown-counting').forEach(element => {
 				element.css({ backgroundColor });
 			});
-			countingBackgroundColorCell.querySelector('#BackgroundColor-cell').value = backgroundColor;
-			countingBackgroundColorCell.querySelector('#BackgroundColor-cell').setAttribute('value', backgroundColor);
+			countingBackgroundColorCell.find('#BackgroundColor-cell').value = backgroundColor;
+			countingBackgroundColorCell.find('#BackgroundColor-cell').setAttribute('value', backgroundColor);
 		});
 
-		countingPane.querySelector('#FontSize-cell').onChanged(fontSize => {
-			draftDom.querySelectorAll('.crater-countdown-counting').forEach(element => {
+		countingPane.find('#FontSize-cell').onChanged(fontSize => {
+			draftDom.findAll('.crater-countdown-counting').forEach(element => {
 				element.css({ fontSize });
 			});
 		});
 
-		countingPane.querySelector('#FontStyle-cell').onChanged(fontFamily => {
-			draftDom.querySelectorAll('.crater-countdown-counting').forEach(element => {
+		countingPane.find('#FontStyle-cell').onChanged(fontFamily => {
+			draftDom.findAll('.crater-countdown-counting').forEach(element => {
 				element.css({ fontFamily });
 			});
 		});
 
-		let labelPane = this.paneContent.querySelector('.label-pane');
+		let labelPane = this.paneContent.find('.label-pane');
 
-		let labelColorCell = labelPane.querySelector('#Color-cell').parentNode;
-		this.pickColor({ parent: labelColorCell, cell: labelColorCell.querySelector('#Color-cell') }, (color) => {
-			draftDom.querySelectorAll('.crater-countdown-label').forEach(element => {
+		let labelColorCell = labelPane.find('#Color-cell').parentNode;
+		this.pickColor({ parent: labelColorCell, cell: labelColorCell.find('#Color-cell') }, (color) => {
+			draftDom.findAll('.crater-countdown-label').forEach(element => {
 				element.css({ color });
 			});
-			labelColorCell.querySelector('#Color-cell').value = color;
-			labelColorCell.querySelector('#Color-cell').setAttribute('value', color);
+			labelColorCell.find('#Color-cell').value = color;
+			labelColorCell.find('#Color-cell').setAttribute('value', color);
 		});
 
-		let labelBackgroundColorCell = labelPane.querySelector('#BackgroundColor-cell').parentNode;
-		this.pickColor({ parent: labelBackgroundColorCell, cell: labelBackgroundColorCell.querySelector('#BackgroundColor-cell') }, (backgroundColor) => {
-			draftDom.querySelectorAll('.crater-countdown-label').forEach(element => {
+		let labelBackgroundColorCell = labelPane.find('#BackgroundColor-cell').parentNode;
+		this.pickColor({ parent: labelBackgroundColorCell, cell: labelBackgroundColorCell.find('#BackgroundColor-cell') }, (backgroundColor) => {
+			draftDom.findAll('.crater-countdown-label').forEach(element => {
 				element.css({ backgroundColor });
 			});
-			labelBackgroundColorCell.querySelector('#BackgroundColor-cell').value = backgroundColor;
-			labelBackgroundColorCell.querySelector('#BackgroundColor-cell').setAttribute('value', backgroundColor);
+			labelBackgroundColorCell.find('#BackgroundColor-cell').value = backgroundColor;
+			labelBackgroundColorCell.find('#BackgroundColor-cell').setAttribute('value', backgroundColor);
 		});
 
-		labelPane.querySelector('#FontSize-cell').onChanged(size => {
-			draftDom.querySelectorAll('.crater-countdown-label').forEach(element => {
+		labelPane.find('#FontSize-cell').onChanged(size => {
+			draftDom.findAll('.crater-countdown-label').forEach(element => {
 				element.css({ fontSize: size });
 			});
 		});
 
-		labelPane.querySelector('#FontStyle-cell').onChanged(style => {
-			draftDom.querySelectorAll('.crater-countdown-label').forEach(element => {
+		labelPane.find('#FontStyle-cell').onChanged(style => {
+			draftDom.findAll('.crater-countdown-label').forEach(element => {
 				element.css({ fontFamily: style });
 			});
 		});
 
-		let settingsPane = this.paneContent.querySelector('.settings-pane');
+		let settingsPane = this.paneContent.find('.settings-pane');
 
-		let settingsDate = settingsPane.querySelector('#Date-cell');
-		let settingsTime = settingsPane.querySelector('#Time-cell');
-		let settingsBorder = settingsPane.querySelector('#Border-cell');
-		let settingsBorderRadius = settingsPane.querySelector('#BorderRadius-cell');
+		let settingsDate = settingsPane.find('#Date-cell');
+		let settingsTime = settingsPane.find('#Time-cell');
+		let settingsBorder = settingsPane.find('#Border-cell');
+		let settingsBorderRadius = settingsPane.find('#BorderRadius-cell');
 
 		settingsDate.onChanged(date => {
 			this.sharePoint.properties.pane.content[this.key].draft.dom.dataset.date = func.dateValue(date);
@@ -7780,13 +7788,13 @@ class CountDown extends CraterWebParts {
 		});
 
 		settingsBorder.onChanged(border => {
-			draftDom.querySelectorAll('.crater-countdown-block').forEach(element => {
+			draftDom.findAll('.crater-countdown-block').forEach(element => {
 				element.css({ border });
 			});
 		});
 
 		settingsBorderRadius.onChanged(borderRadius => {
-			draftDom.querySelectorAll('.crater-countdown-block').forEach(element => {
+			draftDom.findAll('.crater-countdown-block').forEach(element => {
 				element.css({ borderRadius });
 			});
 		});
@@ -7796,7 +7804,7 @@ class CountDown extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 
@@ -7894,7 +7902,7 @@ class DateList extends CraterWebParts {
 			]
 		});
 
-		let dateListContent = dateList.querySelector(`.crater-datelist-content`);
+		let dateListContent = dateList.find(`.crater-datelist-content`);
 
 
 		for (let row of params.source) {
@@ -7941,8 +7949,8 @@ class DateList extends CraterWebParts {
 		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
 			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
 		} else {
-			let dateList = this.sharePoint.properties.pane.content[key].draft.dom.querySelector('.crater-datelist-content');
-			let dateListRows = dateList.querySelectorAll('.crater-datelist-content-item');
+			let dateList = this.sharePoint.properties.pane.content[key].draft.dom.find('.crater-datelist-content');
+			let dateListRows = dateList.findAll('.crater-datelist-content-item');
 			this.paneContent.makeElement({
 				element: 'div', children: [
 					this.elementModifier.createElement(
@@ -7962,22 +7970,22 @@ class DateList extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [//create the cells for changing crater event title
 							this.elementModifier.cell({
-								element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: this.element.querySelector('.crater-datelist-title-imgIcon').src }
+								element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: this.element.find('.crater-datelist-title-imgIcon').src }
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'title', value: this.element.querySelector('.crater-datelist-title').textContent
+								element: 'input', name: 'title', value: this.element.find('.crater-datelist-title').textContent
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'backgroundcolor', value: this.element.querySelector('.crater-datelist-title').css()['background-color'], list: func.colors
+								element: 'input', name: 'backgroundcolor', value: this.element.find('.crater-datelist-title').css()['background-color'], list: func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.querySelector('.crater-datelist-title').css().color, list: func.colors
+								element: 'input', name: 'color', value: this.element.find('.crater-datelist-title').css().color, list: func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontsize', value: this.element.querySelector('.crater-datelist-title').css()['font-size']
+								element: 'input', name: 'fontsize', value: this.element.find('.crater-datelist-title').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'height', value: this.element.querySelector('.crater-datelist-title').css()['height'] || ''
+								element: 'input', name: 'height', value: this.element.find('.crater-datelist-title').css()['height'] || ''
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleTitle', options: ['show', 'hide']
@@ -7999,19 +8007,19 @@ class DateList extends CraterWebParts {
 					{
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'daySize', value: this.element.querySelector('.crater-datelist-content-item-date-day').css()['font-size']
+								element: 'input', name: 'daySize', value: this.element.find('.crater-datelist-content-item-date-day').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'monthSize', value: this.element.querySelector('.crater-datelist-content-item-date-month').css()['font-size']
+								element: 'input', name: 'monthSize', value: this.element.find('.crater-datelist-content-item-date-month').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-datelist-content-item-date').css()['font-family']
+								element: 'input', name: 'fontFamily', value: this.element.find('.crater-datelist-content-item-date').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'dayColor', value: this.element.querySelector('.crater-datelist-content-item-date-day').css()['color'], list: func.colors
+								element: 'input', name: 'dayColor', value: this.element.find('.crater-datelist-content-item-date-day').css()['color'], list: func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'monthColor', value: this.element.querySelector('.crater-datelist-content-item-date-month').css()['color'], list: func.colors
+								element: 'input', name: 'monthColor', value: this.element.find('.crater-datelist-content-item-date-month').css()['color'], list: func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleDate', options: ['show', 'hide']
@@ -8034,13 +8042,13 @@ class DateList extends CraterWebParts {
 					{
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-datelist-content-item-text-main').css()['font-size']
+								element: 'input', name: 'fontSize', value: this.element.find('.crater-datelist-content-item-text-main').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-datelist-content-item-text-main').css()['font-family']
+								element: 'input', name: 'fontFamily', value: this.element.find('.crater-datelist-content-item-text-main').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'titleColor', value: this.element.querySelector('.crater-datelist-content-item-text-main').css()['color'], list: func.colors
+								element: 'input', name: 'titleColor', value: this.element.find('.crater-datelist-content-item-text-main').css()['color'], list: func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleTitle', options: ['show', 'hide']
@@ -8062,13 +8070,13 @@ class DateList extends CraterWebParts {
 					{
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-datelist-content-item-text-subtitle').css()['font-size']
+								element: 'input', name: 'fontSize', value: this.element.find('.crater-datelist-content-item-text-subtitle').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-datelist-content-item-text-subtitle').css()['font-family']
+								element: 'input', name: 'fontFamily', value: this.element.find('.crater-datelist-content-item-text-subtitle').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'subtitleColor', value: this.element.querySelector('.crater-datelist-content-item-text-subtitle').css().color, list: func.colors
+								element: 'input', name: 'subtitleColor', value: this.element.find('.crater-datelist-content-item-text-subtitle').css().color, list: func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleSubtitle', options: ['show', 'hide']
@@ -8090,13 +8098,13 @@ class DateList extends CraterWebParts {
 					{
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-datelist-content-item-text-body').css()['font-size']
+								element: 'input', name: 'fontSize', value: this.element.find('.crater-datelist-content-item-text-body').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-datelist-content-item-text-body').css()['font-family']
+								element: 'input', name: 'fontFamily', value: this.element.find('.crater-datelist-content-item-text-body').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'bodyColor', value: this.element.querySelector('.crater-datelist-content-item-text-body').css()['color'], list: func.colors
+								element: 'input', name: 'bodyColor', value: this.element.find('.crater-datelist-content-item-text-body').css()['color'], list: func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleBody', options: ['show', 'hide']
@@ -8132,19 +8140,19 @@ class DateList extends CraterWebParts {
 				children: [
 					this.paneOptions({ options: ['AA', 'AB', 'D'], owner: 'crater-datelist-content-item' }),
 					this.elementModifier.cell({
-						element: 'input', name: 'Day', attribute: { class: 'crater-date' }, value: params.list[i].querySelector('#Day').textContent
+						element: 'input', name: 'Day', attribute: { class: 'crater-date' }, value: params.list[i].find('#Day').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Month', attribute: { class: 'crater-date' }, value: params.list[i].querySelector('#Month').textContent
+						element: 'input', name: 'Month', attribute: { class: 'crater-date' }, value: params.list[i].find('#Month').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'title', value: params.list[i].querySelector('#mainText').textContent
+						element: 'input', name: 'title', value: params.list[i].find('#mainText').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'subtitle', value: params.list[i].querySelector('#subtitle').textContent
+						element: 'input', name: 'subtitle', value: params.list[i].find('#subtitle').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'body', value: params.list[i].querySelector('#body').textContent
+						element: 'input', name: 'body', value: params.list[i].find('#body').textContent
 					}),
 				]
 			});
@@ -8157,10 +8165,10 @@ class DateList extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 		//get the content and all the events
-		let dateList = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-datelist-content');
-		let dateListRow = dateList.querySelectorAll('.crater-datelist-content-item');
+		let dateList = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-datelist-content');
+		let dateListRow = dateList.findAll('.crater-datelist-content-item');
 
 		let dateListRowPanePrototype = this.elementModifier.createElement({//create a row on the property pane
 			element: 'div',
@@ -8210,40 +8218,40 @@ class DateList extends CraterWebParts {
 
 		let dateRowHandler = (dateRowPane, dateRowDom) => {
 			dateRowPane.addEventListener('mouseover', event => {
-				dateRowPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				dateRowPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			dateRowPane.addEventListener('mouseout', event => {
-				dateRowPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				dateRowPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
 			// get the values of the newly created row on the property - pane
-			dateRowPane.querySelector('#title-cell').onChanged(value => {
-				dateRowDom.querySelector('.crater-datelist-content-item-text-main').innerHTML = value;
+			dateRowPane.find('#title-cell').onChanged(value => {
+				dateRowDom.find('.crater-datelist-content-item-text-main').innerHTML = value;
 			});
 
-			dateRowPane.querySelector('#subtitle-cell').onChanged(value => {
-				dateRowDom.querySelector('.crater-datelist-content-item-text-subtitle').innerHTML = value;
+			dateRowPane.find('#subtitle-cell').onChanged(value => {
+				dateRowDom.find('.crater-datelist-content-item-text-subtitle').innerHTML = value;
 			});
 
-			dateRowPane.querySelector('#body-cell').onChanged(value => {
-				dateRowDom.querySelector('.crater-datelist-content-item-text-body').innerHTML = value;
+			dateRowPane.find('#body-cell').onChanged(value => {
+				dateRowDom.find('.crater-datelist-content-item-text-body').innerHTML = value;
 			});
 
-			dateRowPane.querySelector('#Day-cell').onChanged(value => {
-				dateRowDom.querySelector('.crater-datelist-content-item-date-day').innerHTML = value;
+			dateRowPane.find('#Day-cell').onChanged(value => {
+				dateRowDom.find('.crater-datelist-content-item-date-day').innerHTML = value;
 			});
 
-			dateRowPane.querySelector('#Month-cell').onChanged(value => {
-				dateRowDom.querySelector('.crater-datelist-content-item-date-month').innerHTML = value;
+			dateRowPane.find('#Month-cell').onChanged(value => {
+				dateRowDom.find('.crater-datelist-content-item-date-month').innerHTML = value;
 			});
 
-			dateRowPane.querySelector('.delete-crater-datelist-content-item').addEventListener('click', event => {
+			dateRowPane.find('.delete-crater-datelist-content-item').addEventListener('click', event => {
 				dateRowDom.remove();
 				dateRowPane.remove();
 			});
 
-			dateRowPane.querySelector('.add-before-crater-datelist-content-item').addEventListener('click', event => {
+			dateRowPane.find('.add-before-crater-datelist-content-item').addEventListener('click', event => {
 				let newdateRowDom = dateListRowDomPrototype.cloneNode(true);
 				let newdateRowPane = dateListRowPanePrototype.cloneNode(true);
 
@@ -8252,7 +8260,7 @@ class DateList extends CraterWebParts {
 				dateRowHandler(newdateRowPane, newdateRowDom);
 			});
 
-			dateRowPane.querySelector('.add-after-crater-datelist-content-item').addEventListener('click', event => {
+			dateRowPane.find('.add-after-crater-datelist-content-item').addEventListener('click', event => {
 				let newdateRowDom = dateListRowDomPrototype.cloneNode(true);
 				let newdateRowPane = dateListRowPanePrototype.cloneNode(true);
 
@@ -8265,257 +8273,257 @@ class DateList extends CraterWebParts {
 
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 
-		let titlePane = this.paneContent.querySelector('.title-pane');
-		let dateListDateRowPane = this.paneContent.querySelector('.datelist-date-row-pane');
-		let dateListTitleRowPane = this.paneContent.querySelector('.datelist-title-row-pane');
-		let dateListSubtitleRowPane = this.paneContent.querySelector('.datelist-subtitle-row-pane');
-		let dateListBodyRowPane = this.paneContent.querySelector('.datelist-body-row-pane');
+		let titlePane = this.paneContent.find('.title-pane');
+		let dateListDateRowPane = this.paneContent.find('.datelist-date-row-pane');
+		let dateListTitleRowPane = this.paneContent.find('.datelist-title-row-pane');
+		let dateListSubtitleRowPane = this.paneContent.find('.datelist-subtitle-row-pane');
+		let dateListBodyRowPane = this.paneContent.find('.datelist-body-row-pane');
 
-		let dateListTitleParent = dateListTitleRowPane.querySelector('#titleColor-cell').parentNode;
-		this.pickColor({ parent: dateListTitleParent, cell: dateListTitleParent.querySelector('#titleColor-cell') }, (color) => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
+		let dateListTitleParent = dateListTitleRowPane.find('#titleColor-cell').parentNode;
+		this.pickColor({ parent: dateListTitleParent, cell: dateListTitleParent.find('#titleColor-cell') }, (color) => {
+			draftDom.findAll('.crater-datelist-content-item-text-main').forEach(element => {
 				element.css({ color });//get the color of the event font in the draftDom
 			});
-			dateListTitleParent.querySelector('#titleColor-cell').value = color;
-			dateListTitleParent.querySelector('#titleColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+			dateListTitleParent.find('#titleColor-cell').value = color;
+			dateListTitleParent.find('#titleColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
 		});
 
-		let dateListSubtitleParent = dateListSubtitleRowPane.querySelector('#subtitleColor-cell').parentNode;
-		this.pickColor({ parent: dateListSubtitleParent, cell: dateListSubtitleParent.querySelector('#subtitleColor-cell') }, (color) => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
+		let dateListSubtitleParent = dateListSubtitleRowPane.find('#subtitleColor-cell').parentNode;
+		this.pickColor({ parent: dateListSubtitleParent, cell: dateListSubtitleParent.find('#subtitleColor-cell') }, (color) => {
+			draftDom.findAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
 				element.css({ color });//get the color of the event font in the draftDom
 			});
-			dateListSubtitleParent.querySelector('#subtitleColor-cell').value = color;
-			dateListSubtitleParent.querySelector('#subtitleColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+			dateListSubtitleParent.find('#subtitleColor-cell').value = color;
+			dateListSubtitleParent.find('#subtitleColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
 		});
 
-		let dateListBodyParent = dateListBodyRowPane.querySelector('#bodyColor-cell').parentNode;
-		this.pickColor({ parent: dateListBodyParent, cell: dateListBodyParent.querySelector('#bodyColor-cell') }, (color) => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
+		let dateListBodyParent = dateListBodyRowPane.find('#bodyColor-cell').parentNode;
+		this.pickColor({ parent: dateListBodyParent, cell: dateListBodyParent.find('#bodyColor-cell') }, (color) => {
+			draftDom.findAll('.crater-datelist-content-item-text-body').forEach(element => {
 				element.css({ color });//get the color of the event font in the draftDom
 			});
-			dateListBodyParent.querySelector('#bodyColor-cell').value = color;
-			dateListBodyParent.querySelector('#bodyColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+			dateListBodyParent.find('#bodyColor-cell').value = color;
+			dateListBodyParent.find('#bodyColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
 		});
 
-		let dateListDayParent = dateListDateRowPane.querySelector('#dayColor-cell').parentNode;
-		this.pickColor({ parent: dateListDayParent, cell: dateListDayParent.querySelector('#dayColor-cell') }, (color) => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-date-day').forEach(element => {
+		let dateListDayParent = dateListDateRowPane.find('#dayColor-cell').parentNode;
+		this.pickColor({ parent: dateListDayParent, cell: dateListDayParent.find('#dayColor-cell') }, (color) => {
+			draftDom.findAll('.crater-datelist-content-item-date-day').forEach(element => {
 				element.css({ color });//get the color of the event font in the draftDom
 			});
-			dateListDayParent.querySelector('#dayColor-cell').value = color;
-			dateListDayParent.querySelector('#dayColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+			dateListDayParent.find('#dayColor-cell').value = color;
+			dateListDayParent.find('#dayColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
 		});
 
-		let dateListMonthParent = dateListDateRowPane.querySelector('#monthColor-cell').parentNode;
-		this.pickColor({ parent: dateListMonthParent, cell: dateListMonthParent.querySelector('#monthColor-cell') }, (color) => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-date-month').forEach(element => {
+		let dateListMonthParent = dateListDateRowPane.find('#monthColor-cell').parentNode;
+		this.pickColor({ parent: dateListMonthParent, cell: dateListMonthParent.find('#monthColor-cell') }, (color) => {
+			draftDom.findAll('.crater-datelist-content-item-date-month').forEach(element => {
 				element.css({ color });//get the color of the event font in the draftDom
 			});
-			dateListMonthParent.querySelector('#monthColor-cell').value = color;
-			dateListMonthParent.querySelector('#monthColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+			dateListMonthParent.find('#monthColor-cell').value = color;
+			dateListMonthParent.find('#monthColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
 		});
 
-		let iconParent = titlePane.querySelector('#icon-cell').parentNode;
+		let iconParent = titlePane.find('#icon-cell').parentNode;
 		this.uploadImage({ parent: iconParent }, (image) => {
-			iconParent.querySelector('#icon-cell').src = image.src;
-			draftDom.querySelector('.crater-datelist-title-imgIcon').src = image.src;
+			iconParent.find('#icon-cell').src = image.src;
+			draftDom.find('.crater-datelist-title-imgIcon').src = image.src;
 		});
 
-		titlePane.querySelector('#title-cell').onChanged(value => {
-			draftDom.querySelector('.crater-datelist-title-captionTitle').innerHTML = value;
+		titlePane.find('#title-cell').onChanged(value => {
+			draftDom.find('.crater-datelist-title-captionTitle').innerHTML = value;
 		});
 
-		let backgroundColorCell = titlePane.querySelector('#backgroundcolor-cell').parentNode;
-		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
-			draftDom.querySelector('.crater-datelist-title').css({ backgroundColor });
-			backgroundColorCell.querySelector('#backgroundcolor-cell').value = backgroundColor;
-			backgroundColorCell.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor);
+		let backgroundColorCell = titlePane.find('#backgroundcolor-cell').parentNode;
+		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#backgroundcolor-cell') }, (backgroundColor) => {
+			draftDom.find('.crater-datelist-title').css({ backgroundColor });
+			backgroundColorCell.find('#backgroundcolor-cell').value = backgroundColor;
+			backgroundColorCell.find('#backgroundcolor-cell').setAttribute('value', backgroundColor);
 		});
 
-		let colorCell = titlePane.querySelector('#color-cell').parentNode;
-		this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#color-cell') }, (color) => {
-			draftDom.querySelector('.crater-datelist-title').css({ color });
-			colorCell.querySelector('#color-cell').value = color;
-			colorCell.querySelector('#color-cell').setAttribute('value', color);
-		});
-
-
-		titlePane.querySelector('#fontsize-cell').onChanged(value => {
-			draftDom.querySelector('.crater-datelist-title').css({ fontSize: value });
-		});
-
-		titlePane.querySelector('#height-cell').onChanged(value => {
-			draftDom.querySelector('.crater-datelist-title').css({ height: value });
+		let colorCell = titlePane.find('#color-cell').parentNode;
+		this.pickColor({ parent: colorCell, cell: colorCell.find('#color-cell') }, (color) => {
+			draftDom.find('.crater-datelist-title').css({ color });
+			colorCell.find('#color-cell').value = color;
+			colorCell.find('#color-cell').setAttribute('value', color);
 		});
 
 
+		titlePane.find('#fontsize-cell').onChanged(value => {
+			draftDom.find('.crater-datelist-title').css({ fontSize: value });
+		});
 
-		dateListTitleRowPane.querySelector('#fontSize-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
+		titlePane.find('#height-cell').onChanged(value => {
+			draftDom.find('.crater-datelist-title').css({ height: value });
+		});
+
+
+
+		dateListTitleRowPane.find('#fontSize-cell').onChanged(value => {
+			draftDom.findAll('.crater-datelist-content-item-text-main').forEach(element => {
 				element.css({ fontSize: value });
 			});
 		});
-		dateListTitleRowPane.querySelector('#fontFamily-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
+		dateListTitleRowPane.find('#fontFamily-cell').onChanged(value => {
+			draftDom.findAll('.crater-datelist-content-item-text-main').forEach(element => {
 				element.css({ fontFamily: value });
 			});
 		});
 
-		dateListSubtitleRowPane.querySelector('#fontSize-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
+		dateListSubtitleRowPane.find('#fontSize-cell').onChanged(value => {
+			draftDom.findAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
 				element.css({ fontSize: value });
 			});
 		});
-		dateListSubtitleRowPane.querySelector('#fontFamily-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
+		dateListSubtitleRowPane.find('#fontFamily-cell').onChanged(value => {
+			draftDom.findAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
 				element.css({ fontFamily: value });
 			});
 		});
 
-		dateListBodyRowPane.querySelector('#fontSize-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
+		dateListBodyRowPane.find('#fontSize-cell').onChanged(value => {
+			draftDom.findAll('.crater-datelist-content-item-text-body').forEach(element => {
 				element.css({ fontSize: value });
 			});
 		});
-		dateListBodyRowPane.querySelector('#fontFamily-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
+		dateListBodyRowPane.find('#fontFamily-cell').onChanged(value => {
+			draftDom.findAll('.crater-datelist-content-item-text-body').forEach(element => {
 				element.css({ fontFamily: value });
 			});
 		});
 
-		dateListDateRowPane.querySelector('#daySize-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-date-day').forEach(element => {
+		dateListDateRowPane.find('#daySize-cell').onChanged(value => {
+			draftDom.findAll('.crater-datelist-content-item-date-day').forEach(element => {
 				element.css({ fontSize: value });
 			});
 		});
-		dateListDateRowPane.querySelector('#monthSize-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-date-month').forEach(element => {
+		dateListDateRowPane.find('#monthSize-cell').onChanged(value => {
+			draftDom.findAll('.crater-datelist-content-item-date-month').forEach(element => {
 				element.css({ fontSize: value });
 			});
 		});
 
-		dateListDateRowPane.querySelector('#fontFamily-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-datelist-content-item-date').forEach(element => {
+		dateListDateRowPane.find('#fontFamily-cell').onChanged(value => {
+			draftDom.findAll('.crater-datelist-content-item-date').forEach(element => {
 				element.css({ fontFamily: value });
 			});
 		});
 
 		//appends the dom and pane prototypes to the dom and pane when you click add new
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 			let newDateRowDom = dateListRowDomPrototype.cloneNode(true);
 			let newDateRowPane = dateListRowPanePrototype.cloneNode(true);
 
 			dateList.append(newDateRowDom);//c
-			this.paneContent.querySelector('.datelist-pane').append(newDateRowPane);
+			this.paneContent.find('.datelist-pane').append(newDateRowPane);
 			dateRowHandler(newDateRowPane, newDateRowDom);
 		});
 
-		let paneItems = this.paneContent.querySelectorAll('.crater-datelist-item-pane');
+		let paneItems = this.paneContent.findAll('.crater-datelist-item-pane');
 		paneItems.forEach((dateRow, position) => {
 			dateRowHandler(dateRow, dateListRow[position]);
 		});
 
-		let showHeader = titlePane.querySelector('#toggleTitle-cell');
+		let showHeader = titlePane.find('#toggleTitle-cell');
 		showHeader.addEventListener('change', e => {
 
 			switch (showHeader.value.toLowerCase()) {
 				case "hide":
-					draftDom.querySelectorAll('.crater-datelist-title').forEach(element => {
+					draftDom.findAll('.crater-datelist-title').forEach(element => {
 						element.style.display = "none";
 					});
 					break;
 				case "show":
-					draftDom.querySelectorAll('.crater-datelist-title').forEach(element => {
+					draftDom.findAll('.crater-datelist-title').forEach(element => {
 						element.style.display = "grid";
 					});
 					break;
 				default:
-					draftDom.querySelectorAll('.crater-datelist-title').forEach(element => {
+					draftDom.findAll('.crater-datelist-title').forEach(element => {
 						element.style.display = "none";
 					});
 			}
 		});
 
-		let showTitle = dateListTitleRowPane.querySelector('#toggleTitle-cell');
+		let showTitle = dateListTitleRowPane.find('#toggleTitle-cell');
 		showTitle.addEventListener('change', e => {
 
 			switch (showTitle.value.toLowerCase()) {
 				case "hide":
-					draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
+					draftDom.findAll('.crater-datelist-content-item-text-main').forEach(element => {
 						element.style.display = "none";
 					});
 					break;
 				case "show":
-					draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
+					draftDom.findAll('.crater-datelist-content-item-text-main').forEach(element => {
 						element.style.display = "block";
 					});
 					break;
 				default:
-					draftDom.querySelectorAll('.crater-datelist-content-item-text-main').forEach(element => {
+					draftDom.findAll('.crater-datelist-content-item-text-main').forEach(element => {
 						element.style.display = "none";
 					});
 			}
 		});
 
-		let showSubtitle = dateListSubtitleRowPane.querySelector('#toggleSubtitle-cell');
+		let showSubtitle = dateListSubtitleRowPane.find('#toggleSubtitle-cell');
 		showSubtitle.addEventListener('change', e => {
 
 			switch (showSubtitle.value.toLowerCase()) {
 				case "hide":
-					draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
+					draftDom.findAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
 						element.style.display = "none";
 					});
 					break;
 				case "show":
-					draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
+					draftDom.findAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
 						element.style.display = "block";
 					});
 					break;
 				default:
-					draftDom.querySelectorAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
+					draftDom.findAll('.crater-datelist-content-item-text-subtitle').forEach(element => {
 						element.style.display = "none";
 					});
 			}
 		});
 
-		let showBody = dateListBodyRowPane.querySelector('#toggleBody-cell');
+		let showBody = dateListBodyRowPane.find('#toggleBody-cell');
 		showBody.addEventListener('change', e => {
 
 			switch (showBody.value.toLowerCase()) {
 				case "hide":
-					draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
+					draftDom.findAll('.crater-datelist-content-item-text-body').forEach(element => {
 						element.style.display = "none";
 					});
 					break;
 				case "show":
-					draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
+					draftDom.findAll('.crater-datelist-content-item-text-body').forEach(element => {
 						element.style.display = "block";
 					});
 					break;
 				default:
-					draftDom.querySelectorAll('.crater-datelist-content-item-text-body').forEach(element => {
+					draftDom.findAll('.crater-datelist-content-item-text-body').forEach(element => {
 						element.style.display = "none";
 					});
 			}
 		});
 
-		let showDate = dateListDateRowPane.querySelector('#toggleDate-cell');
+		let showDate = dateListDateRowPane.find('#toggleDate-cell');
 		showDate.addEventListener('change', e => {
 
 			switch (showDate.value.toLowerCase()) {
 				case "hide":
-					draftDom.querySelectorAll('.crater-datelist-content-item-date').forEach(element => {
+					draftDom.findAll('.crater-datelist-content-item-date').forEach(element => {
 						element.style.visibility = "hidden";
 					});
 					break;
 				case "show":
-					draftDom.querySelectorAll('.crater-datelist-content-item-date').forEach(element => {
+					draftDom.findAll('.crater-datelist-content-item-date').forEach(element => {
 						element.style.visibility = "visible";
 					});
 					break;
 				default:
-					draftDom.querySelectorAll('.crater-datelist-content-item-date').forEach(element => {
+					draftDom.findAll('.crater-datelist-content-item-date').forEach(element => {
 						element.style.visibility = "hidden";
 					});
 			}
@@ -8526,7 +8534,7 @@ class DateList extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = draftDom.innerHTML;//upate the webpart
 			this.element.css(draftDom.css());
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
@@ -8540,7 +8548,7 @@ class DateList extends CraterWebParts {
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
-		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
 
 		let updateWindow = this.elementModifier.createForm({
 			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
@@ -8558,25 +8566,25 @@ class DateList extends CraterWebParts {
 
 		let data: any = {};
 		let source: any;
-		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+		updateWindow.find('#update-element').addEventListener('click', event => {
 			event.preventDefault();
-			data.day = updateWindow.querySelector('#meta-data-day').value;
-			data.month = updateWindow.querySelector('#meta-data-month').value;
-			data.title = updateWindow.querySelector('#meta-data-title').value;
-			data.subtitle = updateWindow.querySelector('#meta-data-subtitle').value;
-			data.body = updateWindow.querySelector('#meta-data-body').value;
+			data.day = updateWindow.find('#meta-data-day').value;
+			data.month = updateWindow.find('#meta-data-month').value;
+			data.title = updateWindow.find('#meta-data-title').value;
+			data.subtitle = updateWindow.find('#meta-data-subtitle').value;
+			data.body = updateWindow.find('#meta-data-body').value;
 			source = func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
-			draftDom.querySelector('.crater-datelist-content').innerHTML = newContent.querySelector('.crater-datelist-content').innerHTML;
+			draftDom.find('.crater-datelist-content').innerHTML = newContent.find('.crater-datelist-content').innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
-			this.paneContent.querySelector('.datelist-pane').innerHTML = this.generatePaneContent({ list: newContent.querySelectorAll('.crater-datelist-content-item') }).innerHTML;
+			this.paneContent.find('.datelist-pane').innerHTML = this.generatePaneContent({ list: newContent.findAll('.crater-datelist-content-item') }).innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
 		if (!func.isnull(paneConnection)) {
-			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
@@ -8644,7 +8652,7 @@ class Map extends CraterWebParts {
 		const styles = (mapColor !== '') ? mapStyles : '';
 
 		// @ts-ignore
-		let map = new google.maps.Map(this.element.querySelector('#crater-map-div'), {
+		let map = new google.maps.Map(this.element.find('#crater-map-div'), {
 			center: newMap,
 			zoom: this.sharePoint.properties.pane.content[this.key].settings.myMap.zoom,
 			styles
@@ -8662,8 +8670,8 @@ class Map extends CraterWebParts {
 	public rendered(params) {
 		this.element = params.element;
 		this.key = params.element.dataset['key'];
-		this.element.querySelector('#crater-map-div').innerHTML = '';
-		this.element.querySelector('script').remove();
+		this.element.find('#crater-map-div').innerHTML = '';
+		this.element.find('script').remove();
 		window['initMap'] = this.initMap;
 		this.element.makeElement(
 			{
@@ -8726,10 +8734,10 @@ class Map extends CraterWebParts {
 								element: 'input', name: 'color', list: func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'width', value: this.element.querySelector('#crater-map-div').css()['width'], list: func.pixelSizes
+								element: 'input', name: 'width', value: this.element.find('#crater-map-div').css()['width'], list: func.pixelSizes
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'height', value: this.element.querySelector('#crater-map-div').css()['height'], list: func.pixelSizes
+								element: 'input', name: 'height', value: this.element.find('#crater-map-div').css()['height'], list: func.pixelSizes
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'marker', options: ['show', 'hide']
@@ -8750,32 +8758,32 @@ class Map extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let mapPane = this.paneContent.querySelector('.map-style-pane');
+		let mapPane = this.paneContent.find('.map-style-pane');
 
-		mapPane.querySelector('#latitude-cell').onChanged(value => {
+		mapPane.find('#latitude-cell').onChanged(value => {
 			this.sharePoint.properties.pane.content[this.key].settings.myMap.lat = parseFloat(value);
 		});
 
-		let colorValue = mapPane.querySelector('#color-cell').parentNode;
-		this.pickColor({ parent: colorValue, cell: colorValue.querySelector('#color-cell') }, (color) => {
+		let colorValue = mapPane.find('#color-cell').parentNode;
+		this.pickColor({ parent: colorValue, cell: colorValue.find('#color-cell') }, (color) => {
 
-			colorValue.querySelector('#color-cell').value = color;
+			colorValue.find('#color-cell').value = color;
 			let hexColor = ColorPicker.rgbToHex(color);
-			colorValue.querySelector('#color-cell').setAttribute('value', hexColor); //set the value of the eventColor cell in the pane to the color
+			colorValue.find('#color-cell').setAttribute('value', hexColor); //set the value of the eventColor cell in the pane to the color
 			this.sharePoint.properties.pane.content[this.key].settings.myMap.color = hexColor;
 		});
 
-		mapPane.querySelector('#longitude-cell').onChanged(value => {
+		mapPane.find('#longitude-cell').onChanged(value => {
 			this.sharePoint.properties.pane.content[this.key].settings.myMap.lng = parseFloat(value);
 		});
 
-		mapPane.querySelector('#zoom-cell').onChanged(value => {
+		mapPane.find('#zoom-cell').onChanged(value => {
 			this.sharePoint.properties.pane.content[this.key].settings.myMap.zoom = parseInt(value);
 		});
 
-		let markerValue = mapPane.querySelector('#marker-cell');
+		let markerValue = mapPane.find('#marker-cell');
 		markerValue.addEventListener('change', e => {
 			let marker = markerValue.value;
 			switch (marker.toLowerCase()) {
@@ -8788,13 +8796,13 @@ class Map extends CraterWebParts {
 			}
 		});
 
-		mapPane.querySelector('#width-cell').onChanged(value => {
-			draftDom.querySelector('#crater-map-div').css({ width: value });
+		mapPane.find('#width-cell').onChanged(value => {
+			draftDom.find('#crater-map-div').css({ width: value });
 			this.sharePoint.properties.pane.content[this.key].settings.myMap.width = value;
 		});
 
-		mapPane.querySelector('#height-cell').onChanged(value => {
-			draftDom.querySelector('#crater-map-div').css({ height: value });
+		mapPane.find('#height-cell').onChanged(value => {
+			draftDom.find('#crater-map-div').css({ height: value });
 			this.sharePoint.properties.pane.content[this.key].settings.myMap.height = value;
 		});
 
@@ -8803,10 +8811,10 @@ class Map extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-			this.element.querySelector('#crater-map-div').innerHTML = '';
-			this.element.removeChild(this.element.querySelector('script'));
+			this.element.find('#crater-map-div').innerHTML = '';
+			this.element.removeChild(this.element.find('script'));
 			window['initMap'] = this.initMap;
 			this.element.makeElement({
 				element: 'script', attributes: { src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDdGAHe_9Ghatd4wZjyc3hRdirIQ1ttcv0&callback=initMap' }
@@ -8876,8 +8884,8 @@ class Instagram extends CraterWebParts {
 			})
 			.then(responseData => {
 				if (this.displayed) {
-					let instaDiv = this.sharePoint.app.querySelector('.crater-instagram');
-					instaDiv.removeChild(instaDiv.querySelector('.crater-instagram-content'));
+					let instaDiv = this.sharePoint.app.find('.crater-instagram');
+					instaDiv.removeChild(instaDiv.find('.crater-instagram-content'));
 					let child = this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'crater-instagram-content' }
 					});
@@ -8889,21 +8897,21 @@ class Instagram extends CraterWebParts {
 					this.displayed = true;
 				}
 			}).catch(error => {
-				let errorMessage = this.sharePoint.app.querySelector('.crater-instagram-error');
+				let errorMessage = this.sharePoint.app.find('.crater-instagram-error');
 				errorMessage.style.display = 'block';
 			});
 	}
 
 	public renderInstagramPost(params?) {
-		this.element = this.sharePoint.app.querySelector('.crater-instagram');
-		let errorMessage = this.sharePoint.app.querySelector('.crater-instagram-error');
+		this.element = this.sharePoint.app.find('.crater-instagram');
+		let errorMessage = this.sharePoint.app.find('.crater-instagram-error');
 		errorMessage.style.display = 'none';
 		this.key = this.element.dataset['key'];
 		let display = params;
-		let instaContent = this.element.querySelector('.crater-instagram-content');
+		let instaContent = this.element.find('.crater-instagram-content');
 		instaContent.innerHTML = '';
 
-		let embedScript = document.createElement('script');
+		let embedScript = this.element.createElement('script');
 		embedScript.setAttribute('src', '//www.instagram.com/embed.js');
 		embedScript.setAttribute('async', '');
 		instaContent.appendChild(embedScript);
@@ -8952,7 +8960,7 @@ class Instagram extends CraterWebParts {
 								element: 'select', name: 'hideCaption', options: ['show', 'hide']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'width', attributes: { placeholder: 'Please enter a width' }, value: this.element.querySelector('.crater-instagram-content').css()['height'] || ''
+								element: 'input', name: 'width', attributes: { placeholder: 'Please enter a width' }, value: this.element.find('.crater-instagram-content').css()['height'] || ''
 							})
 						]
 					})
@@ -8972,10 +8980,10 @@ class Instagram extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let instagramPane = this.paneContent.querySelector('.instagram-pane');
-		let postUrl = instagramPane.querySelector('#postUrl-cell');
+		let instagramPane = this.paneContent.find('.instagram-pane');
+		let postUrl = instagramPane.find('#postUrl-cell');
 		postUrl.onChanged(value => {
 			this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL = value;
 			this.defaultURL = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL;
@@ -8985,7 +8993,7 @@ class Instagram extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.newEndPoint = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL + `&amp;omitscript=true${finalHide}${finalWidth}`;
 		});
 
-		let hideCaption = instagramPane.querySelector('#hideCaption-cell');
+		let hideCaption = instagramPane.find('#hideCaption-cell');
 		hideCaption.addEventListener('change', e => {
 			let finalWidth = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaWidth || '&amp;minwidth=320&amp;maxwidth=320';
 			let finalURL = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL || this.defaultURL;
@@ -9001,7 +9009,7 @@ class Instagram extends CraterWebParts {
 			}
 		});
 
-		let changeWidth = instagramPane.querySelector('#width-cell');
+		let changeWidth = instagramPane.find('#width-cell');
 		changeWidth.onChanged(value => {
 			this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaWidth = `&amp;minwidth=${value}&amp;maxwidth=${value}`;
 			let finalURL = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL || this.defaultURL;
@@ -9017,7 +9025,7 @@ class Instagram extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.getEmbed(this.sharePoint.properties.pane.content[this.key].draft.newEndPoint);
 			this.element.innerHTML = draftDom.innerHTML;//upate the webpart
 			this.element.css(draftDom.css());
@@ -9058,7 +9066,7 @@ class YouTube extends CraterWebParts {
 		this.key = youtube.dataset.key;
 		this.sharePoint.properties.pane.content[this.key].settings = { myYoutube: { defaultVideo: 'https://www.youtube.com/embed/M7lc1UVf-VE', width: '640', height: '390' } };
 
-		let youtubeContent = youtube.querySelector('.crater-youtube-contents');
+		let youtubeContent = youtube.find('.crater-youtube-contents');
 		youtubeContent.makeElement({
 			element: 'script', attributes: { src: 'https://www.youtube.com/iframe_api' }
 		});
@@ -9126,29 +9134,29 @@ class YouTube extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let youtubePane = this.paneContent.querySelector('.youtube-pane');
+		let youtubePane = this.paneContent.find('.youtube-pane');
 
-		youtubePane.querySelector('#videoURL-cell').onChanged(value => {
+		youtubePane.find('#videoURL-cell').onChanged(value => {
 			if (value.indexOf('.be/') !== -1) {
-				youtubePane.querySelector('#videoURL').style.color = 'green';
-				youtubePane.querySelector('#videoURL').textContent = 'Valid URL';
+				youtubePane.find('#videoURL').style.color = 'green';
+				youtubePane.find('#videoURL').textContent = 'Valid URL';
 				let afterEmbed = value.split('.be/')[1];
 				let newValue = 'https://www.youtube.com/embed/' + afterEmbed;
 				this.sharePoint.properties.pane.content[this.key].settings.myYoutube.defaultVideo = newValue;
 			} else {
-				youtubePane.querySelector('#videoURL').style.color = 'red';
-				youtubePane.querySelector('#videoURL').textContent = 'Invalid Video URL. Please right click on the video to get the video URL';
+				youtubePane.find('#videoURL').style.color = 'red';
+				youtubePane.find('#videoURL').textContent = 'Invalid Video URL. Please right click on the video to get the video URL';
 			}
 
 		});
 
-		youtubePane.querySelector('#width-cell').onChanged(value => {
+		youtubePane.find('#width-cell').onChanged(value => {
 			this.sharePoint.properties.pane.content[this.key].settings.myYoutube.width = value;
 		});
 
-		youtubePane.querySelector('#height-cell').onChanged(value => {
+		youtubePane.find('#height-cell').onChanged(value => {
 			this.sharePoint.properties.pane.content[this.key].settings.myYoutube.height = value;
 		});
 
@@ -9157,9 +9165,9 @@ class YouTube extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 
-			let draftDomIframe = draftDom.querySelector('.crater-iframe');
+			let draftDomIframe = draftDom.find('.crater-iframe');
 
 			draftDomIframe.innerHTML = '';
 
@@ -9218,7 +9226,7 @@ class Facebook extends CraterWebParts {
 			const width = (params.width) ? params.width : this.element.getBoundingClientRect().width;
 			const height = (params.height) ? params.height : '';
 			const adaptContainer = (params.adaptContainer) ? params.adaptContainer : 'true';
-			let crater = this.element.querySelector('.crater-facebook-content');
+			let crater = this.element.find('.crater-facebook-content');
 			if (crater) crater.remove();
 
 			let facebookContent = this.elementModifier.createElement({
@@ -9284,7 +9292,7 @@ class Facebook extends CraterWebParts {
 								element: 'input', name: 'pageUrl',
 								value:
 									//this.defaultURL
-									this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.fb-page ').dataset.href
+									this.sharePoint.properties.pane.content[this.key].draft.dom.find('.fb-page ').dataset.href
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'Tabs', value: this.sharePoint.properties.pane.content[this.key].settings.facebook.tabs
@@ -9351,20 +9359,20 @@ class Facebook extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector(".crater-property-content").monitor();
+		this.paneContent = this.sharePoint.app.find(".crater-property-content").monitor();
 
-		let titlePane = this.paneContent.querySelector('.title-pane');
-		let sizePane = this.paneContent.querySelector('.size-pane');
+		let titlePane = this.paneContent.find('.title-pane');
+		let sizePane = this.paneContent.find('.size-pane');
 		let facebook = this.sharePoint.properties.pane.content[this.key].settings.facebook;
 
 
-		titlePane.querySelector('#pageUrl-cell').onChanged(value => {
+		titlePane.find('#pageUrl-cell').onChanged(value => {
 			facebook.url = value;
 		});
-		titlePane.querySelector('#Tabs-cell').onChanged(value => {
+		titlePane.find('#Tabs-cell').onChanged(value => {
 			facebook.tabs = value;
 		});
-		let coverCell = titlePane.querySelector('#hide-cover-cell');
+		let coverCell = titlePane.find('#hide-cover-cell');
 		coverCell.addEventListener('change', e => {
 			switch (coverCell.value.toLowerCase()) {
 				case 'show':
@@ -9378,7 +9386,7 @@ class Facebook extends CraterWebParts {
 			}
 		});
 
-		let hideFacePileCell = titlePane.querySelector('#hide-facepile-cell');
+		let hideFacePileCell = titlePane.find('#hide-facepile-cell');
 		hideFacePileCell.addEventListener('change', e => {
 			switch (hideFacePileCell.value.toLowerCase()) {
 				case 'show':
@@ -9392,7 +9400,7 @@ class Facebook extends CraterWebParts {
 			}
 		});
 
-		let showHeaderCell = titlePane.querySelector('#small-header-cell');
+		let showHeaderCell = titlePane.find('#small-header-cell');
 		showHeaderCell.addEventListener('change', e => {
 			switch (showHeaderCell.value.toLowerCase()) {
 				case 'show':
@@ -9406,15 +9414,15 @@ class Facebook extends CraterWebParts {
 			}
 		});
 
-		sizePane.querySelector('#width-cell').onChanged(value => {
+		sizePane.find('#width-cell').onChanged(value => {
 			facebook.width = value;
 		});
 
-		sizePane.querySelector('#height-cell').onChanged(value => {
+		sizePane.find('#height-cell').onChanged(value => {
 			facebook.height = value;
 		});
 
-		let adaptCell = sizePane.querySelector('#container-width-cell');
+		let adaptCell = sizePane.find('#container-width-cell');
 		adaptCell.addEventListener('change', e => {
 			switch (adaptCell.value.toLowerCase()) {
 				case 'true':
@@ -9432,7 +9440,7 @@ class Facebook extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
 
@@ -9484,13 +9492,13 @@ class BeforeAfter extends CraterWebParts {
 
 	public rendered(params) {
 		this.element = params.element;
-		const slider = this.element.querySelector('.crater-beforeAfter-contents').querySelector('.crater-handle');
+		const slider = this.element.find('.crater-beforeAfter-contents').find('.crater-handle');
 		let isDown = false;
-		let resizeDiv = this.element.querySelector('.crater-beforeAfter-contents').querySelector('.crater-after');
-		let containerWidth = this.element.querySelector('.crater-beforeAfter-contents').offsetWidth + 'px';
-		this.element.querySelector('.crater-after img').css({ "width": containerWidth });
+		let resizeDiv = this.element.find('.crater-beforeAfter-contents').find('.crater-after');
+		let containerWidth = this.element.find('.crater-beforeAfter-contents').offsetWidth + 'px';
+		this.element.find('.crater-after img').css({ "width": containerWidth });
 
-		this.drags(slider, resizeDiv, this.element.querySelector('.crater-beforeAfter-contents'));
+		this.drags(slider, resizeDiv, this.element.find('.crater-beforeAfter-contents'));
 	}
 
 	private drags(dragElement, resizeElement, container): any {
@@ -9524,7 +9532,7 @@ class BeforeAfter extends CraterWebParts {
 				// Set the new values for the slider and the handle. 
 				// Bind mouseup events to stop dragging.
 
-				let draggable = container.querySelector('.crater-draggable');
+				let draggable = container.find('.crater-draggable');
 
 				if (!func.isnull(draggable)) draggable.css({ 'left': widthValue });
 				container.addEventListener('mouseup', function () {
@@ -9532,7 +9540,7 @@ class BeforeAfter extends CraterWebParts {
 					resizeElement.classList.remove('crater-resizable');
 				});
 
-				let resizable = container.querySelector('.crater-resizable');
+				let resizable = container.find('.crater-resizable');
 				if (!func.isnull(resizable)) resizable.css({ 'width': widthValue });
 			});
 			container.addEventListener('mouseup', () => {
@@ -9575,7 +9583,7 @@ class BeforeAfter extends CraterWebParts {
 								element: "img", name: "before",
 								dataAttributes: {
 									style: { width: '400px', height: '400px' },
-									src: this.element.querySelector('.crater-beforeAfter-contents').querySelector('.crater-beforeImage').src
+									src: this.element.find('.crater-beforeAfter-contents').find('.crater-beforeImage').src
 								}
 							}),
 							this.elementModifier.cell({
@@ -9583,7 +9591,7 @@ class BeforeAfter extends CraterWebParts {
 								name: 'after',
 								dataAttributes: {
 									style: { width: '400px', height: '400px' },
-									src: this.element.querySelector('.crater-beforeAfter-contents').querySelector('.crater-after').querySelector('.crater-afterImage').src
+									src: this.element.find('.crater-beforeAfter-contents').find('.crater-after').find('.crater-afterImage').src
 								}
 							})
 						]
@@ -9597,18 +9605,18 @@ class BeforeAfter extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let afterCell = this.paneContent.querySelector('#after-cell').parentNode;
+		let afterCell = this.paneContent.find('#after-cell').parentNode;
 		this.uploadImage({ parent: afterCell }, (image) => {
-			afterCell.querySelector('#after-cell').src = image.src;
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.beforeAfter-contents').querySelector('.crater-after').querySelector('.afterImage').src = image.src;
+			afterCell.find('#after-cell').src = image.src;
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.beforeAfter-contents').find('.crater-after').find('.afterImage').src = image.src;
 		});
 
-		let beforeCell = this.paneContent.querySelector('#before-cell').parentNode;
+		let beforeCell = this.paneContent.find('#before-cell').parentNode;
 		this.uploadImage({ parent: beforeCell }, (image) => {
-			beforeCell.querySelector('#before-cell').src = image.src;
-			this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.beforeAfter-contents').querySelector('.beforeImage').src = image.src;
+			beforeCell.find('#before-cell').src = image.src;
+			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.beforeAfter-contents').find('.beforeImage').src = image.src;
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
@@ -9616,7 +9624,7 @@ class BeforeAfter extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
 			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
 
@@ -9693,8 +9701,8 @@ class Event extends CraterWebParts {
 			]
 		});
 
-		let content = event.querySelector(`.crater-event-content`);
-		let locationElement = content.querySelectorAll('.crater-event-content-task-location') as any;
+		let content = event.find(`.crater-event-content`);
+		let locationElement = content.findAll('.crater-event-content-task-location') as any;
 
 		for (let each of params.source) {
 			content.makeElement(
@@ -9752,8 +9760,8 @@ class Event extends CraterWebParts {
 		else if (this.sharePoint.properties.pane.content[key].content !== '') {
 			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
 		} else {
-			let eventList = this.sharePoint.properties.pane.content[key].draft.dom.querySelector('.crater-event-content');
-			let dateListRows = eventList.querySelectorAll('.crater-event-content-item');
+			let eventList = this.sharePoint.properties.pane.content[key].draft.dom.find('.crater-event-content');
+			let dateListRows = eventList.findAll('.crater-event-content-item');
 			this.paneContent.makeElement({
 				element: 'div', children: [
 					this.elementModifier.createElement(
@@ -9773,22 +9781,22 @@ class Event extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [//create the cells for changing crater event title
 							this.elementModifier.cell({
-								element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: this.element.querySelector('.crater-event-title-imgIcon').src }
+								element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: this.element.find('.crater-event-title-imgIcon').src }
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'title', value: this.element.querySelector('.crater-event-title').textContent
+								element: 'input', name: 'title', value: this.element.find('.crater-event-title').textContent
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'backgroundcolor', value: this.element.querySelector('.crater-event-title').css()['background-color']
+								element: 'input', name: 'backgroundcolor', value: this.element.find('.crater-event-title').css()['background-color']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.querySelector('.crater-event-title').css().color
+								element: 'input', name: 'color', value: this.element.find('.crater-event-title').css().color
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontsize', value: this.element.querySelector('.crater-event-title').css()['font-size']
+								element: 'input', name: 'fontsize', value: this.element.find('.crater-event-title').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'height', value: this.element.querySelector('.crater-event-title').css()['height'] || ''
+								element: 'input', name: 'height', value: this.element.find('.crater-event-title').css()['height'] || ''
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleTitle', options: ['show', 'hide']
@@ -9810,10 +9818,10 @@ class Event extends CraterWebParts {
 					{
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'iconWidth', value: this.element.querySelector('.crater-event-content-item-icon-image').css()['width']
+								element: 'input', name: 'iconWidth', value: this.element.find('.crater-event-content-item-icon-image').css()['width']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'iconHeight', value: this.element.querySelector('.crater-event-content-item-icon-image').css()['height']
+								element: 'input', name: 'iconHeight', value: this.element.find('.crater-event-content-item-icon-image').css()['height']
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleIcon', options: ['show', 'hide']
@@ -9835,13 +9843,13 @@ class Event extends CraterWebParts {
 					{
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-event-content-task-caption').css()['font-size']
+								element: 'input', name: 'fontSize', value: this.element.find('.crater-event-content-task-caption').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-event-content-task-caption').css()['font-family']
+								element: 'input', name: 'fontFamily', value: this.element.find('.crater-event-content-task-caption').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'eventColor', value: this.element.querySelector('.crater-event-content-task-caption').css()['color']
+								element: 'input', name: 'eventColor', value: this.element.find('.crater-event-content-task-caption').css()['color']
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleTitle', options: ['show', 'hide']
@@ -9863,13 +9871,13 @@ class Event extends CraterWebParts {
 					{
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-event-content-task-location-place').css()['font-size']
+								element: 'input', name: 'fontSize', value: this.element.find('.crater-event-content-task-location-place').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-event-content-task-location-place').css()['font-family']
+								element: 'input', name: 'fontFamily', value: this.element.find('.crater-event-content-task-location-place').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'locationColor', value: this.element.querySelector('.crater-event-content-task-location-place').css().color
+								element: 'input', name: 'locationColor', value: this.element.find('.crater-event-content-task-location-place').css().color
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleLocation', options: ['show', 'hide']
@@ -9891,13 +9899,13 @@ class Event extends CraterWebParts {
 					{
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-event-content-task-location-duration').css()['font-size']
+								element: 'input', name: 'fontSize', value: this.element.find('.crater-event-content-task-location-duration').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-event-content-task-location-duration').css()['font-family']
+								element: 'input', name: 'fontFamily', value: this.element.find('.crater-event-content-task-location-duration').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'durationColor', value: this.element.querySelector('.crater-event-content-task-location-duration').css()['color']
+								element: 'input', name: 'durationColor', value: this.element.find('.crater-event-content-task-location-duration').css()['color']
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleDuration', options: ['show', 'hide']
@@ -9919,16 +9927,16 @@ class Event extends CraterWebParts {
 					{
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'daySize', value: this.element.querySelector('.crater-event-content-item-date-day').css()['font-size']
+								element: 'input', name: 'daySize', value: this.element.find('.crater-event-content-item-date-day').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'monthSize', value: this.element.querySelector('.crater-event-content-item-date-month').css()['font-size']
+								element: 'input', name: 'monthSize', value: this.element.find('.crater-event-content-item-date-month').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontFamily', value: this.element.querySelector('.crater-event-content-item-date').css()['font-family']
+								element: 'input', name: 'fontFamily', value: this.element.find('.crater-event-content-item-date').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'dateColor', value: this.element.querySelector('.crater-event-content-item-date').css()['color']
+								element: 'input', name: 'dateColor', value: this.element.find('.crater-event-content-item-date').css()['color']
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleDate', options: ['show', 'hide']
@@ -9961,10 +9969,10 @@ class Event extends CraterWebParts {
 		let strip = (value) => {
 			return value.split(' ');
 		};
-		let cTime = strip(this.element.querySelector('#startTime').textContent)[0];
-		let dTime = this.element.querySelector('#endTime').textContent;
-		// let cDay = this.element.querySelector('.crater-event-content-item-date-day').textContent;
-		// let cMonth = this.element.querySelector('.crater-event-content-item-date-month').textContent;
+		let cTime = strip(this.element.find('#startTime').textContent)[0];
+		let dTime = this.element.find('#endTime').textContent;
+		// let cDay = this.element.find('.crater-event-content-item-date-day').textContent;
+		// let cMonth = this.element.find('.crater-event-content-item-date-month').textContent;
 		// let gDate = new Date(`${cMonth} ${cDay}, 2019`);
 
 
@@ -9975,19 +9983,19 @@ class Event extends CraterWebParts {
 				children: [
 					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-event-content-item' }),
 					this.elementModifier.cell({
-						element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.list[i].querySelector('#icon').src }
+						element: 'img', name: 'icon', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.list[i].find('#icon').src }
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Task', attributes: { class: 'taskValue' }, value: params.list[i].querySelector('#eventTask').textContent
+						element: 'input', name: 'Task', attributes: { class: 'taskValue' }, value: params.list[i].find('#eventTask').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Location', attributes: { class: 'locationValue' }, value: params.list[i].querySelector('#location').textContent
+						element: 'input', name: 'Location', attributes: { class: 'locationValue' }, value: params.list[i].find('#location').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Day', attribute: { class: 'crater-date dateValue' }, value: params.list[i].querySelector('#Day').textContent
+						element: 'input', name: 'Day', attribute: { class: 'crater-date dateValue' }, value: params.list[i].find('#Day').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Month', attribute: { class: 'crater-date dateValue' }, value: params.list[i].querySelector('#Month').textContent
+						element: 'input', name: 'Month', attribute: { class: 'crater-date dateValue' }, value: params.list[i].find('#Month').textContent
 					}),
 					this.elementModifier.cell({
 						element: 'input', name: 'start', attributes: { class: 'startValue' }, value: cTime
@@ -10006,10 +10014,10 @@ class Event extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 		//get the content and all the events
-		let eventList = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-event-content');
-		let eventListRow = eventList.querySelectorAll('.crater-event-content-item');
+		let eventList = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-event-content');
+		let eventListRow = eventList.findAll('.crater-event-content-item');
 
 		let eventListRowPanePrototype = this.elementModifier.createElement({//create a row on the property pane
 			element: 'div',
@@ -10053,14 +10061,14 @@ class Event extends CraterWebParts {
 					}),
 					{
 						element: 'div', attributes: { class: 'crater-event-content-task' }, children: [
-							{ element: 'div', attributes: { class: 'crater-event-content-task-caption', id: 'eventTask' }, text: this.paneContent.querySelector(`.taskValue input`).value },
+							{ element: 'div', attributes: { class: 'crater-event-content-task-caption', id: 'eventTask' }, text: this.paneContent.find(`.taskValue input`).value },
 							{
 								element: 'div', attributes: { class: 'crater-event-content-task-location' }, children: [
 									{ element: 'img', attributes: { src: 'https://img.icons8.com/small/16/000000/clock.png' } },
 									{ element: 'span', attributes: { class: 'crater-event-content-task-location-duration startTime' }, text: '' },
 									{ element: 'span', attributes: { class: 'crater-event-content-task-location-duration endTime' }, text: '' },
 									{ element: 'img', attributes: { src: 'https://img.icons8.com/small/16/000000/previous--location.png' } },
-									{ element: 'span', attributes: { class: 'crater-event-content-task-location-place' }, text: this.paneContent.querySelector(`.locationValue input`).value }
+									{ element: 'span', attributes: { class: 'crater-event-content-task-location-place' }, text: this.paneContent.find(`.locationValue input`).value }
 								]
 							}
 						]
@@ -10078,50 +10086,50 @@ class Event extends CraterWebParts {
 
 		let eventRowHandler = (eventRowPane, eventRowDom) => {
 			eventRowPane.addEventListener('mouseover', event => {
-				eventRowPane.querySelector('.crater-content-options').css({ visibility: 'visible' });
+				eventRowPane.find('.crater-content-options').css({ visibility: 'visible' });
 			});
 
 			eventRowPane.addEventListener('mouseout', event => {
-				eventRowPane.querySelector('.crater-content-options').css({ visibility: 'hidden' });
+				eventRowPane.find('.crater-content-options').css({ visibility: 'hidden' });
 			});
 
-			let iconCellParent = eventRowPane.querySelector('#icon-cell').parentNode;
+			let iconCellParent = eventRowPane.find('#icon-cell').parentNode;
 			this.uploadImage({ parent: iconCellParent }, (image) => {
-				iconCellParent.querySelector('#icon-cell').src = image.src;
-				eventRowDom.querySelector('.crater-event-content-item-icon-image').src = image.src;
+				iconCellParent.find('#icon-cell').src = image.src;
+				eventRowDom.find('.crater-event-content-item-icon-image').src = image.src;
 			});
 
 			// get the values of the newly created row on the property - pane
-			eventRowPane.querySelector('#Task-cell').onChanged(value => {
-				eventRowDom.querySelector('.crater-event-content-task-caption').innerHTML = value;
+			eventRowPane.find('#Task-cell').onChanged(value => {
+				eventRowDom.find('.crater-event-content-task-caption').innerHTML = value;
 			});
 
-			eventRowPane.querySelector('#Location-cell').onChanged(value => {
-				eventRowDom.querySelector('.stateCountry').innerHTML = value;
+			eventRowPane.find('#Location-cell').onChanged(value => {
+				eventRowDom.find('.stateCountry').innerHTML = value;
 			});
 
-			eventRowPane.querySelector('#Day-cell').onChanged(value => {
-				eventRowDom.querySelector('.crater-event-content-item-date-day').innerHTML = value;
+			eventRowPane.find('#Day-cell').onChanged(value => {
+				eventRowDom.find('.crater-event-content-item-date-day').innerHTML = value;
 			});
 
-			eventRowPane.querySelector('#Month-cell').onChanged(value => {
-				eventRowDom.querySelector('.crater-event-content-item-date-month').innerHTML = value;
+			eventRowPane.find('#Month-cell').onChanged(value => {
+				eventRowDom.find('.crater-event-content-item-date-month').innerHTML = value;
 			});
 
-			eventRowPane.querySelector('#start-cell').onChanged(value => {
-				eventRowDom.querySelector('.startTime').innerHTML = value + ` - `;
+			eventRowPane.find('#start-cell').onChanged(value => {
+				eventRowDom.find('.startTime').innerHTML = value + ` - `;
 			});
 
-			eventRowPane.querySelector('#end-cell').onChanged(value => {
-				eventRowDom.querySelector('.endTime').innerHTML = value;
+			eventRowPane.find('#end-cell').onChanged(value => {
+				eventRowDom.find('.endTime').innerHTML = value;
 			});
 
-			eventRowPane.querySelector('.delete-crater-event-content-item').addEventListener('click', event => {
+			eventRowPane.find('.delete-crater-event-content-item').addEventListener('click', event => {
 				eventRowDom.remove();
 				eventRowPane.remove();
 			});
 
-			eventRowPane.querySelector('.add-before-crater-event-content-item').addEventListener('click', event => {
+			eventRowPane.find('.add-before-crater-event-content-item').addEventListener('click', event => {
 				let newEventRowDom = eventListRowDomPrototype.cloneNode(true);
 				let neweventRowPane = eventListRowPanePrototype.cloneNode(true);
 
@@ -10130,7 +10138,7 @@ class Event extends CraterWebParts {
 				eventRowHandler(neweventRowPane, newEventRowDom);
 			});
 
-			eventRowPane.querySelector('.add-after-crater-event-content-item').addEventListener('click', event => {
+			eventRowPane.find('.add-after-crater-event-content-item').addEventListener('click', event => {
 				let newEventRowDom = eventListRowDomPrototype.cloneNode(true);
 				let newEventRowPane = eventListRowPanePrototype.cloneNode(true);
 
@@ -10143,285 +10151,285 @@ class Event extends CraterWebParts {
 
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 
-		let titlePane = this.paneContent.querySelector('.title-pane');
-		let eventIconRowPane = this.paneContent.querySelector('.event-icon-row-pane');
-		let eventTitleRowPane = this.paneContent.querySelector('.event-title-row-pane');
-		let eventLocationRowPane = this.paneContent.querySelector('.event-location-row-pane');
-		let eventDurationRowPane = this.paneContent.querySelector('.event-duration-row-pane');
-		let eventDateRowPane = this.paneContent.querySelector('.event-date-row-pane');
+		let titlePane = this.paneContent.find('.title-pane');
+		let eventIconRowPane = this.paneContent.find('.event-icon-row-pane');
+		let eventTitleRowPane = this.paneContent.find('.event-title-row-pane');
+		let eventLocationRowPane = this.paneContent.find('.event-location-row-pane');
+		let eventDurationRowPane = this.paneContent.find('.event-duration-row-pane');
+		let eventDateRowPane = this.paneContent.find('.event-date-row-pane');
 
-		let iconParent = titlePane.querySelector('#icon-cell').parentNode;
+		let iconParent = titlePane.find('#icon-cell').parentNode;
 
-		let eventColorParent = eventTitleRowPane.querySelector('#eventColor-cell').parentNode;
-		this.pickColor({ parent: eventColorParent, cell: eventColorParent.querySelector('#eventColor-cell') }, (color) => {
-			draftDom.querySelectorAll('.crater-event-content-task-caption').forEach(element => {
+		let eventColorParent = eventTitleRowPane.find('#eventColor-cell').parentNode;
+		this.pickColor({ parent: eventColorParent, cell: eventColorParent.find('#eventColor-cell') }, (color) => {
+			draftDom.findAll('.crater-event-content-task-caption').forEach(element => {
 				element.css({ color });//get the color of the event font in the draftDom
 			});
-			eventColorParent.querySelector('#eventColor-cell').value = color;
-			eventColorParent.querySelector('#eventColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+			eventColorParent.find('#eventColor-cell').value = color;
+			eventColorParent.find('#eventColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
 		});
 
-		let dateColorParent = eventDateRowPane.querySelector('#dateColor-cell').parentNode;
-		this.pickColor({ parent: dateColorParent, cell: dateColorParent.querySelector('#dateColor-cell') }, (color) => {
-			draftDom.querySelectorAll('.crater-event-content-item-date').forEach(element => {
+		let dateColorParent = eventDateRowPane.find('#dateColor-cell').parentNode;
+		this.pickColor({ parent: dateColorParent, cell: dateColorParent.find('#dateColor-cell') }, (color) => {
+			draftDom.findAll('.crater-event-content-item-date').forEach(element => {
 				element.css({ color });//get the color of the event font in the draftDom
 			});
-			dateColorParent.querySelector('#dateColor-cell').value = color;
-			dateColorParent.querySelector('#dateColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+			dateColorParent.find('#dateColor-cell').value = color;
+			dateColorParent.find('#dateColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
 		});
 
-		let locationColorParent = eventLocationRowPane.querySelector('#locationColor-cell').parentNode;
-		this.pickColor({ parent: locationColorParent, cell: locationColorParent.querySelector('#locationColor-cell') }, (color) => {
-			draftDom.querySelectorAll('.crater-event-content-task-location-place').forEach(element => {
+		let locationColorParent = eventLocationRowPane.find('#locationColor-cell').parentNode;
+		this.pickColor({ parent: locationColorParent, cell: locationColorParent.find('#locationColor-cell') }, (color) => {
+			draftDom.findAll('.crater-event-content-task-location-place').forEach(element => {
 				element.css({ color });//get the color of the event font in the draftDom
 			});
-			locationColorParent.querySelector('#locationColor-cell').value = color;
-			locationColorParent.querySelector('#locationColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+			locationColorParent.find('#locationColor-cell').value = color;
+			locationColorParent.find('#locationColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
 		});
 
-		let durationColorParent = eventDurationRowPane.querySelector('#durationColor-cell').parentNode;
-		this.pickColor({ parent: durationColorParent, cell: durationColorParent.querySelector('#durationColor-cell') }, (color) => {
-			draftDom.querySelectorAll('.crater-event-content-task-location-duration').forEach(element => {
+		let durationColorParent = eventDurationRowPane.find('#durationColor-cell').parentNode;
+		this.pickColor({ parent: durationColorParent, cell: durationColorParent.find('#durationColor-cell') }, (color) => {
+			draftDom.findAll('.crater-event-content-task-location-duration').forEach(element => {
 				element.css({ color });//get the color of the event font in the draftDom
 			});
-			durationColorParent.querySelector('#durationColor-cell').value = color;
-			durationColorParent.querySelector('#durationColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
+			durationColorParent.find('#durationColor-cell').value = color;
+			durationColorParent.find('#durationColor-cell').setAttribute('value', color); //set the value of the eventColor cell in the pane to the color
 		});
 		this.uploadImage({ parent: iconParent }, (image) => {
-			iconParent.querySelector('#icon-cell').src = image.src;
-			draftDom.querySelector('.crater-event-title-imgIcon').src = image.src;
+			iconParent.find('#icon-cell').src = image.src;
+			draftDom.find('.crater-event-title-imgIcon').src = image.src;
 		});
-		titlePane.querySelector('#title-cell').onChanged(value => {
-			draftDom.querySelector('.crater-event-title-captionTitle').innerHTML = value;
-		});
-
-		let backgroundColorCell = titlePane.querySelector('#backgroundcolor-cell').parentNode;
-		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
-			draftDom.querySelector('.crater-event-title').css({ backgroundColor });
-			backgroundColorCell.querySelector('#backgroundcolor-cell').value = backgroundColor;
-			backgroundColorCell.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor);
+		titlePane.find('#title-cell').onChanged(value => {
+			draftDom.find('.crater-event-title-captionTitle').innerHTML = value;
 		});
 
-		let colorCell = titlePane.querySelector('#color-cell').parentNode;
-		this.pickColor({ parent: colorCell, cell: colorCell.querySelector('#color-cell') }, (color) => {
-			draftDom.querySelector('.crater-event-title').css({ color });
-			colorCell.querySelector('#color-cell').value = color;
-			colorCell.querySelector('#color-cell').setAttribute('value', color);
+		let backgroundColorCell = titlePane.find('#backgroundcolor-cell').parentNode;
+		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#backgroundcolor-cell') }, (backgroundColor) => {
+			draftDom.find('.crater-event-title').css({ backgroundColor });
+			backgroundColorCell.find('#backgroundcolor-cell').value = backgroundColor;
+			backgroundColorCell.find('#backgroundcolor-cell').setAttribute('value', backgroundColor);
+		});
+
+		let colorCell = titlePane.find('#color-cell').parentNode;
+		this.pickColor({ parent: colorCell, cell: colorCell.find('#color-cell') }, (color) => {
+			draftDom.find('.crater-event-title').css({ color });
+			colorCell.find('#color-cell').value = color;
+			colorCell.find('#color-cell').setAttribute('value', color);
 		});
 
 
-		titlePane.querySelector('#fontsize-cell').onChanged(value => {
-			draftDom.querySelector('.crater-event-title').css({ fontSize: value });
+		titlePane.find('#fontsize-cell').onChanged(value => {
+			draftDom.find('.crater-event-title').css({ fontSize: value });
 		});
 
-		titlePane.querySelector('#height-cell').onChanged(value => {
-			draftDom.querySelector('.crater-event-title').css({ height: value });
+		titlePane.find('#height-cell').onChanged(value => {
+			draftDom.find('.crater-event-title').css({ height: value });
 		});
 
-		eventIconRowPane.querySelector('#iconWidth-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-event-content-item-icon-image').forEach(element => {
+		eventIconRowPane.find('#iconWidth-cell').onChanged(value => {
+			draftDom.findAll('.crater-event-content-item-icon-image').forEach(element => {
 				element.css({ width: value });
 			});
 		});
-		eventIconRowPane.querySelector('#iconHeight-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-event-content-item-icon-image').forEach(element => {
+		eventIconRowPane.find('#iconHeight-cell').onChanged(value => {
+			draftDom.findAll('.crater-event-content-item-icon-image').forEach(element => {
 				element.css({ height: value });
 			});
 		});
 
-		eventTitleRowPane.querySelector('#fontSize-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-event-content-task-caption').forEach(element => {
+		eventTitleRowPane.find('#fontSize-cell').onChanged(value => {
+			draftDom.findAll('.crater-event-content-task-caption').forEach(element => {
 				element.css({ fontSize: value });
 			});
 		});
-		eventTitleRowPane.querySelector('#fontFamily-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-event-content-task-caption').forEach(element => {
+		eventTitleRowPane.find('#fontFamily-cell').onChanged(value => {
+			draftDom.findAll('.crater-event-content-task-caption').forEach(element => {
 				element.css({ fontFamily: value });
 			});
 		});
 
-		eventLocationRowPane.querySelector('#fontSize-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-event-content-task-location-place').forEach(element => {
+		eventLocationRowPane.find('#fontSize-cell').onChanged(value => {
+			draftDom.findAll('.crater-event-content-task-location-place').forEach(element => {
 				element.css({ fontSize: value });
 			});
 		});
-		eventLocationRowPane.querySelector('#fontFamily-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-event-content-task-location-place').forEach(element => {
+		eventLocationRowPane.find('#fontFamily-cell').onChanged(value => {
+			draftDom.findAll('.crater-event-content-task-location-place').forEach(element => {
 				element.css({ fontFamily: value });
 			});
 		});
 
-		eventDurationRowPane.querySelector('#fontSize-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-event-content-task-location-duration').forEach(element => {
+		eventDurationRowPane.find('#fontSize-cell').onChanged(value => {
+			draftDom.findAll('.crater-event-content-task-location-duration').forEach(element => {
 				element.css({ fontSize: value });
 			});
 		});
-		eventDurationRowPane.querySelector('#fontFamily-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-event-content-task-location-duration').forEach(element => {
+		eventDurationRowPane.find('#fontFamily-cell').onChanged(value => {
+			draftDom.findAll('.crater-event-content-task-location-duration').forEach(element => {
 				element.css({ fontFamily: value });
 			});
 		});
 
-		eventDateRowPane.querySelector('#daySize-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-event-content-item-date-day').forEach(element => {
+		eventDateRowPane.find('#daySize-cell').onChanged(value => {
+			draftDom.findAll('.crater-event-content-item-date-day').forEach(element => {
 				element.css({ fontSize: value });
 			});
 		});
-		eventDateRowPane.querySelector('#monthSize-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-event-content-item-date-month').forEach(element => {
+		eventDateRowPane.find('#monthSize-cell').onChanged(value => {
+			draftDom.findAll('.crater-event-content-item-date-month').forEach(element => {
 				element.css({ fontSize: value });
 			});
 		});
 
-		eventDateRowPane.querySelector('#fontFamily-cell').onChanged(value => {
-			draftDom.querySelectorAll('.crater-event-content-item-date').forEach(element => {
+		eventDateRowPane.find('#fontFamily-cell').onChanged(value => {
+			draftDom.findAll('.crater-event-content-item-date').forEach(element => {
 				element.css({ fontFamily: value });
 			});
 		});
 		//appends the dom and pane prototypes to the dom and pane when you click add new
-		this.paneContent.querySelector('.new-component').addEventListener('click', event => {
+		this.paneContent.find('.new-component').addEventListener('click', event => {
 			let newEventRowDom = eventListRowDomPrototype.cloneNode(true);
 			let newEventRowPane = eventListRowPanePrototype.cloneNode(true);
 
 			eventList.append(newEventRowDom);//c
-			this.paneContent.querySelector('.list-pane').append(newEventRowPane);
+			this.paneContent.find('.list-pane').append(newEventRowPane);
 			eventRowHandler(newEventRowPane, newEventRowDom);
 		});
 
-		let paneItems = this.paneContent.querySelectorAll('.crater-event-item-pane');
+		let paneItems = this.paneContent.findAll('.crater-event-item-pane');
 		paneItems.forEach((eventRow, position) => {
 			eventRowHandler(eventRow, eventListRow[position]);
 		});
 
-		let showHeader = titlePane.querySelector('#toggleTitle-cell');
+		let showHeader = titlePane.find('#toggleTitle-cell');
 		showHeader.addEventListener('change', e => {
 
 			switch (showHeader.value.toLowerCase()) {
 				case "hide":
-					draftDom.querySelectorAll('.crater-event-title').forEach(element => {
+					draftDom.findAll('.crater-event-title').forEach(element => {
 						element.style.display = "none";
 					});
 					break;
 				case "show":
-					draftDom.querySelectorAll('.crater-event-title').forEach(element => {
+					draftDom.findAll('.crater-event-title').forEach(element => {
 						element.style.display = "flex";
 					});
 					break;
 				default:
-					draftDom.querySelectorAll('.crater-event-title').forEach(element => {
+					draftDom.findAll('.crater-event-title').forEach(element => {
 						element.style.display = "none";
 					});
 			}
 		});
 
 		//to hide or show properties
-		let showIcon = eventIconRowPane.querySelector('#toggleIcon-cell');
+		let showIcon = eventIconRowPane.find('#toggleIcon-cell');
 
 		showIcon.addEventListener('change', e => {
 
 			switch (showIcon.value.toLowerCase()) {
 				case "hide":
-					draftDom.querySelectorAll('.crater-event-content-item-icon-image').forEach(element => {
+					draftDom.findAll('.crater-event-content-item-icon-image').forEach(element => {
 						element.style.display = "none";
 					});
 					break;
 				case "show":
-					draftDom.querySelectorAll('.crater-event-content-item-icon-image').forEach(element => {
+					draftDom.findAll('.crater-event-content-item-icon-image').forEach(element => {
 						element.style.display = "block";
 					});
 					break;
 				default:
-					draftDom.querySelectorAll('.crater-event-content-item-icon-image').forEach(element => {
+					draftDom.findAll('.crater-event-content-item-icon-image').forEach(element => {
 						element.style.display = "none";
 					});
 			}
 		});
 
-		let showTitle = eventTitleRowPane.querySelector('#toggleTitle-cell');
+		let showTitle = eventTitleRowPane.find('#toggleTitle-cell');
 		showTitle.addEventListener('change', e => {
 
 			switch (showTitle.value.toLowerCase()) {
 				case "hide":
-					draftDom.querySelectorAll('.crater-event-content-task-caption').forEach(element => {
+					draftDom.findAll('.crater-event-content-task-caption').forEach(element => {
 						element.style.visibility = "hidden";
 					});
 					break;
 				case "show":
-					draftDom.querySelectorAll('.crater-event-content-task-caption').forEach(element => {
+					draftDom.findAll('.crater-event-content-task-caption').forEach(element => {
 						element.style.visibility = "visible";
 					});
 					break;
 				default:
-					draftDom.querySelectorAll('.crater-event-content-task-caption').forEach(element => {
+					draftDom.findAll('.crater-event-content-task-caption').forEach(element => {
 						element.style.visibility = "hidden";
 					});
 			}
 		});
 
-		let showLocation = eventLocationRowPane.querySelector('#toggleLocation-cell');
+		let showLocation = eventLocationRowPane.find('#toggleLocation-cell');
 		showLocation.addEventListener('change', e => {
 
 			switch (showLocation.value.toLowerCase()) {
 				case "hide":
-					draftDom.querySelectorAll('.crater-event-content-task-location-place').forEach(element => {
+					draftDom.findAll('.crater-event-content-task-location-place').forEach(element => {
 						element.style.visibility = "hidden";
 						element.previousSibling.style.visibility = "hidden";
 					});
 					break;
 				case "show":
-					draftDom.querySelectorAll('.crater-event-content-task-location-place').forEach(element => {
+					draftDom.findAll('.crater-event-content-task-location-place').forEach(element => {
 						element.style.visibility = "visible";
 						element.previousSibling.style.visibility = "visible";
 					});
 					break;
 				default:
-					draftDom.querySelectorAll('.crater-event-content-task-location-place').forEach(element => {
+					draftDom.findAll('.crater-event-content-task-location-place').forEach(element => {
 						element.style.visibility = "hidden";
 						element.previousSibling.style.visibility = "hidden";
 					});
 			}
 		});
 
-		let showDuration = eventDurationRowPane.querySelector('#toggleDuration-cell');
+		let showDuration = eventDurationRowPane.find('#toggleDuration-cell');
 		showDuration.addEventListener('change', e => {
 
 			switch (showDuration.value.toLowerCase()) {
 				case "hide":
-					draftDom.querySelectorAll('.crater-event-content-task-location-duration').forEach(element => {
+					draftDom.findAll('.crater-event-content-task-location-duration').forEach(element => {
 						element.style.visibility = "hidden";
 						element.previousSibling.style.visibility = "hidden";
 					});
 					break;
 				case "show":
-					draftDom.querySelectorAll('.crater-event-content-task-location-duration').forEach(element => {
+					draftDom.findAll('.crater-event-content-task-location-duration').forEach(element => {
 						element.style.visibility = "visible";
 						element.previousSibling.style.visibility = "visible";
 					});
 					break;
 				default:
-					draftDom.querySelectorAll('.crater-event-content-task-location-duration').forEach(element => {
+					draftDom.findAll('.crater-event-content-task-location-duration').forEach(element => {
 						element.style.visibility = "hidden";
 						element.previousSibling.style.visibility = "hidden";
 					});
 			}
 		});
 
-		let showDate = eventDateRowPane.querySelector('#toggleDate-cell');
+		let showDate = eventDateRowPane.find('#toggleDate-cell');
 		showDate.addEventListener('change', e => {
 
 			switch (showDate.value.toLowerCase()) {
 				case "hide":
-					draftDom.querySelectorAll('.crater-event-content-item-date').forEach(element => {
+					draftDom.findAll('.crater-event-content-item-date').forEach(element => {
 						element.style.display = "none";
 					});
 					break;
 				case "show":
-					draftDom.querySelectorAll('.crater-event-content-item-date').forEach(element => {
+					draftDom.findAll('.crater-event-content-item-date').forEach(element => {
 						element.style.display = "block";
 					});
 					break;
 				default:
-					draftDom.querySelectorAll('.crater-event-content-item-date').forEach(element => {
+					draftDom.findAll('.crater-event-content-item-date').forEach(element => {
 						element.style.display = "none";
 					});
 			}
@@ -10432,7 +10440,7 @@ class Event extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = draftDom.innerHTML;//upate the webpart
 			this.element.css(draftDom.css());
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
@@ -10445,7 +10453,7 @@ class Event extends CraterWebParts {
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
-		let paneConnection = this.sharePoint.app.querySelector('.crater-property-connection');
+		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
 
 		let updateWindow = this.elementModifier.createForm({
 			title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
@@ -10465,27 +10473,27 @@ class Event extends CraterWebParts {
 
 		let data: any = {};
 		let source: any;
-		updateWindow.querySelector('#update-element').addEventListener('click', event => {
+		updateWindow.find('#update-element').addEventListener('click', event => {
 			event.preventDefault();
-			data.title = updateWindow.querySelector('#meta-data-title').value;
-			data.icon = updateWindow.querySelector('#meta-data-icon').value;
-			data.day = updateWindow.querySelector('#meta-data-day').value;
-			data.month = updateWindow.querySelector('#meta-data-month').value;
-			data.location = updateWindow.querySelector('#meta-data-location').value;
-			data.start = updateWindow.querySelector('#meta-data-start').value;
-			data.end = updateWindow.querySelector('#meta-data-end').value;
+			data.title = updateWindow.find('#meta-data-title').value;
+			data.icon = updateWindow.find('#meta-data-icon').value;
+			data.day = updateWindow.find('#meta-data-day').value;
+			data.month = updateWindow.find('#meta-data-month').value;
+			data.location = updateWindow.find('#meta-data-location').value;
+			data.start = updateWindow.find('#meta-data-start').value;
+			data.end = updateWindow.find('#meta-data-end').value;
 			source = func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
-			draftDom.querySelector('.crater-event-content').innerHTML = newContent.querySelector('.crater-event-content').innerHTML;
+			draftDom.find('.crater-event-content').innerHTML = newContent.find('.crater-event-content').innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
-			this.paneContent.querySelector('.list-pane').innerHTML = this.generatePaneContent({ list: newContent.querySelectorAll('.crater-event-content-item') }).innerHTML;
+			this.paneContent.find('.list-pane').innerHTML = this.generatePaneContent({ list: newContent.findAll('.crater-event-content-item') }).innerHTML;
 			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
 		if (!func.isnull(paneConnection)) {
-			paneConnection.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
@@ -10604,25 +10612,25 @@ class Power extends CraterWebParts {
 		</div>
 		`;
 
-		power.querySelector('.login_form').innerHTML += form;
+		power.find('.login_form').innerHTML += form;
 
 		this.key = power.dataset.key;
 		this.sharePoint.properties.pane.content[this.key].settings.myPowerBi = { showNavContent: '', showFilter: '', loginType: '', code: '', username: '', tenantID: "90fa49f0-0a6c-4170-abed-92ed96ba67ca", clientSecret: 'FUq.Y0@BN4byWh6B8.H:et:?F/VX2-3a', password: '', clientId: '9605a407-7c23-4dc8-bd90-997fbc254d38', accessToken: '', embedToken: '', embedUrl: '', reports: [], reportName: [], groups: [], groupName: [], dashboards: [], dashBoardName: [], tiles: [], tileName: [], width: '100%', height: '300px' };
 		window.onerror = (msg, url, lineNumber, columnNumber, error) => {
 			console.log(msg, url, lineNumber, columnNumber, error);
 		};
-		power.querySelector('#master').addEventListener('click', event => {
-			let loginForm = power.querySelector('.login_form') as any;
-			let powerConnect = power.querySelector('.crater-power-connect') as any;
+		power.find('#master').addEventListener('click', event => {
+			let loginForm = power.find('.login_form') as any;
+			let powerConnect = power.find('.crater-power-connect') as any;
 
 			powerConnect.style.display = "none";
 			loginForm.style.display = 'block';
-			let username = power.querySelector('#power-username') as any;
-			let password = power.querySelector('#power-password') as any;
-			let errorDisplay = power.querySelector('#emptyField') as any;
-			let loginButton = power.querySelector('#login-submit') as any;
-			let cancelButton = power.querySelector('#cancelbtn') as any;
-			let renderBox = power.querySelector('#renderContainer') as any;
+			let username = power.find('#power-username') as any;
+			let password = power.find('#power-password') as any;
+			let errorDisplay = power.find('#emptyField') as any;
+			let loginButton = power.find('#login-submit') as any;
+			let cancelButton = power.find('#cancelbtn') as any;
+			let renderBox = power.find('#renderContainer') as any;
 
 			loginButton.addEventListener('click', e => {
 				e.preventDefault();
@@ -10642,11 +10650,11 @@ class Power extends CraterWebParts {
 							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups.length = 0;
 							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupName.length = 0;
 							this.getWorkSpace(aResponse);
-							renderBox.querySelector('#render-error').style.display = 'none';
+							renderBox.find('#render-error').style.display = 'none';
 							renderBox.style.display = "block";
 							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.loginType = 'master';
 							loginForm.style.display = "none";
-							if (renderBox.querySelector('.connected')) renderBox.querySelector('.connected').remove();
+							if (renderBox.find('.connected')) renderBox.find('.connected').remove();
 							renderBox.makeElement({
 								element: 'div', attributes: { class: 'connected' }, children: [
 									{ element: 'img', attributes: { alt: 'Master-User', src: this.image.loading2 } },
@@ -10659,9 +10667,9 @@ class Power extends CraterWebParts {
 									}
 								]
 							});
-							renderBox.querySelector('#master').addEventListener('click', ev => {
+							renderBox.find('#master').addEventListener('click', ev => {
 								loginButton.innerHTML = 'Login';
-								if (power.querySelector('.login_form').style.display = 'none') power.querySelector('.login_form').style.display = 'block';
+								if (power.find('.login_form').style.display = 'none') power.find('.login_form').style.display = 'block';
 							});
 
 
@@ -10672,11 +10680,11 @@ class Power extends CraterWebParts {
 
 			cancelButton.addEventListener('click', e => {
 				loginForm.style.display = 'none';
-				if (!renderBox.querySelector('.connected')) powerConnect.style.display = 'grid';
+				if (!renderBox.find('.connected')) powerConnect.style.display = 'grid';
 			});
 
 		});
-		power.querySelector('#normal').addEventListener('click', event => {
+		power.find('#normal').addEventListener('click', event => {
 			// this.checkConsent();
 			this.startCounter();
 			this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken = '';
@@ -10687,13 +10695,13 @@ class Power extends CraterWebParts {
 						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupName.length = 0;
 						this.getWorkSpace(access);
 						if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken && this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups.length !== 0) {
-							let powerConnect = power.querySelector('.crater-power-connect') as any;
+							let powerConnect = power.find('.crater-power-connect') as any;
 							powerConnect.style.display = "none";
-							let renderBox = power.querySelector('#renderContainer') as any;
-							renderBox.querySelector('#render-error').style.display = 'none';
+							let renderBox = power.find('#renderContainer') as any;
+							renderBox.find('#render-error').style.display = 'none';
 							renderBox.style.display = 'block';
-							power.querySelector('.crater-power-timer').style.display = "none";
-							if (renderBox.querySelector('.connected')) renderBox.querySelector('.connected').remove();
+							power.find('.crater-power-timer').style.display = "none";
+							if (renderBox.find('.connected')) renderBox.find('.connected').remove();
 							renderBox.makeElement({
 								element: 'div', attributes: { class: 'connected' }, children: [
 									{ element: 'img', attributes: { alt: 'Login', src: this.image.loading2 } },
@@ -10716,7 +10724,7 @@ class Power extends CraterWebParts {
 	}
 
 	public showLoading() {
-		let loadingButton = document.querySelector('#login-submit') as any;
+		let loadingButton = this.element.find('#login-submit') as any;
 		loadingButton.style.zIndex = 2;
 		loadingButton.render({
 			element: 'img', attributes: { class: 'crater-icon', src: this.sharePoint.images.loading, style: { width: '20px', height: '20px' } }
@@ -10740,19 +10748,19 @@ class Power extends CraterWebParts {
 	}
 	public startCounter() {
 		//@ts-ignore
-		document.querySelector('.crater-power-timer').style.display = 'block';
+		this.element.find('.crater-power-timer').style.display = 'block';
 		clearInterval(1);
 		setInterval(() => {
 			if (this.counter === 0) {
 				//@ts-ignore
-				document.querySelector('.crater-power-counter').render({
+				this.element.find('.crater-power-counter').render({
 					element: 'img', attributes: { class: 'crater-icon', src: this.sharePoint.images.loading, style: { width: '20px', height: '20px' } }
 				});
 			}
 			else {
 				this.counter--;
 				//@ts-ignore
-				document.querySelector('.crater-power-counter').textContent = 'Please wait ' + this.counter + ' Seconds';
+				this.element.find('.crater-power-counter').textContent = 'Please wait ' + this.counter + ' Seconds';
 			}
 		}, 1000);
 
@@ -10781,8 +10789,8 @@ class Power extends CraterWebParts {
 		}).catch(error => {
 			console.log(error.message);
 			//@ts-ignore
-			document.querySelector('#render-error').style.display = 'block';
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#render-error').style.display = 'block';
+			this.element.find('#render-text').textContent = error.message;
 		});
 
 		return promise;
@@ -10825,8 +10833,8 @@ class Power extends CraterWebParts {
 		}).catch(error => {
 			console.log(error.message);
 			//@ts-ignore
-			document.querySelector('#render-error').style.display = 'block';
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#render-error').style.display = 'block';
+			this.element.find('#render-text').textContent = error.message;
 		});
 
 		return promise;
@@ -10858,8 +10866,8 @@ class Power extends CraterWebParts {
 			rej(new Error('Sorry, there was an error'));
 		}).catch(error => {
 			//@ts-ignore
-			document.querySelector('#render-error').style.display = 'block';
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#render-error').style.display = 'block';
+			this.element.find('#render-text').textContent = error.message;
 		});
 
 		return promise;
@@ -10890,8 +10898,8 @@ class Power extends CraterWebParts {
 			rej(new Error('Sorry, there was an error'));
 		}).catch(error => {
 			//@ts-ignore
-			document.querySelector('#render-error').style.display = 'block';
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#render-error').style.display = 'block';
+			this.element.find('#render-text').textContent = error.message;
 		});
 
 		return promise;
@@ -10937,8 +10945,8 @@ class Power extends CraterWebParts {
 		}).catch(error => {
 			console.log(error.message);
 			//@ts-ignore
-			document.querySelector('#renderContainer').style.display = "block";
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#renderContainer').style.display = "block";
+			this.element.find('#render-text').textContent = error.message;
 
 		});
 
@@ -10980,8 +10988,8 @@ class Power extends CraterWebParts {
 		}).catch(error => {
 			console.log(error.message);
 			//@ts-ignore
-			document.querySelector('#renderContainer').style.display = "block";
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#renderContainer').style.display = "block";
+			this.element.find('#render-text').textContent = error.message;
 		});
 
 		return promise;
@@ -11031,8 +11039,8 @@ class Power extends CraterWebParts {
 		}).catch(error => {
 			console.log(error.message);
 			//@ts-ignore
-			document.querySelector('#renderContainer').style.display = "block";
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#renderContainer').style.display = "block";
+			this.element.find('#render-text').textContent = error.message;
 		});
 
 		return promise;
@@ -11074,8 +11082,8 @@ class Power extends CraterWebParts {
 		}).catch(error => {
 			console.log(error.message);
 			//@ts-ignore
-			document.querySelector('#render-error').style.display = 'block';
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#render-error').style.display = 'block';
+			this.element.find('#render-text').textContent = error.message;
 		});
 
 		return promise;
@@ -11104,8 +11112,8 @@ class Power extends CraterWebParts {
 		}).catch(error => {
 			console.log(error.message);
 			//@ts-ignore
-			document.querySelector('#render-error').style.display = 'block';
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#render-error').style.display = 'block';
+			this.element.find('#render-text').textContent = error.message;
 		});
 
 		return promise;
@@ -11137,8 +11145,8 @@ class Power extends CraterWebParts {
 		}).catch(error => {
 			console.log(error.message);
 			//@ts-ignore
-			document.querySelector('#render-error').style.display = 'block';
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#render-error').style.display = 'block';
+			this.element.find('#render-text').textContent = error.message;
 		});
 
 		return promise;
@@ -11165,8 +11173,8 @@ class Power extends CraterWebParts {
 		}).catch(error => {
 			console.log(error.message);
 			//@ts-ignore
-			document.querySelector('#render-error').style.display = 'block';
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#render-error').style.display = 'block';
+			this.element.find('#render-text').textContent = error.message;
 		});
 
 		return promise;
@@ -11194,8 +11202,8 @@ class Power extends CraterWebParts {
 		}).catch(error => {
 			console.log(error.message);
 			//@ts-ignore
-			document.querySelector('#render-error').style.display = 'block';
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#render-error').style.display = 'block';
+			this.element.find('#render-text').textContent = error.message;
 		});
 
 		return promise;
@@ -11210,6 +11218,7 @@ class Power extends CraterWebParts {
 		let promise = new Promise((res, rej) => {
 			let result;
 			let request = new XMLHttpRequest();
+			let self = this;
 			request.onreadystatechange = function (e) {
 				if (this.readyState == 4 && this.status == 200) {
 					result = request.responseText;
@@ -11225,12 +11234,12 @@ class Power extends CraterWebParts {
 						draftPower.groupName.push(workspace.name);
 					}
 
-					if (document.querySelector('#getWork')) {
-						let errorText = document.querySelector('#render-text') as any;
+					if (self.element.find('#getWork')) {
+						let errorText = self.element.find('#render-text') as any;
 						errorText.textContent = '';
 						//@ts-ignore
-						document.querySelector('#renderContainer').style.display = "none";
-						document.querySelector('#getWork').remove();
+						self.element.find('#renderContainer').style.display = "none";
+						self.element.find('#getWork').remove();
 					}
 					draftPower.groupName.push('My WorkSpace');
 				}
@@ -11242,16 +11251,16 @@ class Power extends CraterWebParts {
 			res(JSON.parse(result));
 			rej(new Error('Sorry, there was an error'));
 		}).catch(error => {
-			let powDiv = document.querySelector('#render-error') as any;
+			let powDiv = this.element.find('#render-error') as any;
 			//@ts-ignore
-			document.querySelector('#renderContainer').style.display = 'block';
-			powDiv.querySelector('#render-text').textContent = `Couldn't Fetch Workspaces!`;
+			this.element.find('#renderContainer').style.display = 'block';
+			powDiv.find('#render-text').textContent = `Couldn't Fetch Workspaces!`;
 			powDiv.makeElement({
 				element: 'div', children: [
 					{ element: 'button', attributes: { id: 'getWork', class: 'user-button' }, text: 'Retry' }
 				]
 			});
-			powDiv.querySelector('#getWork').addEventListener('click', even => {
+			powDiv.find('#getWork').addEventListener('click', even => {
 				this.getWorkSpace(access);
 			});
 		});
@@ -11286,17 +11295,17 @@ class Power extends CraterWebParts {
 		}).catch(error => {
 			console.log(error.message);
 			//@ts-ignore
-			document.querySelector('#login-submit').style.zIndex = 0;
-			document.querySelector('#login-submit').innerHTML = 'Login';
-			document.querySelector('.crater-power-counter').innerHTML = "Sorry, there was an error. Please, click the connect button to try again";
+			this.element.find('#login-submit').style.zIndex = 0;
+			this.element.find('#login-submit').innerHTML = 'Login';
+			this.element.find('.crater-power-counter').innerHTML = "Sorry, there was an error. Please, click the connect button to try again";
 			//@ts-ignore
-			document.querySelector('#renderContainer').style.display = "block";
-			document.querySelector('#render-text').textContent = `Please make sure your details are valid!`;
+			this.element.find('#renderContainer').style.display = "block";
+			this.element.find('#render-text').textContent = `Please make sure your details are valid!`;
 		});
 
 		return promise;
-		// -------------------------------------------
 	}
+
 	public tokenListener(params) {
 		let currentTime = Date.now();
 		let expiration = Date.parse(params.tokenExpiration);
@@ -11319,7 +11328,7 @@ class Power extends CraterWebParts {
 		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
 
 		this.getEmbedToken({ accessToken: draftPower.accessToken, groupID: draftPower.groupId, reportID: draftPower.reportId, generateUrl: draftPower.tokenEmbed }).then(response => {
-			let embedContainer = document.querySelector('#renderContainer') as any;
+			let embedContainer = this.element.find('#renderContainer') as any;
 			//@ts-ignore
 			let reportRefresh = powerbi.get(embedContainer);
 
@@ -11328,8 +11337,8 @@ class Power extends CraterWebParts {
 			});
 		}).catch(error => {
 			//@ts-ignore
-			document.querySelector('#renderContainer').style.display = "block";
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#renderContainer').style.display = "block";
+			this.element.find('#render-text').textContent = error.message;
 		});
 	}
 
@@ -11346,10 +11355,10 @@ class Power extends CraterWebParts {
 		}
 
 		let accessString = 'Bearer ' + params.accessToken;
-		let self = this;
 		let promise = new Promise((res, rej) => {
 			let result;
 			let request = new XMLHttpRequest();
+			let self = this;
 			request.onreadystatechange = function (e) {
 				if (this.readyState == 4 && this.status == 200) {
 					result = request.responseText;
@@ -11358,9 +11367,9 @@ class Power extends CraterWebParts {
 					draftPower.expiration = JSON.parse(result).expiration;
 
 					if (self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.changed) {
-						if (document.querySelector('#renderContainer')) {
-							document.querySelector('#renderContainer').remove();
-							let powerContainer = document.querySelector('.crater-power-container') as any;
+						if (self.element.find('#renderContainer')) {
+							self.element.find('#renderContainer').remove();
+							let powerContainer = self.element.find('.crater-power-container') as any;
 							powerContainer.makeElement({
 								element: 'div', attributes: { id: 'renderContainer' }, children: [
 									{
@@ -11384,8 +11393,8 @@ class Power extends CraterWebParts {
 		}).catch(error => {
 			console.log(error.message);
 			//@ts-ignore
-			document.querySelector('#render-error').style.display = 'block';
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#render-error').style.display = 'block';
+			this.element.find('#render-text').textContent = error.message;
 		});
 
 		return promise;
@@ -11419,7 +11428,7 @@ class Power extends CraterWebParts {
 			};
 
 			// Get a reference to the embedded dashboard HTML element 
-			const reportContainer = document.querySelector('#renderContainer') as any;
+			const reportContainer = this.element.find('#renderContainer') as any;
 
 			reportContainer.style.display = 'block';
 			//@ts-ignore
@@ -11436,10 +11445,10 @@ class Power extends CraterWebParts {
 		catch (error) {
 			console.log(error.message);
 			//@ts-ignore
-			document.querySelector('.login_form').style.display = "block";
+			this.element.find('.login_form').style.display = "block";
 			//@ts-ignore
-			document.querySelector('#render-error').style.display = 'block';
-			document.querySelector('#render-text').textContent = error.message;
+			this.element.find('#render-error').style.display = 'block';
+			this.element.find('#render-text').textContent = error.message;
 		}
 	}
 
@@ -11453,8 +11462,8 @@ class Power extends CraterWebParts {
 		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
 		if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedded) {
 			this.getEmbedToken({ accessToken: draftPower.accessToken, groupID: draftPower.groupId, reportID: draftPower.reportId, generateUrl: draftPower.tokenEmbed }).then(response => {
-				this.element.querySelector('.crater-power-container').css({ width: draftPower.width, height: draftPower.height });
-				this.element.querySelector('#renderContainer').css({ width: '100%', height: draftPower.height });
+				this.element.find('.crater-power-container').css({ width: draftPower.width, height: draftPower.height });
+				this.element.find('#renderContainer').css({ width: '100%', height: draftPower.height });
 				this.embedPower({ accessToken: response, type: draftPower.embedType, embedUrl: draftPower.embedUrl });
 			});
 		}
@@ -11589,8 +11598,8 @@ class Power extends CraterWebParts {
 				});
 			}
 			else if (this.sharePoint.properties.pane.content[key].settings.myPowerBi.loginType === '') {
-				let userList = this.sharePoint.properties.pane.content[key].draft.dom.querySelector('.crater-power-container');
-				let userListRows = userList.querySelectorAll('.user');
+				let userList = this.sharePoint.properties.pane.content[key].draft.dom.find('.crater-power-container');
+				let userListRows = userList.findAll('.user');
 
 				this.paneContent.makeElement({
 					element: 'div', attributes: { class: 'layout-pane card' }, children: [
@@ -11604,7 +11613,7 @@ class Power extends CraterWebParts {
 						{
 							element: 'div', attributes: { class: 'row' }, children: [
 								this.elementModifier.cell({
-									element: 'input', name: 'backgroundcolor', value: this.element.querySelector('.user').css()['background-color']
+									element: 'input', name: 'backgroundcolor', value: this.element.find('.user').css()['background-color']
 								})
 							]
 						}
@@ -11623,16 +11632,16 @@ class Power extends CraterWebParts {
 						{
 							element: 'div', attributes: { class: 'row' }, children: [
 								this.elementModifier.cell({
-									element: 'input', name: 'fontSize', value: this.element.querySelector('.user-button').css()['font-size']
+									element: 'input', name: 'fontSize', value: this.element.find('.user-button').css()['font-size']
 								}),
 								this.elementModifier.cell({
-									element: 'input', name: 'backgroundcolor', value: this.element.querySelector('.user-button').css()['background-color']
+									element: 'input', name: 'backgroundcolor', value: this.element.find('.user-button').css()['background-color']
 								}),
 								this.elementModifier.cell({
-									element: 'input', name: 'fontFamily', value: this.element.querySelector('.user-button').css()['font-family']
+									element: 'input', name: 'fontFamily', value: this.element.find('.user-button').css()['font-family']
 								}),
 								this.elementModifier.cell({
-									element: 'input', name: 'color', value: this.element.querySelector('.user-button').css()['color']
+									element: 'input', name: 'color', value: this.element.find('.user-button').css()['color']
 								})
 							]
 						}
@@ -11651,13 +11660,13 @@ class Power extends CraterWebParts {
 						{
 							element: 'div', attributes: { class: 'row' }, children: [
 								this.elementModifier.cell({
-									element: 'input', name: 'fontSize', value: this.element.querySelector('.user-recommended').css()['font-size']
+									element: 'input', name: 'fontSize', value: this.element.find('.user-recommended').css()['font-size']
 								}),
 								this.elementModifier.cell({
-									element: 'input', name: 'fontFamily', value: this.element.querySelector('.user-recommended').css()['font-family']
+									element: 'input', name: 'fontFamily', value: this.element.find('.user-recommended').css()['font-family']
 								}),
 								this.elementModifier.cell({
-									element: 'input', name: 'color', value: this.element.querySelector('.user-recommended').css()['color']
+									element: 'input', name: 'color', value: this.element.find('.user-recommended').css()['color']
 								}),
 								this.elementModifier.cell({
 									element: 'select', name: 'toggle', options: ['show', 'hide']
@@ -11679,13 +11688,13 @@ class Power extends CraterWebParts {
 						{
 							element: 'div', attributes: { class: 'row' }, children: [
 								this.elementModifier.cell({
-									element: 'input', name: 'fontSize', value: this.element.querySelector('.power-text').css()['font-size']
+									element: 'input', name: 'fontSize', value: this.element.find('.power-text').css()['font-size']
 								}),
 								this.elementModifier.cell({
-									element: 'input', name: 'fontFamily', value: this.element.querySelector('.power-text').css()['font-family']
+									element: 'input', name: 'fontFamily', value: this.element.find('.power-text').css()['font-family']
 								}),
 								this.elementModifier.cell({
-									element: 'input', name: 'color', value: this.element.querySelector('.power-text').css()['color']
+									element: 'input', name: 'color', value: this.element.find('.power-text').css()['color']
 								}),
 								this.elementModifier.cell({
 									element: 'select', name: 'toggle', options: ['show', 'hide']
@@ -11707,13 +11716,13 @@ class Power extends CraterWebParts {
 						{
 							element: 'div', attributes: { class: 'row' }, children: [
 								this.elementModifier.cell({
-									element: 'input', name: 'fontSize', value: this.element.querySelector('.user-header').css()['font-size']
+									element: 'input', name: 'fontSize', value: this.element.find('.user-header').css()['font-size']
 								}),
 								this.elementModifier.cell({
-									element: 'input', name: 'fontFamily', value: this.element.querySelector('.user-header').css()['font-family']
+									element: 'input', name: 'fontFamily', value: this.element.find('.user-header').css()['font-family']
 								}),
 								this.elementModifier.cell({
-									element: 'input', name: 'color', value: this.element.querySelector('.user-header').css()['color']
+									element: 'input', name: 'color', value: this.element.find('.user-header').css()['color']
 								}),
 								this.elementModifier.cell({
 									element: 'select', name: 'toggle', options: ['show', 'hide']
@@ -11747,19 +11756,19 @@ class Power extends CraterWebParts {
 				attributes: { class: 'crater-power-user-pane row' },
 				children: [
 					this.elementModifier.cell({
-						element: 'img', name: 'image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.list[i].querySelector('.crater-power-image').src }
+						element: 'img', name: 'image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.list[i].find('.crater-power-image').src }
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'header', attribute: { class: 'crater-user-header' }, value: params.list[i].querySelector('.user-header').textContent
+						element: 'input', name: 'header', attribute: { class: 'crater-user-header' }, value: params.list[i].find('.user-header').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'info-text', value: params.list.title || params.list[i].querySelector('.power-text').textContent
+						element: 'input', name: 'info-text', value: params.list.title || params.list[i].find('.power-text').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'recommended', value: params.list.subTitle || params.list[i].querySelector('.user-recommended').textContent
+						element: 'input', name: 'recommended', value: params.list.subTitle || params.list[i].find('.user-recommended').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'button', value: params.list.body || params.list[i].querySelector('.user-button').textContent
+						element: 'input', name: 'button', value: params.list.body || params.list[i].find('.user-button').textContent
 					})
 				]
 			});
@@ -11773,7 +11782,7 @@ class Power extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 		let self = this;
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
 		window.onerror = (msg, url, lineNumber, columnNumber, error) => {
 			console.log(msg, url, lineNumber, columnNumber, error);
@@ -11781,12 +11790,12 @@ class Power extends CraterWebParts {
 
 		if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.loginType.length !== 0) {
 
-			let powerPane = this.paneContent.querySelector('.power-pane');
-			let sizePane = this.paneContent.querySelector('.size-pane');
+			let powerPane = this.paneContent.find('.power-pane');
+			let sizePane = this.paneContent.find('.size-pane');
 			if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.loginType.toLowerCase() === 'user') {
-				powerPane.querySelector('#user-rights-cell').parentElement.remove();
+				powerPane.find('#user-rights-cell').parentElement.remove();
 			} else {
-				powerPane.querySelector('#user-rights-cell').onChanged(value => {
+				powerPane.find('#user-rights-cell').onChanged(value => {
 					switch (value.toLowerCase()) {
 						case 'allow':
 							this.getAccessToken().then(response => {
@@ -11804,8 +11813,8 @@ class Power extends CraterWebParts {
 
 			let changedPage = () => {
 				try {
-					if (powerPane.querySelector('#page-cell')) {
-						powerPane.querySelector('#page-cell').onChanged(value => {
+					if (powerPane.find('#page-cell')) {
+						powerPane.find('#page-cell').onChanged(value => {
 							for (let page = 0; page < self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.pageName.length; page++) {
 								for (let property in self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.pageName[page]) {
 									if (value === self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.pages[page].displayName) {
@@ -11822,15 +11831,15 @@ class Power extends CraterWebParts {
 			};
 			let changedTile = () => {
 				try {
-					if (powerPane.querySelector('#tile-cell')) {
-						powerPane.querySelector('#tile-cell').onChanged(value => {
+					if (powerPane.find('#tile-cell')) {
+						powerPane.find('#tile-cell').onChanged(value => {
 
 							for (let tile = 0; tile < self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tiles.length; tile++) {
 								for (let property in self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tiles[tile]) {
 									if (value === self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tiles[tile].tileName) {
-										if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
-										if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
-										if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
+										if (powerPane.find('#filter-panel-cell')) powerPane.find('#filter-panel-cell').parentElement.parentElement.remove();
+										if (powerPane.find('#navigation-cell')) powerPane.find('#navigation-cell').parentElement.parentElement.remove();
+										if (powerPane.find('#page-cell')) powerPane.find('#page-cell').parentElement.remove();
 
 										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tokenEmbed = 'tile';
 										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.embedType = 'tile';
@@ -11846,15 +11855,15 @@ class Power extends CraterWebParts {
 										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.reportId = self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboardId;
 										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.embedUrl = self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboardEmbedUrl;
 										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.namePage = '';
-										if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
-										if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
-										if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
+										if (powerPane.find('#page-cell')) powerPane.find('#page-cell').parentElement.remove();
+										if (powerPane.find('#filter-panel-cell')) powerPane.find('#filter-panel-cell').parentElement.parentElement.remove();
+										if (powerPane.find('#navigation-cell')) powerPane.find('#navigation-cell').parentElement.parentElement.remove();
 									}
 								}
 							}
 
 							if (value.toLowerCase() !== 'show full dashboard') {
-								powerPane.querySelector('.power-embed').makeElement({
+								powerPane.find('.power-embed').makeElement({
 									element: 'div', children: [
 										self.elementModifier.cell({
 											element: 'select', name: 'page', options: self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.pageName
@@ -11873,7 +11882,7 @@ class Power extends CraterWebParts {
 									]
 								});
 
-								powerPane.querySelector('#filter-panel-cell').onChanged(val => {
+								powerPane.find('#filter-panel-cell').onChanged(val => {
 									switch (val.toLowerCase()) {
 										case 'show':
 											self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showFilter = true;
@@ -11886,7 +11895,7 @@ class Power extends CraterWebParts {
 									}
 								});
 
-								powerPane.querySelector('#navigation-cell').onChanged(val => {
+								powerPane.find('#navigation-cell').onChanged(val => {
 									switch (val.toLowerCase()) {
 										case 'show':
 											self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showNavContent = true;
@@ -11908,11 +11917,11 @@ class Power extends CraterWebParts {
 			};
 			let changedReport = () => {
 				try {
-					if (powerPane.querySelector('#view-cell')) {
-						powerPane.querySelector('#view-cell').onChanged(value => {
-							if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
-							if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
-							if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
+					if (powerPane.find('#view-cell')) {
+						powerPane.find('#view-cell').onChanged(value => {
+							if (powerPane.find('#page-cell')) powerPane.find('#page-cell').parentElement.remove();
+							if (powerPane.find('#filter-panel-cell')) powerPane.find('#filter-panel-cell').parentElement.parentElement.remove();
+							if (powerPane.find('#navigation-cell')) powerPane.find('#navigation-cell').parentElement.parentElement.remove();
 
 							for (let view = 0; view < self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.reports.length; view++) {
 								for (let property in self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.reports[view]) {
@@ -11924,7 +11933,7 @@ class Power extends CraterWebParts {
 									}
 								}
 							}
-							powerPane.querySelector('.power-embed').makeElement({
+							powerPane.find('.power-embed').makeElement({
 								element: 'div', children: [
 									self.elementModifier.cell({
 										element: 'select', name: 'page', options: self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.pageName
@@ -11943,7 +11952,7 @@ class Power extends CraterWebParts {
 								]
 							});
 
-							powerPane.querySelector('#filter-panel-cell').onChanged(val => {
+							powerPane.find('#filter-panel-cell').onChanged(val => {
 								switch (val.toLowerCase()) {
 									case 'show':
 										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showFilter = true;
@@ -11957,7 +11966,7 @@ class Power extends CraterWebParts {
 								}
 							});
 
-							powerPane.querySelector('#navigation-cell').onChanged(val => {
+							powerPane.find('#navigation-cell').onChanged(val => {
 								switch (val.toLowerCase()) {
 									case 'show':
 										self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.showNavContent = true;
@@ -11978,12 +11987,12 @@ class Power extends CraterWebParts {
 			};
 			let changedDashboard = () => {
 				try {
-					if (powerPane.querySelector('#view-cell')) {
-						powerPane.querySelector('#view-cell').onChanged(value => {
-							if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
-							if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
-							if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
-							if (powerPane.querySelector('#tile-cell')) powerPane.querySelector('#tile-cell').parentElement.remove();
+					if (powerPane.find('#view-cell')) {
+						powerPane.find('#view-cell').onChanged(value => {
+							if (powerPane.find('#filter-panel-cell')) powerPane.find('#filter-panel-cell').parentElement.parentElement.remove();
+							if (powerPane.find('#navigation-cell')) powerPane.find('#navigation-cell').parentElement.parentElement.remove();
+							if (powerPane.find('#page-cell')) powerPane.find('#page-cell').parentElement.remove();
+							if (powerPane.find('#tile-cell')) powerPane.find('#tile-cell').parentElement.remove();
 							for (let view = 0; view < self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboards.length; view++) {
 								for (let property in self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboards[view]) {
 									if (value === self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboards[view].dashboardName) {
@@ -11994,7 +12003,7 @@ class Power extends CraterWebParts {
 									}
 								}
 							}
-							powerPane.querySelector('.power-embed').makeElement({
+							powerPane.find('.power-embed').makeElement({
 								element: 'div', children: [
 									self.elementModifier.cell({
 										element: 'select', name: 'tile', options: self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tileName
@@ -12011,14 +12020,14 @@ class Power extends CraterWebParts {
 
 			};
 
-			powerPane.querySelector('#WorkSpace-cell').onChanged(value => {
+			powerPane.find('#WorkSpace-cell').onChanged(value => {
 				this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.changed = true;
-				if (powerPane.querySelector('#embed-type-cell')) powerPane.querySelector('#embed-type-cell').parentElement.remove();
-				if (powerPane.querySelector('#view-cell')) powerPane.querySelector('#view-cell').parentElement.remove();
-				if (powerPane.querySelector('#tile-cell')) powerPane.querySelector('#tile-cell').parentElement.remove();
-				if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
-				if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
-				if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
+				if (powerPane.find('#embed-type-cell')) powerPane.find('#embed-type-cell').parentElement.remove();
+				if (powerPane.find('#view-cell')) powerPane.find('#view-cell').parentElement.remove();
+				if (powerPane.find('#tile-cell')) powerPane.find('#tile-cell').parentElement.remove();
+				if (powerPane.find('#page-cell')) powerPane.find('#page-cell').parentElement.remove();
+				if (powerPane.find('#filter-panel-cell')) powerPane.find('#filter-panel-cell').parentElement.parentElement.remove();
+				if (powerPane.find('#navigation-cell')) powerPane.find('#navigation-cell').parentElement.parentElement.remove();
 				for (let group = 0; group < this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups.length; group++) {
 					for (let property in this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups[group]) {
 						if (value === this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups[group].workspaceName) {
@@ -12033,7 +12042,7 @@ class Power extends CraterWebParts {
 					}
 				}
 
-				powerPane.querySelector('.power-embed').makeElement({
+				powerPane.find('.power-embed').makeElement({
 					element: 'div', children: [
 						self.elementModifier.cell({
 							element: 'select', name: 'embed-type', options: ['Dashboard', 'Report']
@@ -12041,15 +12050,15 @@ class Power extends CraterWebParts {
 					]
 				});
 
-				powerPane.querySelector('#embed-type-cell').onChanged(val => {
+				powerPane.find('#embed-type-cell').onChanged(val => {
 					switch (val.toLowerCase()) {
 						case 'report':
-							if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
-							if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
-							if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
-							if (powerPane.querySelector('#view-cell')) powerPane.querySelector('#view-cell').parentElement.remove();
-							if (powerPane.querySelector('#tile-cell')) powerPane.querySelector('#tile-cell').parentElement.remove();
-							powerPane.querySelector('.power-embed').makeElement({
+							if (powerPane.find('#filter-panel-cell')) powerPane.find('#filter-panel-cell').parentElement.parentElement.remove();
+							if (powerPane.find('#navigation-cell')) powerPane.find('#navigation-cell').parentElement.parentElement.remove();
+							if (powerPane.find('#page-cell')) powerPane.find('#page-cell').parentElement.remove();
+							if (powerPane.find('#view-cell')) powerPane.find('#view-cell').parentElement.remove();
+							if (powerPane.find('#tile-cell')) powerPane.find('#tile-cell').parentElement.remove();
+							powerPane.find('.power-embed').makeElement({
 								element: 'div', children: [
 									this.elementModifier.cell({
 										element: 'select', name: 'view', options: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.reportName
@@ -12059,20 +12068,20 @@ class Power extends CraterWebParts {
 							self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tileId = '';
 							self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboardId = '';
 							// if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.reportName.indexOf('No Reports') !== -1) {
-							// 	powerPane.querySelector('#view-cell').options[0].selected = true;
-							// 	powerPane.querySelector('#view-cell').disabled = true;
+							// 	powerPane.find('#view-cell').options[0].selected = true;
+							// 	powerPane.find('#view-cell').disabled = true;
 							// }
 							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedType = val.toLowerCase();
 							changedReport();
 							break;
 						case 'dashboard':
-							if (powerPane.querySelector('#filter-panel-cell')) powerPane.querySelector('#filter-panel-cell').parentElement.parentElement.remove();
-							if (powerPane.querySelector('#navigation-cell')) powerPane.querySelector('#navigation-cell').parentElement.parentElement.remove();
-							if (powerPane.querySelector('#page-cell')) powerPane.querySelector('#page-cell').parentElement.remove();
-							if (powerPane.querySelector('#view-cell')) powerPane.querySelector('#view-cell').parentElement.remove();
-							if (powerPane.querySelector('#tile-cell')) powerPane.querySelector('#tile-cell').parentElement.remove();
+							if (powerPane.find('#filter-panel-cell')) powerPane.find('#filter-panel-cell').parentElement.parentElement.remove();
+							if (powerPane.find('#navigation-cell')) powerPane.find('#navigation-cell').parentElement.parentElement.remove();
+							if (powerPane.find('#page-cell')) powerPane.find('#page-cell').parentElement.remove();
+							if (powerPane.find('#view-cell')) powerPane.find('#view-cell').parentElement.remove();
+							if (powerPane.find('#tile-cell')) powerPane.find('#tile-cell').parentElement.remove();
 
-							powerPane.querySelector('.power-embed').makeElement({
+							powerPane.find('.power-embed').makeElement({
 								element: 'div', children: [
 									this.elementModifier.cell({
 										element: 'select', name: 'view', options: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.dashBoardName
@@ -12080,8 +12089,8 @@ class Power extends CraterWebParts {
 								]
 							});
 							// if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.dashBoardName.indexOf('No Dashboards') !== -1) {
-							// 	powerPane.querySelector('#view-cell').options[0].selected = true;
-							// 	powerPane.querySelector('#view-cell').disabled = true;
+							// 	powerPane.find('#view-cell').options[0].selected = true;
+							// 	powerPane.find('#view-cell').disabled = true;
 							// }
 							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedType = val.toLowerCase();
 							changedDashboard();
@@ -12090,22 +12099,22 @@ class Power extends CraterWebParts {
 				});
 			});
 
-			sizePane.querySelector('#display-cell').onChanged(value => {
+			sizePane.find('#display-cell').onChanged(value => {
 				switch (value) {
 					case '16:9 (1280px x 720px)':
-						if (sizePane.querySelector('#width-cell')) sizePane.querySelector('#width-cell').parentElement.remove();
-						if (sizePane.querySelector('#height-cell')) sizePane.querySelector('#height-cell').parentElement.remove();
+						if (sizePane.find('#width-cell')) sizePane.find('#width-cell').parentElement.remove();
+						if (sizePane.find('#height-cell')) sizePane.find('#height-cell').parentElement.remove();
 						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.width = '1280px';
 						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.height = '720px';
 						break;
 					case '4:3 (1000px x 750px)':
-						if (sizePane.querySelector('#width-cell')) sizePane.querySelector('#width-cell').parentElement.remove();
-						if (sizePane.querySelector('#height-cell')) sizePane.querySelector('#height-cell').parentElement.remove();
+						if (sizePane.find('#width-cell')) sizePane.find('#width-cell').parentElement.remove();
+						if (sizePane.find('#height-cell')) sizePane.find('#height-cell').parentElement.remove();
 						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.width = '1000px';
 						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.height = '750px';
 						break;
 					case 'Custom Size':
-						sizePane.querySelector('.power-embed').makeElement({
+						sizePane.find('.power-embed').makeElement({
 							element: 'div', children: [
 								this.elementModifier.cell({
 									element: 'input', name: 'width', value: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.width
@@ -12115,10 +12124,10 @@ class Power extends CraterWebParts {
 								})
 							]
 						});
-						sizePane.querySelector('#width-cell').onChanged(val => {
+						sizePane.find('#width-cell').onChanged(val => {
 							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.width = val;
 						});
-						sizePane.querySelector('#height-cell').onChanged(val => {
+						sizePane.find('#height-cell').onChanged(val => {
 							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.height = val;
 						});
 						break;
@@ -12126,204 +12135,204 @@ class Power extends CraterWebParts {
 			});
 		}
 		else {
-			let layoutRowPane = this.paneContent.querySelector('.layout-pane');
-			let layoutButtonRowPane = this.paneContent.querySelector('.layout-button-row-pane');
-			let layoutRecommendedRowPane = this.paneContent.querySelector('.layout-recommended-row-pane');
-			let layoutInfoRowPane = this.paneContent.querySelector('.layout-info-row-pane');
-			let layoutHeaderRowPane = this.paneContent.querySelector('.layout-header-row-pane');
-			let userList = this.element.querySelector('.crater-power-connect');
-			let userListRow = userList.querySelectorAll('.user');
+			let layoutRowPane = this.paneContent.find('.layout-pane');
+			let layoutButtonRowPane = this.paneContent.find('.layout-button-row-pane');
+			let layoutRecommendedRowPane = this.paneContent.find('.layout-recommended-row-pane');
+			let layoutInfoRowPane = this.paneContent.find('.layout-info-row-pane');
+			let layoutHeaderRowPane = this.paneContent.find('.layout-header-row-pane');
+			let userList = this.element.find('.crater-power-connect');
+			let userListRow = userList.findAll('.user');
 
-			let layoutBackgroundParent = layoutRowPane.querySelector('#backgroundcolor-cell').parentNode;
-			this.pickColor({ parent: layoutBackgroundParent, cell: layoutBackgroundParent.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
-				this.element.querySelectorAll('.login-container').forEach(element => {
+			let layoutBackgroundParent = layoutRowPane.find('#backgroundcolor-cell').parentNode;
+			this.pickColor({ parent: layoutBackgroundParent, cell: layoutBackgroundParent.find('#backgroundcolor-cell') }, (backgroundColor) => {
+				this.element.findAll('.login-container').forEach(element => {
 					element.css({ backgroundColor });
 				});
-				layoutBackgroundParent.querySelector('#backgroundcolor-cell').value = backgroundColor;
-				layoutBackgroundParent.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor); //set the value of the eventColor cell in the pane to the color
+				layoutBackgroundParent.find('#backgroundcolor-cell').value = backgroundColor;
+				layoutBackgroundParent.find('#backgroundcolor-cell').setAttribute('value', backgroundColor); //set the value of the eventColor cell in the pane to the color
 			});
 
-			let layoutButtonParent = layoutButtonRowPane.querySelector('#backgroundcolor-cell').parentNode;
-			this.pickColor({ parent: layoutButtonParent, cell: layoutButtonParent.querySelector('#backgroundcolor-cell') }, (backgroundColor) => {
-				this.element.querySelectorAll('.user-button').forEach(element => {
+			let layoutButtonParent = layoutButtonRowPane.find('#backgroundcolor-cell').parentNode;
+			this.pickColor({ parent: layoutButtonParent, cell: layoutButtonParent.find('#backgroundcolor-cell') }, (backgroundColor) => {
+				this.element.findAll('.user-button').forEach(element => {
 					element.css({ backgroundColor });
 				});
-				layoutButtonParent.querySelector('#backgroundcolor-cell').value = backgroundColor;
-				layoutButtonParent.querySelector('#backgroundcolor-cell').setAttribute('value', backgroundColor); //set the value of the eventColor cell in the pane to the color
+				layoutButtonParent.find('#backgroundcolor-cell').value = backgroundColor;
+				layoutButtonParent.find('#backgroundcolor-cell').setAttribute('value', backgroundColor); //set the value of the eventColor cell in the pane to the color
 			});
 
-			let layoutButtonColor = layoutButtonRowPane.querySelector('#color-cell').parentNode;
-			this.pickColor({ parent: layoutButtonColor, cell: layoutButtonColor.querySelector('#color-cell') }, (color) => {
-				this.element.querySelectorAll('.user-button').forEach(element => {
+			let layoutButtonColor = layoutButtonRowPane.find('#color-cell').parentNode;
+			this.pickColor({ parent: layoutButtonColor, cell: layoutButtonColor.find('#color-cell') }, (color) => {
+				this.element.findAll('.user-button').forEach(element => {
 					element.css({ color });
 				});
-				layoutButtonColor.querySelector('#color-cell').value = color;
-				layoutButtonColor.querySelector('#color-cell').setAttribute('value', color);
+				layoutButtonColor.find('#color-cell').value = color;
+				layoutButtonColor.find('#color-cell').setAttribute('value', color);
 			});
 
-			let layoutRecommendedColor = layoutRecommendedRowPane.querySelector('#color-cell').parentNode;
-			this.pickColor({ parent: layoutRecommendedColor, cell: layoutRecommendedColor.querySelector('#color-cell') }, (color) => {
-				this.element.querySelectorAll('.user-recommended').forEach(element => {
+			let layoutRecommendedColor = layoutRecommendedRowPane.find('#color-cell').parentNode;
+			this.pickColor({ parent: layoutRecommendedColor, cell: layoutRecommendedColor.find('#color-cell') }, (color) => {
+				this.element.findAll('.user-recommended').forEach(element => {
 					element.css({ color });
 				});
-				layoutRecommendedColor.querySelector('#color-cell').value = color;
-				layoutRecommendedColor.querySelector('#color-cell').setAttribute('value', color);
+				layoutRecommendedColor.find('#color-cell').value = color;
+				layoutRecommendedColor.find('#color-cell').setAttribute('value', color);
 			});
 
-			let layoutInfoColor = layoutInfoRowPane.querySelector('#color-cell').parentNode;
-			this.pickColor({ parent: layoutInfoColor, cell: layoutInfoColor.querySelector('#color-cell') }, (color) => {
-				this.element.querySelectorAll('.power-text').forEach(element => {
+			let layoutInfoColor = layoutInfoRowPane.find('#color-cell').parentNode;
+			this.pickColor({ parent: layoutInfoColor, cell: layoutInfoColor.find('#color-cell') }, (color) => {
+				this.element.findAll('.power-text').forEach(element => {
 					element.css({ color });
 				});
-				layoutInfoColor.querySelector('#color-cell').value = color;
-				layoutInfoColor.querySelector('#color-cell').setAttribute('value', color);
+				layoutInfoColor.find('#color-cell').value = color;
+				layoutInfoColor.find('#color-cell').setAttribute('value', color);
 			});
 
-			let layoutHeaderColor = layoutHeaderRowPane.querySelector('#color-cell').parentNode;
-			this.pickColor({ parent: layoutHeaderColor, cell: layoutHeaderColor.querySelector('#color-cell') }, (color) => {
-				this.element.querySelectorAll('.user-header').forEach(element => {
+			let layoutHeaderColor = layoutHeaderRowPane.find('#color-cell').parentNode;
+			this.pickColor({ parent: layoutHeaderColor, cell: layoutHeaderColor.find('#color-cell') }, (color) => {
+				this.element.findAll('.user-header').forEach(element => {
 					element.css({ color });
 				});
-				layoutHeaderColor.querySelector('#color-cell').value = color;
-				layoutHeaderColor.querySelector('#color-cell').setAttribute('value', color);
+				layoutHeaderColor.find('#color-cell').value = color;
+				layoutHeaderColor.find('#color-cell').setAttribute('value', color);
 			});
 
-			layoutButtonRowPane.querySelector('#fontSize-cell').onChanged(value => {
-				this.element.querySelectorAll('.user-button').forEach(element => {
+			layoutButtonRowPane.find('#fontSize-cell').onChanged(value => {
+				this.element.findAll('.user-button').forEach(element => {
 					element.css({ fontSize: value });
 				});
 			});
 
-			layoutRecommendedRowPane.querySelector('#fontSize-cell').onChanged(value => {
-				this.element.querySelectorAll('.user-recommended').forEach(element => {
+			layoutRecommendedRowPane.find('#fontSize-cell').onChanged(value => {
+				this.element.findAll('.user-recommended').forEach(element => {
 					element.css({ fontSize: value });
 				});
 			});
 
-			layoutInfoRowPane.querySelector('#fontSize-cell').onChanged(value => {
-				this.element.querySelectorAll('.power-text').forEach(element => {
+			layoutInfoRowPane.find('#fontSize-cell').onChanged(value => {
+				this.element.findAll('.power-text').forEach(element => {
 					element.css({ fontSize: value });
 				});
 			});
 
-			layoutHeaderRowPane.querySelector('#fontSize-cell').onChanged(value => {
-				this.element.querySelectorAll('.user-header').forEach(element => {
+			layoutHeaderRowPane.find('#fontSize-cell').onChanged(value => {
+				this.element.findAll('.user-header').forEach(element => {
 					element.css({ fontSize: value });
 				});
 			});
 
-			layoutButtonRowPane.querySelector('#fontFamily-cell').onChanged(value => {
-				this.element.querySelectorAll('.user-button').forEach(element => {
+			layoutButtonRowPane.find('#fontFamily-cell').onChanged(value => {
+				this.element.findAll('.user-button').forEach(element => {
 					element.css({ fontFamily: value });
 				});
 			});
 
-			layoutRecommendedRowPane.querySelector('#fontFamily-cell').onChanged(value => {
-				this.element.querySelectorAll('.user-recommended').forEach(element => {
+			layoutRecommendedRowPane.find('#fontFamily-cell').onChanged(value => {
+				this.element.findAll('.user-recommended').forEach(element => {
 					element.css({ fontFamily: value });
 				});
 			});
 
-			layoutInfoRowPane.querySelector('#fontFamily-cell').onChanged(value => {
-				this.element.querySelectorAll('.power-text').forEach(element => {
+			layoutInfoRowPane.find('#fontFamily-cell').onChanged(value => {
+				this.element.findAll('.power-text').forEach(element => {
 					element.css({ fontFamily: value });
 				});
 			});
 
-			layoutHeaderRowPane.querySelector('#fontFamily-cell').onChanged(value => {
-				this.element.querySelectorAll('.user-header').forEach(element => {
+			layoutHeaderRowPane.find('#fontFamily-cell').onChanged(value => {
+				this.element.findAll('.user-header').forEach(element => {
 					element.css({ fontFamily: value });
 				});
 			});
 
-			let showRecommended = layoutRecommendedRowPane.querySelector('#toggle-cell');
+			let showRecommended = layoutRecommendedRowPane.find('#toggle-cell');
 			showRecommended.addEventListener('change', e => {
 
 				switch (showRecommended.value.toLowerCase()) {
 					case "hide":
-						this.element.querySelectorAll('.user-recommended').forEach(element => {
+						this.element.findAll('.user-recommended').forEach(element => {
 							element.style.display = "none";
 						});
 						break;
 					case "show":
-						this.element.querySelectorAll('.user-recommended').forEach(element => {
+						this.element.findAll('.user-recommended').forEach(element => {
 							element.style.display = "block";
 						});
 						break;
 					default:
-						this.element.querySelectorAll('.user-recommended').forEach(element => {
+						this.element.findAll('.user-recommended').forEach(element => {
 							element.style.display = "none";
 						});
 				}
 			});
 
-			let showInfo = layoutInfoRowPane.querySelector('#toggle-cell');
+			let showInfo = layoutInfoRowPane.find('#toggle-cell');
 			showInfo.addEventListener('change', e => {
 
 				switch (showInfo.value.toLowerCase()) {
 					case "hide":
-						this.element.querySelectorAll('.power-text').forEach(element => {
+						this.element.findAll('.power-text').forEach(element => {
 							element.style.display = "none";
 						});
 						break;
 					case "show":
-						this.element.querySelectorAll('.power-text').forEach(element => {
+						this.element.findAll('.power-text').forEach(element => {
 							element.style.display = "block";
 						});
 						break;
 					default:
-						this.element.querySelectorAll('.power-text').forEach(element => {
+						this.element.findAll('.power-text').forEach(element => {
 							element.style.display = "none";
 						});
 				}
 			});
 
-			let showHeader = layoutHeaderRowPane.querySelector('#toggle-cell');
+			let showHeader = layoutHeaderRowPane.find('#toggle-cell');
 			showHeader.addEventListener('change', e => {
 
 				switch (showHeader.value.toLowerCase()) {
 					case "hide":
-						this.element.querySelectorAll('.user-header').forEach(element => {
+						this.element.findAll('.user-header').forEach(element => {
 							element.style.display = "none";
 						});
 						break;
 					case "show":
-						this.element.querySelectorAll('.user-header').forEach(element => {
+						this.element.findAll('.user-header').forEach(element => {
 							element.style.display = "block";
 						});
 						break;
 					default:
-						this.element.querySelectorAll('.user-header').forEach(element => {
+						this.element.findAll('.user-header').forEach(element => {
 							element.style.display = "none";
 						});
 				}
 			});
 
 			let userRowHandler = (userRowPane, userRowDom) => {
-				let iconParent = userRowPane.querySelector('#image-cell').parentNode;
+				let iconParent = userRowPane.find('#image-cell').parentNode;
 				this.uploadImage({ parent: iconParent }, (image) => {
-					iconParent.querySelector('#image-cell').src = image.src;
-					this.element.querySelector('.crater-power-image').src = image.src;
+					iconParent.find('#image-cell').src = image.src;
+					this.element.find('.crater-power-image').src = image.src;
 				});
-				userRowPane.querySelector('#header-cell').onChanged(value => {
-					userRowDom.querySelector('.user-header').innerHTML = value;
-				});
-
-				userRowPane.querySelector('#info-text-cell').onChanged(value => {
-					userRowDom.querySelector('.power-text').innerHTML = value;
+				userRowPane.find('#header-cell').onChanged(value => {
+					userRowDom.find('.user-header').innerHTML = value;
 				});
 
-				userRowPane.querySelector('#recommended-cell').onChanged(value => {
-					userRowDom.querySelector('.user-recommended').innerHTML = value;
+				userRowPane.find('#info-text-cell').onChanged(value => {
+					userRowDom.find('.power-text').innerHTML = value;
 				});
 
-				userRowPane.querySelector('#button-cell').onChanged(value => {
-					userRowDom.querySelector('.user-button').innerHTML = value;
+				userRowPane.find('#recommended-cell').onChanged(value => {
+					userRowDom.find('.user-recommended').innerHTML = value;
+				});
+
+				userRowPane.find('#button-cell').onChanged(value => {
+					userRowDom.find('.user-button').innerHTML = value;
 				});
 
 			};
 
-			let paneItems = this.paneContent.querySelectorAll('.crater-power-user-pane');
+			let paneItems = this.paneContent.findAll('.crater-power-user-pane');
 			paneItems.forEach((userRow, position) => {
 				userRowHandler(userRow, userListRow[position]);
 			});
@@ -12335,20 +12344,20 @@ class Power extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
 
 			if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.changed) {
 				if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId !== 'none') {
 					this.getEmbedToken({ accessToken: draftPower.accessToken, groupID: draftPower.groupId, reportID: draftPower.reportId, generateUrl: draftPower.tokenEmbed }).then(response => {
-						this.element.querySelector('.crater-power-container').css({ width: draftPower.width, height: draftPower.height });
-						this.element.querySelector('#renderContainer').css({ width: '100%', height: draftPower.height });
+						this.element.find('.crater-power-container').css({ width: draftPower.width, height: draftPower.height });
+						this.element.find('#renderContainer').css({ width: '100%', height: draftPower.height });
 						this.embedPower({ accessToken: response, type: draftPower.embedType, embedUrl: draftPower.embedUrl });
 					});
 				} else {
 					if (draftPower.embedType === 'report') {
-						if (this.element.querySelector('#renderContainer')) this.element.querySelector('#renderContainer').remove();
-						let powerContainer = this.element.querySelector('.crater-power-container') as any;
+						if (this.element.find('#renderContainer')) this.element.find('#renderContainer').remove();
+						let powerContainer = this.element.find('.crater-power-container') as any;
 						powerContainer.makeElement({
 							element: 'div', attributes: { id: 'renderContainer' }, children: [
 								{
@@ -12358,7 +12367,7 @@ class Power extends CraterWebParts {
 								}
 							]
 						});
-						let render = powerContainer.querySelector('#renderContainer');
+						let render = powerContainer.find('#renderContainer');
 						const iframeURL = `${draftPower.embedUrl}&autoAuth=true&ctid=${draftPower.tenantID}&filterPaneEnabled=${draftPower.showFilter}&navContentPaneEnabled=${draftPower.showNavContent}&pageName=${draftPower.namePage}`;
 						render.makeElement({
 							element: 'div', attributes: { class: 'power-iframe' }, children: [
@@ -12369,16 +12378,16 @@ class Power extends CraterWebParts {
 						});
 						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedded = false;
 
-						render.querySelector('#render-error').style.display = "none";
+						render.find('#render-error').style.display = "none";
 						render.style.display = "block";
 					}
 				}
 			} else {
 				if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId !== 'none') {
-					this.element.querySelector('.crater-power-container').css({ width: draftPower.width, height: draftPower.height });
-					this.element.querySelector('#renderContainer').css({ width: '100%', height: draftPower.height });
+					this.element.find('.crater-power-container').css({ width: draftPower.width, height: draftPower.height });
+					this.element.find('#renderContainer').css({ width: '100%', height: draftPower.height });
 				} else {
-					let powerIframe = this.element.querySelector('#renderContainer').querySelector('iframe');
+					let powerIframe = this.element.find('#renderContainer').find('iframe');
 					powerIframe.width = draftPower.width;
 					powerIframe.height = draftPower.height;
 				}
@@ -12439,16 +12448,17 @@ class Birthday extends CraterWebParts {
 
 	public rendered(params) {
 		this.key = params.element.dataset.key;
+		this.element = params.element;
 		this.getUser();
 
-		params.element.querySelector('.birthday-loading-text').textContent = 'Fetching Employee Directory, Please wait...';
+		params.element.find('.birthday-loading-text').textContent = 'Fetching Employee Directory, Please wait...';
 
 		if (!this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.fetched) {
 			setTimeout(() => {
 				if (this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users.length !== 0) {
 					let renderedCount = (this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.count) ? this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.count : this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users.length;
-					let birthdayDiv = params.element.querySelector('.crater-birthday-div');
-					let birthdayLoading = params.element.querySelector('.birthday-loading') as any;
+					let birthdayDiv = params.element.find('.crater-birthday-div');
+					let birthdayLoading = params.element.find('.birthday-loading') as any;
 					birthdayLoading.style.display = 'none';
 					if (this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.mode.toLowerCase() === 'birthday') {
 						for (let i = 0; i < renderedCount; i++) {
@@ -12516,7 +12526,7 @@ class Birthday extends CraterWebParts {
 						}
 					}
 				} else {
-					params.element.querySelector('.birthday-loading-text').textContent = 'Taking longer than expected. Please check your internet connection';
+					params.element.find('.birthday-loading-text').textContent = 'Taking longer than expected. Please check your internet connection';
 				}
 			}, 12000);
 		}
@@ -12550,7 +12560,7 @@ class Birthday extends CraterWebParts {
 		let self = this;
 
 		let getImage = (imgID, element?) => {
-			const setSource = (element) ? element : document;
+			const setSource = (element) ? element : this.element;
 			this.sharePoint.connection.getWithGraph().then((client) => {
 				client.api(`/users/${imgID}/photo/$value`)
 					.responseType('blob')
@@ -12563,10 +12573,10 @@ class Birthday extends CraterWebParts {
 									const blobUrl = URL.createObjectURL(myBlob);
 									draftBirthday.users[p].photo = result;
 									draftBirthday.users[p].image = blobUrl;
-									if ((setSource.querySelector('.birthday')) && (!setSource.querySelector('.no-users'))) {
-										let renderedBirthdays = setSource.querySelectorAll('.birthday') as any;
+									if ((setSource.find('.birthday')) && (!setSource.find('.no-users'))) {
+										let renderedBirthdays = setSource.findAll('.birthday') as any;
 										if (renderedBirthdays[p].getAttribute('divid') === imgID) {
-											renderedBirthdays[p].querySelector('.name-image1').src = blobUrl;
+											renderedBirthdays[p].find('.name-image1').src = blobUrl;
 										}
 									}
 								}
@@ -12609,10 +12619,10 @@ class Birthday extends CraterWebParts {
 
 										draftBirthday.users[p].birthDate = newDate;
 										if (draftBirthday.mode.toLowerCase() === 'birthday') {
-											if ((document.querySelector('.birthday')) && (!document.querySelector('.no-users'))) {
-												let renderedBirthdays = document.querySelectorAll('.birthday') as any;
+											if ((this.element.find('.birthday')) && (!this.element.find('.no-users'))) {
+												let renderedBirthdays = this.element.findAll('.birthday') as any;
 												if (renderedBirthdays[p].getAttribute('divid') === bthID) {
-													renderedBirthdays[p].querySelector('.birthDate').textContent = new Date(draftBirthday.users[p].birthDate).toString().split(`${new Date(draftBirthday.users[p].birthDate).getFullYear()}`)[0];
+													renderedBirthdays[p].find('.birthDate').textContent = new Date(draftBirthday.users[p].birthDate).toString().split(`${new Date(draftBirthday.users[p].birthDate).getFullYear()}`)[0];
 												}
 											}
 										}
@@ -12655,10 +12665,10 @@ class Birthday extends CraterWebParts {
 										draftBirthday.users[p].year = self.getDAYS(daysLeft).year;
 
 										if (draftBirthday.mode.toLowerCase() === 'anniversary') {
-											if ((document.querySelector('.birthday')) && (!document.querySelector('.no-users'))) {
-												let renderedBirthdays = document.querySelectorAll('.birthday') as any;
+											if ((this.element.find('.birthday')) && (!this.element.find('.no-users'))) {
+												let renderedBirthdays = this.element.findAll('.birthday') as any;
 												if (renderedBirthdays[p].getAttribute('divid') === hID) {
-													renderedBirthdays[p].querySelector('.birthDate').textContent = draftBirthday.users[p].anniversary;
+													renderedBirthdays[p].find('.birthDate').textContent = draftBirthday.users[p].anniversary;
 												}
 											}
 										}
@@ -12715,8 +12725,8 @@ class Birthday extends CraterWebParts {
 		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
 			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
 		} else {
-			let birthdayList = this.sharePoint.properties.pane.content[key].draft.dom.querySelector('.crater-birthday-div');
-			let birthdayListRows = birthdayList.querySelectorAll('.birthday');
+			let birthdayList = this.sharePoint.properties.pane.content[key].draft.dom.find('.crater-birthday-div');
+			let birthdayListRows = birthdayList.findAll('.birthday');
 
 			this.paneContent.makeElement({
 				element: 'div', attributes: { class: 'title-pane card' }, children: [
@@ -12780,7 +12790,7 @@ class Birthday extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'section-height', value: this.element.querySelector('.crater-birthday-div').css()['max-height']
+								element: 'input', name: 'section-height', value: this.element.find('.crater-birthday-div').css()['max-height']
 							})
 						]
 					})
@@ -12797,28 +12807,28 @@ class Birthday extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Image', value: this.element.querySelector('.crater-birthday-header-img').src
+								element: 'input', name: 'Image', value: this.element.find('.crater-birthday-header-img').src
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-birthday-header-title').css()['font-size']
+								element: 'input', name: 'fontSize', value: this.element.find('.crater-birthday-header-title').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.querySelector('.crater-birthday-header-title').css()['font-family']
+								element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.find('.crater-birthday-header-title').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.querySelector('.crater-birthday-header-title').css()['color']
+								element: 'input', name: 'color', value: this.element.find('.crater-birthday-header-title').css()['color']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'background-color', value: this.element.querySelector('.crater-birthday-header').css()['color']
+								element: 'input', name: 'background-color', value: this.element.find('.crater-birthday-header').css()['color']
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggle', options: ['Show', 'Hide']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'text', value: this.element.querySelector('.crater-birthday-header-title').textContent
+								element: 'input', name: 'text', value: this.element.find('.crater-birthday-header-title').textContent
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'header-height', value: this.element.querySelector('.crater-birthday-header').css()['height']
+								element: 'input', name: 'header-height', value: this.element.find('.crater-birthday-header').css()['height']
 							})
 						]
 					})
@@ -12835,13 +12845,13 @@ class Birthday extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.querySelector('.personName').css()['font-size']
+								element: 'input', name: 'fontSize', value: this.element.find('.personName').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.querySelector('.personName').css()['font-family']
+								element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.find('.personName').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.querySelector('.personName').css()['color']
+								element: 'input', name: 'color', value: this.element.find('.personName').css()['color']
 							})
 						]
 					})
@@ -12858,13 +12868,13 @@ class Birthday extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.querySelector('.title').css()['font-size']
+								element: 'input', name: 'fontSize', value: this.element.find('.title').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.querySelector('.title').css()['font-family']
+								element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.find('.title').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.querySelector('.title').css()['color']
+								element: 'input', name: 'color', value: this.element.find('.title').css()['color']
 							}),
 						]
 					})
@@ -12881,13 +12891,13 @@ class Birthday extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.querySelector('.birthDate').css()['font-size']
+								element: 'input', name: 'fontSize', value: this.element.find('.birthDate').css()['font-size']
 							}),
 							this.elementModifier.cell({
-								element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.querySelector('.birthDate').css()['font-family']
+								element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.find('.birthDate').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.querySelector('.birthDate').css()['color']
+								element: 'input', name: 'color', value: this.element.find('.birthDate').css()['color']
 							})
 						]
 					})
@@ -12922,13 +12932,13 @@ class Birthday extends CraterWebParts {
 				]
 			});
 			if (draftBirthday.fetched) {
-				this.paneContent.querySelector('#update-message').textContent = 'Directory Updated! Sort the list to view it';
-				this.paneContent.querySelector('#fetch-birthday').innerHTML = 'UPDATED';
+				this.paneContent.find('#update-message').textContent = 'Directory Updated! Sort the list to view it';
+				this.paneContent.find('#fetch-birthday').innerHTML = 'UPDATED';
 			} else {
-				this.paneContent.querySelector('#update-message').textContent = 'Click this button to update the user directory';
-				this.paneContent.querySelector('#fetch-birthday').innerHTML = 'UPDATE';
+				this.paneContent.find('#update-message').textContent = 'Click this button to update the user directory';
+				this.paneContent.find('#fetch-birthday').innerHTML = 'UPDATE';
 			}
-			this.paneContent.querySelector('.title-settings').querySelector('#Interval-cell').readOnly = true;
+			this.paneContent.find('.title-settings').find('#Interval-cell').readOnly = true;
 
 			this.paneContent.makeElement({
 				element: 'div', attributes: { class: 'user-pane card' }, children: [
@@ -13014,7 +13024,7 @@ class Birthday extends CraterWebParts {
 						element: 'input', name: 'birthdayBackground', value: params.list[i].css()['background-color']
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'birthdayName', value: params.list[i].querySelector('.personName').textContent
+						element: 'input', name: 'birthdayName', value: params.list[i].find('.personName').textContent
 					})
 				]
 			});
@@ -13028,37 +13038,37 @@ class Birthday extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 		let draftBirthday = this.sharePoint.properties.pane.content[this.key].settings.myBirthdays;
-		let birthdayList = this.sharePoint.properties.pane.content[this.key].draft.dom.querySelector('.crater-birthday-div');
-		let birthdayListRow = birthdayList.querySelectorAll('.birthday') as any;
+		let birthdayList = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-birthday-div');
+		let birthdayListRow = birthdayList.findAll('.birthday') as any;
 		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
 		draftBirthday.sortUsers = [];
 
-		let titlePane = this.paneContent.querySelector('.title-pane');
-		let optionsPane = this.paneContent.querySelector('.user-pane');
-		let namePane = this.paneContent.querySelector('.name-pane');
-		let jobPane = this.paneContent.querySelector('.job-title-pane');
-		let birthdayPane = this.paneContent.querySelector('.birthday-pane');
-		let headerPane = this.paneContent.querySelector('.header-pane');
-		let sectionPane = this.paneContent.querySelector('.section-pane');
-		let bgColorPane = this.paneContent.querySelector('.background-color-pane');
+		let titlePane = this.paneContent.find('.title-pane');
+		let optionsPane = this.paneContent.find('.user-pane');
+		let namePane = this.paneContent.find('.name-pane');
+		let jobPane = this.paneContent.find('.job-title-pane');
+		let birthdayPane = this.paneContent.find('.birthday-pane');
+		let headerPane = this.paneContent.find('.header-pane');
+		let sectionPane = this.paneContent.find('.section-pane');
+		let bgColorPane = this.paneContent.find('.background-color-pane');
 
-		let orderCell = titlePane.querySelector('#order-cell');
-		let sortCell = titlePane.querySelector('#sortBy-cell');
-		let modeCell = titlePane.querySelector('#mode-cell');
-		let count = titlePane.querySelector('#count-cell');
-		let future = titlePane.querySelector('#daysFuture-cell');
-		let past = titlePane.querySelector('#daysPast-cell');
-		let nameField = optionsPane.querySelector('#nameField-cell');
-		let titleField = optionsPane.querySelector('#titleField-cell');
-		let birthdayField = optionsPane.querySelector('#birthdayField-cell');
+		let orderCell = titlePane.find('#order-cell');
+		let sortCell = titlePane.find('#sortBy-cell');
+		let modeCell = titlePane.find('#mode-cell');
+		let count = titlePane.find('#count-cell');
+		let future = titlePane.find('#daysFuture-cell');
+		let past = titlePane.find('#daysPast-cell');
+		let nameField = optionsPane.find('#nameField-cell');
+		let titleField = optionsPane.find('#titleField-cell');
+		let birthdayField = optionsPane.find('#birthdayField-cell');
 
 		window.onerror = (msg, url, lineNumber, columnNumber, error) => {
 			console.log(msg, url, lineNumber, columnNumber, error);
 		};
 
-		bgColorPane.querySelector('#position-cell').onChanged(value => {
+		bgColorPane.find('#position-cell').onChanged(value => {
 			if (value.indexOf(',') !== -1) {
 				draftBirthday.position = value.split(',');
 			} else {
@@ -13066,8 +13076,8 @@ class Birthday extends CraterWebParts {
 			}
 		});
 
-		let rowCell = bgColorPane.querySelector('#backgroundColor-cell').parentNode;
-		this.pickColor({ parent: rowCell, cell: rowCell.querySelector('#backgroundColor-cell') }, (backgroundColor) => {
+		let rowCell = bgColorPane.find('#backgroundColor-cell').parentNode;
+		this.pickColor({ parent: rowCell, cell: rowCell.find('#backgroundColor-cell') }, (backgroundColor) => {
 			if (draftBirthday.position) {
 				if (typeof draftBirthday.position === 'object') {
 					for (let each of draftBirthday.position) {
@@ -13077,18 +13087,18 @@ class Birthday extends CraterWebParts {
 					birthdayListRow[draftBirthday.position - 1].css({ backgroundColor });
 				}
 			}
-			rowCell.querySelector('#backgroundColor-cell').value = backgroundColor;
-			rowCell.querySelector('#backgroundColor-cell').setAttribute('value', backgroundColor);
+			rowCell.find('#backgroundColor-cell').value = backgroundColor;
+			rowCell.find('#backgroundColor-cell').setAttribute('value', backgroundColor);
 		});
 
-		let toggleDisplay = headerPane.querySelector('#toggle-cell');
+		let toggleDisplay = headerPane.find('#toggle-cell');
 		toggleDisplay.addEventListener('change', e => {
 			switch (toggleDisplay.value.toLowerCase()) {
 				case 'show':
-					draftDom.querySelector('.crater-birthday-header').style.display = 'flex';
+					draftDom.find('.crater-birthday-header').style.display = 'flex';
 					break;
 				case 'hide':
-					draftDom.querySelector('.crater-birthday-header').style.display = 'none';
+					draftDom.find('.crater-birthday-header').style.display = 'none';
 					break;
 			}
 		});
@@ -13097,10 +13107,10 @@ class Birthday extends CraterWebParts {
 			switch (nameField.value.toLowerCase()) {
 				case 'id':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.personName').textContent = person.id;
+									div.find('.personName').textContent = person.id;
 								}
 							});
 						}
@@ -13108,10 +13118,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'fullname':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.personName').textContent = person.displayName;
+									div.find('.personName').textContent = person.displayName;
 								}
 							});
 						}
@@ -13119,10 +13129,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'firstname':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.personName').textContent = person.firstName;
+									div.find('.personName').textContent = person.firstName;
 								}
 							});
 						}
@@ -13130,10 +13140,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'lastname':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.personName').textContent = person.lastName;
+									div.find('.personName').textContent = person.lastName;
 								}
 							});
 						}
@@ -13141,10 +13151,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'mail':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.personName').textContent = person.mail;
+									div.find('.personName').textContent = person.mail;
 								}
 							});
 						}
@@ -13152,10 +13162,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'title':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.personName').textContent = person.Title;
+									div.find('.personName').textContent = person.Title;
 								}
 							});
 						}
@@ -13163,10 +13173,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'phone':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.personName').textContent = person.phone;
+									div.find('.personName').textContent = person.phone;
 								}
 							});
 						}
@@ -13174,13 +13184,13 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'birthday/anniversary':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
 									if (draftBirthday.mode.toLowerCase() === "birthday") {
-										div.querySelector('.personName').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
+										div.find('.personName').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
 									} else {
-										div.querySelector('.personName').textContent = person.anniversary;
+										div.find('.personName').textContent = person.anniversary;
 									}
 								}
 							});
@@ -13195,10 +13205,10 @@ class Birthday extends CraterWebParts {
 			switch (titleField.value.toLowerCase()) {
 				case 'id':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.title').textContent = person.id;
+									div.find('.title').textContent = person.id;
 								}
 							});
 						}
@@ -13206,10 +13216,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'fullname':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.title').textContent = person.displayName;
+									div.find('.title').textContent = person.displayName;
 								}
 							});
 						}
@@ -13217,10 +13227,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'firstname':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.title').textContent = person.firstName;
+									div.find('.title').textContent = person.firstName;
 								}
 							});
 						}
@@ -13228,10 +13238,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'lastname':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.title').textContent = person.lastName;
+									div.find('.title').textContent = person.lastName;
 								}
 							});
 						}
@@ -13239,10 +13249,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'mail':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.title').textContent = person.mail;
+									div.find('.title').textContent = person.mail;
 								}
 							});
 						}
@@ -13250,10 +13260,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'title':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.title').textContent = person.Title;
+									div.find('.title').textContent = person.Title;
 								}
 							});
 						}
@@ -13261,10 +13271,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'phone':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.title').textContent = person.phone;
+									div.find('.title').textContent = person.phone;
 								}
 							});
 						}
@@ -13272,13 +13282,13 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'birthday/anniversary':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
 									if (draftBirthday.mode.toLowerCase() === "birthday") {
-										div.querySelector('.title').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
+										div.find('.title').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
 									} else {
-										div.querySelector('.title').textContent = person.anniversary;
+										div.find('.title').textContent = person.anniversary;
 									}
 								}
 							});
@@ -13293,11 +13303,11 @@ class Birthday extends CraterWebParts {
 			switch (birthdayField.value.toLowerCase()) {
 				case 'id':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.birthDate').textContent = person.id;
+									div.find('.birthDate').textContent = person.id;
 								}
 							});
 						}
@@ -13305,10 +13315,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'fullname':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.birthDate').textContent = person.displayName;
+									div.find('.birthDate').textContent = person.displayName;
 								}
 							});
 						}
@@ -13316,10 +13326,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'firstname':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.birthDate').textContent = person.firstName;
+									div.find('.birthDate').textContent = person.firstName;
 								}
 							});
 						}
@@ -13327,10 +13337,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'lastname':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.birthDate').textContent = person.lastName;
+									div.find('.birthDate').textContent = person.lastName;
 								}
 							});
 						}
@@ -13338,10 +13348,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'mail':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.birthDate').textContent = person.mail;
+									div.find('.birthDate').textContent = person.mail;
 								}
 							});
 						}
@@ -13349,10 +13359,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'title':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.birthDate').textContent = person.Title;
+									div.find('.birthDate').textContent = person.Title;
 								}
 							});
 						}
@@ -13360,10 +13370,10 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'phone':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
-									div.querySelector('.birthDate').textContent = person.phone;
+									div.find('.birthDate').textContent = person.phone;
 								}
 							});
 						}
@@ -13371,13 +13381,13 @@ class Birthday extends CraterWebParts {
 					break;
 				case 'birthday/anniversary':
 					for (let person of draftBirthday.users) {
-						if (!birthdayList.querySelector('.no-users')) {
+						if (!birthdayList.find('.no-users')) {
 							birthdayListRow.forEach(div => {
 								if (div.getAttribute('divid') === person.id) {
 									if (draftBirthday.mode.toLowerCase() === "birthday") {
-										div.querySelector('.birthDate').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
+										div.find('.birthDate').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
 									} else {
-										div.querySelector('.birthDate').textContent = person.anniversary;
+										div.find('.birthDate').textContent = person.anniversary;
 									}
 								}
 							});
@@ -13387,148 +13397,148 @@ class Birthday extends CraterWebParts {
 			}
 		});
 
-		headerPane.querySelector('#text-cell').onChanged(value => {
-			draftDom.querySelector('.crater-birthday-header-title').textContent = value;
+		headerPane.find('#text-cell').onChanged(value => {
+			draftDom.find('.crater-birthday-header-title').textContent = value;
 		});
 
-		let nameColorCell = namePane.querySelector('#color-cell').parentNode;
-		this.pickColor({ parent: nameColorCell, cell: nameColorCell.querySelector('#color-cell') }, (color) => {
-			draftDom.querySelectorAll('.personName').forEach(element => {
+		let nameColorCell = namePane.find('#color-cell').parentNode;
+		this.pickColor({ parent: nameColorCell, cell: nameColorCell.find('#color-cell') }, (color) => {
+			draftDom.findAll('.personName').forEach(element => {
 				element.css({ color });
 			});
-			nameColorCell.querySelector('#color-cell').value = color;
-			nameColorCell.querySelector('#color-cell').setAttribute('value', color);
+			nameColorCell.find('#color-cell').value = color;
+			nameColorCell.find('#color-cell').setAttribute('value', color);
 		});
 
-		let headerCellParent = headerPane.querySelector('#Image-cell').parentNode;
+		let headerCellParent = headerPane.find('#Image-cell').parentNode;
 		this.uploadImage({ parent: headerCellParent }, (image) => {
-			headerCellParent.querySelector('#Image-cell').src = image.src;
-			draftDom.querySelector('.crater-birthday-header-img').src = image.src;
+			headerCellParent.find('#Image-cell').src = image.src;
+			draftDom.find('.crater-birthday-header-img').src = image.src;
 		});
 
-		let headerColorCell = headerPane.querySelector('#color-cell').parentNode;
-		this.pickColor({ parent: headerColorCell, cell: headerColorCell.querySelector('#color-cell') }, (color) => {
-			draftDom.querySelector('.crater-birthday-header-title').css({ color });
-			headerColorCell.querySelector('#color-cell').value = color;
-			headerColorCell.querySelector('#color-cell').setAttribute('value', color);
+		let headerColorCell = headerPane.find('#color-cell').parentNode;
+		this.pickColor({ parent: headerColorCell, cell: headerColorCell.find('#color-cell') }, (color) => {
+			draftDom.find('.crater-birthday-header-title').css({ color });
+			headerColorCell.find('#color-cell').value = color;
+			headerColorCell.find('#color-cell').setAttribute('value', color);
 		});
 
-		let headerBackgroundColorCell = headerPane.querySelector('#background-color-cell').parentNode;
-		this.pickColor({ parent: headerBackgroundColorCell, cell: headerBackgroundColorCell.querySelector('#background-color-cell') }, (backgroundColor) => {
-			draftDom.querySelector('.crater-birthday-header').css({ backgroundColor });
-			headerBackgroundColorCell.querySelector('#background-color-cell').value = backgroundColor;
-			headerBackgroundColorCell.querySelector('#background-color-cell').setAttribute('value', backgroundColor);
+		let headerBackgroundColorCell = headerPane.find('#background-color-cell').parentNode;
+		this.pickColor({ parent: headerBackgroundColorCell, cell: headerBackgroundColorCell.find('#background-color-cell') }, (backgroundColor) => {
+			draftDom.find('.crater-birthday-header').css({ backgroundColor });
+			headerBackgroundColorCell.find('#background-color-cell').value = backgroundColor;
+			headerBackgroundColorCell.find('#background-color-cell').setAttribute('value', backgroundColor);
 		});
 
-		let jobColorCell = jobPane.querySelector('#color-cell').parentNode;
-		this.pickColor({ parent: jobColorCell, cell: jobColorCell.querySelector('#color-cell') }, (color) => {
-			draftDom.querySelectorAll('.title').forEach(element => {
+		let jobColorCell = jobPane.find('#color-cell').parentNode;
+		this.pickColor({ parent: jobColorCell, cell: jobColorCell.find('#color-cell') }, (color) => {
+			draftDom.findAll('.title').forEach(element => {
 				element.css({ color });
 			});
-			jobColorCell.querySelector('#color-cell').value = color;
-			jobColorCell.querySelector('#color-cell').setAttribute('value', color);
+			jobColorCell.find('#color-cell').value = color;
+			jobColorCell.find('#color-cell').setAttribute('value', color);
 		});
 
-		let birthdayColorCell = birthdayPane.querySelector('#color-cell').parentNode;
-		this.pickColor({ parent: birthdayColorCell, cell: birthdayColorCell.querySelector('#color-cell') }, (color) => {
-			draftDom.querySelectorAll('.birthDate').forEach(element => {
+		let birthdayColorCell = birthdayPane.find('#color-cell').parentNode;
+		this.pickColor({ parent: birthdayColorCell, cell: birthdayColorCell.find('#color-cell') }, (color) => {
+			draftDom.findAll('.birthDate').forEach(element => {
 				element.css({ color });
 			});
-			birthdayColorCell.querySelector('#color-cell').value = color;
-			birthdayColorCell.querySelector('#color-cell').setAttribute('value', color);
+			birthdayColorCell.find('#color-cell').value = color;
+			birthdayColorCell.find('#color-cell').setAttribute('value', color);
 		});
 
-		namePane.querySelector('#fontSize-cell').onChanged(value => {
-			draftDom.querySelectorAll('.personName').forEach(element => {
+		namePane.find('#fontSize-cell').onChanged(value => {
+			draftDom.findAll('.personName').forEach(element => {
 				element.css({ fontSize: value });
 			});
 		});
 
-		jobPane.querySelector('#fontSize-cell').onChanged(value => {
-			draftDom.querySelectorAll('.title').forEach(element => {
+		jobPane.find('#fontSize-cell').onChanged(value => {
+			draftDom.findAll('.title').forEach(element => {
 				element.css({ fontSize: value });
 			});
 		});
 
-		sectionPane.querySelector('#section-height-cell').onChanged(value => {
-			draftDom.querySelector('.crater-birthday-div').css({ maxHeight: value });
+		sectionPane.find('#section-height-cell').onChanged(value => {
+			draftDom.find('.crater-birthday-div').css({ maxHeight: value });
 		});
 
-		headerPane.querySelector('#header-height-cell').onChanged(value => {
-			draftDom.querySelector('.crater-birthday-header').css({ height: value });
-			draftDom.querySelector('.crater-birthday-header-img').css({ height: value });
-			draftDom.querySelector('.crater-birthday-header-img').css({ width: value });
+		headerPane.find('#header-height-cell').onChanged(value => {
+			draftDom.find('.crater-birthday-header').css({ height: value });
+			draftDom.find('.crater-birthday-header-img').css({ height: value });
+			draftDom.find('.crater-birthday-header-img').css({ width: value });
 		});
 
-		birthdayPane.querySelector('#fontSize-cell').onChanged(value => {
-			draftDom.querySelectorAll('.birthDate').forEach(element => {
+		birthdayPane.find('#fontSize-cell').onChanged(value => {
+			draftDom.findAll('.birthDate').forEach(element => {
 				element.css({ fontSize: value });
 			});
 		});
 
-		namePane.querySelector('#fontFamily-cell').onChanged(value => {
-			draftDom.querySelectorAll('.personName').forEach(element => {
+		namePane.find('#fontFamily-cell').onChanged(value => {
+			draftDom.findAll('.personName').forEach(element => {
 				element.css({ fontFamily: value });
 			});
 		});
 
-		headerPane.querySelector('#fontFamily-cell').onChanged(value => {
-			draftDom.querySelector('.crater-birthday-header-title').css({ fontFamily: value });
+		headerPane.find('#fontFamily-cell').onChanged(value => {
+			draftDom.find('.crater-birthday-header-title').css({ fontFamily: value });
 		});
 
-		headerPane.querySelector('#fontSize-cell').onChanged(value => {
-			draftDom.querySelector('.crater-birthday-header-title').css({ fontSize: value });
+		headerPane.find('#fontSize-cell').onChanged(value => {
+			draftDom.find('.crater-birthday-header-title').css({ fontSize: value });
 		});
 
-		jobPane.querySelector('#fontFamily-cell').onChanged(value => {
-			draftDom.querySelectorAll('.title').forEach(element => {
+		jobPane.find('#fontFamily-cell').onChanged(value => {
+			draftDom.findAll('.title').forEach(element => {
 				element.css({ fontFamily: value });
 			});
 		});
 
-		birthdayPane.querySelector('#fontFamily-cell').onChanged(value => {
-			draftDom.querySelectorAll('.birthDate').forEach(element => {
+		birthdayPane.find('#fontFamily-cell').onChanged(value => {
+			draftDom.findAll('.birthDate').forEach(element => {
 				element.css({ fontFamily: value });
 			});
 		});
 
 		modeCell.addEventListener('change', event => {
-			let modeDiv = draftDom.querySelectorAll('.birthday');
+			let modeDiv = draftDom.findAll('.birthday');
 			switch (modeCell.value.toLowerCase()) {
 				case 'birthday':
 					draftBirthday.mode = modeCell.value;
 					for (let person of draftBirthday.users) {
 						for (let position = 0; position < draftBirthday.users.length; position++) {
-							if ((modeDiv[position]) && (!modeDiv[position].querySelector('.no-users'))) {
+							if ((modeDiv[position]) && (!modeDiv[position].find('.no-users'))) {
 								if (modeDiv[position].getAttribute('divid') === person.id) {
-									modeDiv[position].querySelector('.birthDate').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
+									modeDiv[position].find('.birthDate').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
 								}
 							}
 						}
 					}
 
-					if (!titlePane.querySelector('.title-settings').querySelector('#Interval-cell').readOnly) {
+					if (!titlePane.find('.title-settings').find('#Interval-cell').readOnly) {
 						draftBirthday.interval = 999;
-						titlePane.querySelector('.title-settings').querySelector('#Interval-cell').value = draftBirthday.interval;
-						titlePane.querySelector('.title-settings').querySelector('#Interval-cell').readOnly = true;
+						titlePane.find('.title-settings').find('#Interval-cell').value = draftBirthday.interval;
+						titlePane.find('.title-settings').find('#Interval-cell').readOnly = true;
 					}
 					break;
 				case 'anniversary':
 					draftBirthday.mode = modeCell.value;
 					for (let person of draftBirthday.users) {
 						for (let position = 0; position < draftBirthday.users.length; position++) {
-							if ((modeDiv[position]) && (!modeDiv[position].querySelector('.no-users'))) {
+							if ((modeDiv[position]) && (!modeDiv[position].find('.no-users'))) {
 								if (modeDiv[position].getAttribute('divid') === person.id) {
-									modeDiv[position].querySelector('.birthDate').textContent = person.anniversary;
+									modeDiv[position].find('.birthDate').textContent = person.anniversary;
 								}
 							}
 						}
 					}
 					console.log(draftBirthday.users);
 
-					if (titlePane.querySelector('.title-settings').querySelector('#Interval-cell').readOnly) {
-						titlePane.querySelector('.title-settings').querySelector('#Interval-cell').value = draftBirthday.interval;
-						titlePane.querySelector('.title-settings').querySelector('#Interval-cell').readOnly = false;
+					if (titlePane.find('.title-settings').find('#Interval-cell').readOnly) {
+						titlePane.find('.title-settings').find('#Interval-cell').value = draftBirthday.interval;
+						titlePane.find('.title-settings').find('#Interval-cell').readOnly = false;
 					}
 
 					break;
@@ -13537,7 +13547,7 @@ class Birthday extends CraterWebParts {
 			}
 		});
 
-		titlePane.querySelector('.title-settings').querySelector('#Interval-cell').onChanged(value => {
+		titlePane.find('.title-settings').find('#Interval-cell').onChanged(value => {
 			draftBirthday.interval = parseInt(value);
 		});
 
@@ -13583,8 +13593,8 @@ class Birthday extends CraterWebParts {
 						}
 					});
 
-					let craterBirthdayDiv = draftDom.querySelector('.crater-birthday-div');
-					let birthdays = craterBirthdayDiv.querySelectorAll('.birthday') as any;
+					let craterBirthdayDiv = draftDom.find('.crater-birthday-div');
+					let birthdays = craterBirthdayDiv.findAll('.birthday') as any;
 					craterBirthdayDiv.innerHTML = '';
 					const counted = (draftBirthday.count) ? draftBirthday.count : byDate.length;
 
@@ -13723,7 +13733,7 @@ class Birthday extends CraterWebParts {
 						}
 					});
 
-					let craterBirthdayDiv2 = draftDom.querySelector('.crater-birthday-div');
+					let craterBirthdayDiv2 = draftDom.find('.crater-birthday-div');
 
 					craterBirthdayDiv2.innerHTML = '';
 					const anotherCount = (draftBirthday.count) ? draftBirthday.count : byDate2.length;
@@ -14019,17 +14029,17 @@ class Birthday extends CraterWebParts {
 			}
 		});
 
-		this.paneContent.querySelector('.update-pane').querySelector('#fetch-birthday').addEventListener('click', event => {
+		this.paneContent.find('.update-pane').find('#fetch-birthday').addEventListener('click', event => {
 			try {
 				draftBirthday.fetched = false;
-				this.paneContent.querySelector('#update-message').textContent = 'Fetching directory now... Please wait';
-				this.paneContent.querySelector('#fetch-birthday').render({
+				this.paneContent.find('#update-message').textContent = 'Fetching directory now... Please wait';
+				this.paneContent.find('#fetch-birthday').render({
 					element: 'img', attributes: { class: 'birthday-loading-image crater-icon', src: this.sharePoint.images.loading, style: { width: '20px', height: '20px' } }
 				});
 				setTimeout(() => {
 					if (draftBirthday.fetched) {
-						this.paneContent.querySelector('#update-message').textContent = 'Directory Updated! Sort the list to view it';
-						this.paneContent.querySelector('#fetch-birthday').innerHTML = 'UPDATED';
+						this.paneContent.find('#update-message').textContent = 'Directory Updated! Sort the list to view it';
+						this.paneContent.find('#fetch-birthday').innerHTML = 'UPDATED';
 					}
 				}, 7000);
 				this.getUser();
@@ -14043,7 +14053,7 @@ class Birthday extends CraterWebParts {
 			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = draftDom.innerHTML;
 			this.element.css(draftDom.css());
 			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;

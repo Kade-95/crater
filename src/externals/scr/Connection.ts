@@ -102,7 +102,7 @@ class Connection {
         });
     }
 
-    public getWithGraph(params) {
+    public getWithGraph() {
         return new Promise((resolve, reject) => {
             this.context.msGraphClientFactory.getClient()
                 .then((client: MSGraphClient): void => {

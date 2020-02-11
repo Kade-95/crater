@@ -4,6 +4,7 @@ import { ElementModifier, func, PropertyPane, CraterWebParts, Connection, ColorP
 export interface ICraterProps {
 	dom: any;
 	pane: any;
+	states: any;
 }
 
 export default class Crater extends BaseClientSideWebPart<ICraterProps> {
@@ -12,6 +13,7 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 	public app: any;
 	public propertyPane: any = new PropertyPane({ sharePoint: this });
 	public saved: boolean = false;
+	public changingState: boolean = false;
 	public savedWebPart: any;
 	public craterWebparts = new CraterWebParts({ sharePoint: this });
 	public displayPanelWindow: any;
@@ -46,28 +48,25 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 			this.properties.dom.generated = true;
 
 			//start running all webparts rendered
-			this.app.querySelectorAll('.keyed-element').forEach(element => {
-				if (element.hasAttribute('data-type')) {
-					let type = element.dataset.type;
-					this.craterWebparts[type]({ action: 'rendered', element, sharePoint: this });
-				}
-			});
+			this.runAll();
 
-			this.app.querySelectorAll('.crater-display-panel').forEach(element => {
+			if (this.properties.states.data.length == 0) {
+				this.properties.states.data[0] = this.app.innerHTML;
+			}
+
+			this.app.findAll('.crater-display-panel').forEach(element => {
 				element.remove();
 			});
 
 			this.app.addEventListener('mutated', event => {
 				//check for changes
-				this.properties.dom.content = this.app.innerHTML;
-				if (this.saved) {
-					//if saved 
-					this.saved = false;
-					//show options of the keyed elements
-					let type = this.savedWebPart.dataset.type;
-					//start the re-running the webpart
-					this.craterWebparts[type]({ action: 'rendered', element: this.savedWebPart, sharePoint: this });
-					this.propertyPane.clearDraft(this.properties.pane.content[this.savedWebPart.dataset.key].draft);
+				if (!this.changingState) {
+					this.properties.dom.content = this.app.innerHTML;
+					if (this.saved) {
+						this.saveCrater();
+					}
+				} else {
+					this.changingState = false;
 				}
 			});
 
@@ -75,7 +74,7 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 				this.app.addEventListener('click', event => {
 					let element = event.target;
 					if (!(element.classList.contains('crater-display-panel') || element.getParents('.crater-display-panel') || element.classList.contains('new-component'))) {
-						for (let displayPanel of this.app.querySelectorAll('.crater-display-panel')) {
+						for (let displayPanel of this.app.findAll('.crater-display-panel')) {
 							displayPanel.remove();
 						}
 					}
@@ -107,6 +106,12 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 						else if (element.id == 'paste-me') {
 							this.pasteWebpart(element);
 						}
+						else if (element.id == 'undo-me') {
+							this.undoWebpart(element);
+						}
+						else if (element.id == 'redo-me') {
+							this.redoWebpart(element);
+						}
 					}
 
 					if (element.nodeName == 'A' && element.hasAttribute('href')) {
@@ -118,6 +123,15 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 				this.onWindowResized();
 			}
 		}
+	}
+
+	private runAll() {
+		this.app.findAll('.keyed-element').forEach(element => {
+			if (element.hasAttribute('data-type')) {
+				let type = element.dataset.type;
+				this.craterWebparts[type]({ action: 'rendered', element, sharePoint: this });
+			}
+		});
 	}
 
 	private openLink(element) {
@@ -141,10 +155,10 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 		//remove all editwindows 
 		window.onresize = () => {
 			//reset the size of the editwindow to match the size of the screen
-			let editWindow = this.app.querySelector('.crater-edit-window');
+			let editWindow = this.app.find('.crater-edit-window');
 			if (!func.isnull(editWindow)) {
 				editWindow.position({ height: window.innerHeight, width: window.innerWidth });
-				editWindow.querySelector('.crater-editor').css({
+				editWindow.find('.crater-editor').css({
 					height: `${8 * window.innerHeight / 10}px`,
 					width: `${9 * window.innerWidth / 10}px`,
 					marginTop: `${0.5 * window.innerHeight / 10}px`,
@@ -155,10 +169,10 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 	}
 
 	private initializeCrater() {
-		this.app.querySelectorAll('.crater-edit-window').forEach(element => {
+		this.app.findAll('.crater-edit-window').forEach(element => {
 			element.remove();
 		});
-		this.app.querySelectorAll('.crater-pop-up').forEach(element => {
+		this.app.findAll('.crater-pop-up').forEach(element => {
 			element.remove();
 		});
 	}
@@ -246,9 +260,9 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 	}
 
 	private updateDisplayPaneWebPart(params) {
-		this.displayPanelWindow.querySelector('#select-webpart').innerHTML = '';//clear window
+		this.displayPanelWindow.find('#select-webpart').innerHTML = '';//clear window
 		for (let single of params.webparts) {
-			this.displayPanelWindow.querySelector('#select-webpart').makeElement({
+			this.displayPanelWindow.find('#select-webpart').makeElement({
 				element: 'div', attributes: { class: 'single-webpart', 'data-webpart': func.stringReplace(single.toLowerCase(), ' ', '') }, children: [
 					this.elementModifier.createElement({//set the icon
 						element: 'img', attributes: { class: 'image', src: this.images.append }
@@ -264,7 +278,7 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 	public inEditMode() {
 		let editing = this.displayMode == DisplayMode.Edit;
 		if (!editing) {
-			this.app.querySelectorAll('.webpart-option').forEach(option => {
+			this.app.findAll('.webpart-option').forEach(option => {
 				option.show();
 			});
 		}
@@ -277,7 +291,7 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 	}
 
 	public addWebpart(element) {
-		this.app.querySelectorAll('.crater-display-panel').forEach(panel => {
+		this.app.findAll('.crater-display-panel').forEach(panel => {
 			panel.remove();
 		});
 
@@ -286,11 +300,11 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 				let container = element.getParents('.crater-panel') || element.getParents('.crater-tab') || element.getParents('.crater-section');
 
 				if (container.classList.contains('crater-section')) {
-					this.appendWebpart(container.querySelector('.crater-section-content'), webpart.dataset.webpart);
+					this.appendWebpart(container.find('.crater-section-content'), webpart.dataset.webpart);
 				} else if (container.classList.contains('crater-panel')) {
-					this.appendWebpart(container.querySelector('.crater-panel-content'), webpart.dataset.webpart);
+					this.appendWebpart(container.find('.crater-panel-content'), webpart.dataset.webpart);
 				} else if (container.classList.contains('crater-tab')) {
-					this.appendWebpart(container.querySelector('.crater-tab-content'), webpart.dataset.webpart);
+					this.appendWebpart(container.find('.crater-tab-content'), webpart.dataset.webpart);
 					this.craterWebparts['tab']({ action: 'rendered', element: container, sharePoint: this });
 				}
 			})
@@ -342,7 +356,7 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 			this.properties.pane.content[container.dataset.key].settings.columns =
 				this.properties.pane.content[container.dataset.key].settings.columns + 1;
 
-			container.querySelector('.crater-sections-container').css({ gridTemplateColumns: `repeat(${this.properties.pane.content[container.dataset.key].settings.columns}, 1fr)` });
+			container.find('.crater-sections-container').css({ gridTemplateColumns: `repeat(${this.properties.pane.content[container.dataset.key].settings.columns}, 1fr)` });
 		}
 
 		webpart.after(clone);
@@ -360,14 +374,14 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 		clone.dataset.key = newKey;
 		this.properties.pane.content[newKey] = this.properties.pane.content[this.pasteElement.dataset.key];
 
-		if(container.classList.contains('crater-section')){
-			container.querySelector('.crater-section-content').append(clone);
+		if (container.classList.contains('crater-section')) {
+			container.find('.crater-section-content').append(clone);
 		}
-		else if(container.classList.contains('crater-panel')){
-			container.querySelector('.crater-panel-content').append(clone);
+		else if (container.classList.contains('crater-panel')) {
+			container.find('.crater-panel-content').append(clone);
 		}
-		else if(container.classList.contains('crater-tab')){
-			container.querySelector('.crater-tab-content').append(clone);
+		else if (container.classList.contains('crater-tab')) {
+			container.find('.crater-tab-content').append(clone);
 		}
 
 		this.craterWebparts[clone.dataset.type]({ action: 'rendered', element: clone, sharePoint: this });
@@ -375,5 +389,40 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 		this.craterWebparts[container.dataset.type]({ action: 'rendered', element: container, sharePoint: this });
 
 		this.pasteActive = false;
+	}
+
+	public changeState() {
+		this.changingState = true;
+		this.app.innerHTML = this.properties.states.data[this.properties.states.currentPosition] || this.app.innerHTML;
+		this.runAll();
+	}
+
+	public redoWebpart(element: any) {
+		if (this.properties.states.data.length > this.properties.states.currentPosition + 1) {
+			this.properties.states.currentPosition = this.properties.states.currentPosition + 1;
+			this.changeState();
+		}
+	}
+
+	public undoWebpart(element: any) {
+		if (this.properties.states.currentPosition != 0) {
+			this.properties.states.currentPosition = this.properties.states.currentPosition - 1;
+			this.changeState();
+		}
+	}
+
+	private saveCrater() {
+		//show options of the keyed elements
+		let type = this.savedWebPart.dataset.type;
+		//start the re-running the webpart
+		this.craterWebparts[type]({ action: 'rendered', element: this.savedWebPart, sharePoint: this });
+		this.propertyPane.clearDraft(this.properties.pane.content[this.savedWebPart.dataset.key].draft);
+		this.saved = false;
+		this.properties.states.currentPosition = this.properties.states.currentPosition / 1 + 1;
+		for (let i in this.properties.states.data) {
+			if (i < this.properties.states.currentPosition) continue;
+			this.properties.states.data.pop(i);
+		}
+		this.properties.states.data.push(this.properties.dom.content);
 	}
 }

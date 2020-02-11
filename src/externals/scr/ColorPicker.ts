@@ -15,7 +15,7 @@ class ColorPicker {
 
     constructor(params) {
         this.canvas = this.generateCanvas();
-        this.target = this.canvas.querySelector('#color-picker');
+        this.target = this.canvas.find('#color-picker');
         this.width = params.width;
         this.height = params.height;
         this.target.width = this.width;
@@ -23,7 +23,7 @@ class ColorPicker {
 
         //the context
         this.context = this.target.getContext('2d');
-        this.canvas.querySelector('.crater-picked-color-value').innerText = params.color;
+        this.canvas.find('.crater-picked-color-value').innerText = params.color;
 
         //Circle color
         this.pickerCircle = { x: 10, y: 10, width: 7, height: 7 };
@@ -104,9 +104,9 @@ class ColorPicker {
                 this.pickedColor = `rgb(${picked.r}, ${picked.g}, ${picked.b})`;
                 this.target.dispatchEvent(new CustomEvent('colorChanged'));
 
-                this.canvas.querySelector('.crater-picked-color').css({ backgroundColor: this.pickedColor });
+                this.canvas.find('.crater-picked-color').css({ backgroundColor: this.pickedColor });
 
-                this.canvas.querySelector('.crater-picked-color-value').innerText = this.pickedColor;
+                this.canvas.find('.crater-picked-color-value').innerText = this.pickedColor;
             }
         };
 
@@ -119,7 +119,7 @@ class ColorPicker {
         this.target.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
 
-        this.canvas.querySelector('.crater-close-color-picker').addEventListener('click', event => {
+        this.canvas.find('.crater-close-color-picker').addEventListener('click', event => {
             this.dispose();
         });
     }

@@ -713,7 +713,7 @@ class ElementModifier {
 
         let chooseControl = chooseWindow.querySelector('.crater-choose-control');
 
-        chooseWindow.querySelector('#crater-choose-close').addEventListener('click', event=>{
+        chooseWindow.querySelector('#crater-choose-close').addEventListener('click', event => {
             chooseWindow.remove();
         });
 
@@ -744,6 +744,32 @@ function prepareFrameWork(): void {
             if (this[i] == element) return i;
         }
         return -1;
+    };
+
+    Element.prototype['find'] = function (name) {
+        return this.querySelector(name);
+    };
+
+    Element.prototype['findAll'] = function (name) {
+        return this.querySelectorAll(name);
+    };
+
+    Element.prototype['fetch'] = function (...names) {
+        let elements = {};
+        for (let name of names) {
+            elements[name] = this.find(name);
+        }
+
+        return elements;
+    };
+
+    Element.prototype['fetchAll'] = function (...names) {
+        let elements = {};
+        for (let name of names) {
+            elements[name] = this.findAll(name);
+        }
+
+        return elements;
     };
 
     Element.prototype['getMostOccurredNode'] = function () {
