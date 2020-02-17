@@ -177,7 +177,7 @@ class CraterWebParts {
 		for (let option of params.options) {
 			optionContainer.makeElement({
 				element: 'img', attributes: {
-					class: 'webpart-option', id: option.toLowerCase() + '-me', src: options[option.toLowerCase()], alt: option, title: `${option} ${params.title}`
+					class: 'webpart-option', id: option.toLowerCase() + '-me', src: options[option.toLowerCase()], alt: option, title: `${option} ${params.title}`, style: { display: option.toLowerCase() == 'paste' ? 'none' : '' }
 				}
 			});
 		}
@@ -200,6 +200,7 @@ class CraterWebParts {
 		};
 
 		element.addEventListener('mouseenter', event => {
+			this.sharePoint.dontSave = true;
 			if (element.hasAttribute('data-key') && this.sharePoint.inEditMode()) {
 				element.find('.webpart-options').show();
 				handlePaste(element);
@@ -207,6 +208,7 @@ class CraterWebParts {
 		});
 
 		element.addEventListener('mouseleave', event => {
+			this.sharePoint.dontSave = true;
 			if (element.hasAttribute('data-key')) {
 				element.find('.webpart-options').hide();
 			}
@@ -214,6 +216,7 @@ class CraterWebParts {
 
 		element.findAll('.keyed-element').forEach(keyedElement => {
 			keyedElement.addEventListener('mouseenter', event => {
+				this.sharePoint.dontSave = true;
 				if (keyedElement.hasAttribute('data-key') && this.sharePoint.inEditMode()) {
 					keyedElement.find('.webpart-options').show();
 					handlePaste(keyedElement);
@@ -221,6 +224,7 @@ class CraterWebParts {
 			});
 
 			keyedElement.addEventListener('mouseleave', event => {
+				this.sharePoint.dontSave = true;
 				if (keyedElement.hasAttribute('data-key')) {
 					keyedElement.find('.webpart-options').hide();
 				}
@@ -387,6 +391,8 @@ class EmployeeDirectory extends CraterWebParts {
 	public element: any;
 	private key: any;
 	private users: any;
+	private openImage: any = 'https://pngimg.com/uploads/plus/plus_PNG22.png';
+	private closeImage: any = 'https://i.dlpng.com/static/png/1442324-minus-png-minus-png-1600_1600_preview.png';
 
 	constructor(params) {
 		super({ sharePoint: params.sharePoint });
@@ -429,7 +435,6 @@ class EmployeeDirectory extends CraterWebParts {
 		});
 
 		this.key = this.key || employeeDirectory.dataset.key;
-		this.sharePoint.properties.pane.content[this.key].settings.employees = {};
 		let settings = this.sharePoint.properties.pane.content[this.key].settings;
 
 		settings.searchType = 'All';
@@ -437,6 +442,7 @@ class EmployeeDirectory extends CraterWebParts {
 		settings.mailApp = 'Outlook';
 		settings.messageApp = 'Teams';
 		settings.callApp = 'Teams';
+		settings.employees = [];
 
 		localStorage[`crater-${this.key}`] = JSON.stringify(settings);
 		return employeeDirectory;
@@ -469,35 +475,34 @@ class EmployeeDirectory extends CraterWebParts {
 					.get((_error: any, _result: MicrosoftGraph.User, _rawResponse?: any) => {
 						this.users = _result['value'];
 
+						let getImage = (id) => {
+							return new Promise((resolve, reject) => {
+								client.api(`/users/${id}/photo/$value`)
+									.responseType('blob')
+									.get((error: any, result: any, rawResponse?: any) => {
+										if (!func.setNotNull(result)) return;
+										settings.employees[id].photo = result;
+										if (displayed) {
+											display.find(`#row-${id}`).find('.crater-employee-directory-dp').src = window.URL.createObjectURL(result);
+										}
+										resolve();
+									});
+							});
+						};
+
+						let getDepartment = (id) => {
+							return new Promise((resolve, reject) => {
+								client.api(`/users/${id}/department`)
+									.get((error: any, result: any, rawResponse?: any) => {
+										if (!func.setNotNull(result)) return;
+										settings.employees[id].department = result.value;
+										resolve();
+									});
+							});
+						};
+
 						for (let employee of this.users) {
 							settings.employees[employee.id] = employee;
-
-							let getImage = (id) => {
-								return new Promise((resolve, reject) => {
-									client.api(`/users/${id}/photo/$value`)
-										.responseType('blob')
-										.get((error: any, result: any, rawResponse?: any) => {
-											if (!func.setNotNull(result)) return;
-											settings.employees[id].photo = result;
-											if (displayed) {
-												display.find(`#row-${id}`).find('.crater-employee-directory-dp').src = window.URL.createObjectURL(result);
-											}
-											resolve();
-										});
-								});
-							};
-
-							let getDepartment = (id) => {
-								return new Promise((resolve, reject) => {
-									client.api(`/users/${id}/department`)
-										.get((error: any, result: any, rawResponse?: any) => {
-											if (!func.setNotNull(result)) return;
-											settings.employees[employee.id].department = result.value;
-											resolve();
-										});
-								});
-							};
-
 							getImage(employee.id);
 							getDepartment(employee.id);
 						}
@@ -517,7 +522,7 @@ class EmployeeDirectory extends CraterWebParts {
 			settings.employees = {};
 			for (let i = 0; i < 100; i++) {
 				this.users.push(sample);
-				settings.employees[this.key] = sample;
+				settings.employees[sample.id] = sample;
 			}
 
 			this.displayUsers(display);
@@ -548,7 +553,8 @@ class EmployeeDirectory extends CraterWebParts {
 		let menu = this.element.find('.crater-employee-directory-menu');
 		if (menu.position().width < 400) {
 			menu.css({ gridTemplateColumns: '1fr' });
-		} else {
+		}
+		else {
 			menu.cssRemove(['grid-template-columns']);
 		}
 
@@ -562,8 +568,12 @@ class EmployeeDirectory extends CraterWebParts {
 				display.findAll('.crater-employee-directory-other-details').forEach(other => {
 					other.remove();
 				});
+				display.findAll('.crater-employee-directory-toggle-view').forEach(toggle => {
+					toggle.src = this.openImage;
+				});
 
 				if (element.classList.contains('open')) {
+					element.src = this.closeImage;
 					row.append(this.displayOtherDetails(settings.employees[row.id.replace('row-', '')]));
 				}
 			}
@@ -616,9 +626,8 @@ class EmployeeDirectory extends CraterWebParts {
 		let settings = this.sharePoint.properties.pane.content[this.key].settings;
 		let stored = JSON.parse(localStorage[`crater-${this.key}`]);
 
-		for (let i in this.users) {
+		for (let i = 0; i < this.users.length; i++) {
 			let employee = this.users[i];
-
 			if (settings.searchType != 'All' && settings.searchQuery != '') {
 
 				if (settings.searchType == 'By Name') {
@@ -651,7 +660,7 @@ class EmployeeDirectory extends CraterWebParts {
 
 			display.makeElement({
 				element: 'div', attributes: { class: 'crater-employee-directory-row', id: `row-${employee.id}` }, children: [
-					{ element: 'img', attributes: { class: 'crater-employee-directory-dp', src: 'photo' } },
+					{ element: 'img', attributes: { class: 'crater-employee-directory-dp', src: photo } },
 					{
 						element: 'span', attributes: { class: 'crater-employee-directory-details' }, children: [
 							{ element: 'p', attributes: { class: 'crater-employee-directory-name' }, text: employee.displayName },
@@ -660,29 +669,14 @@ class EmployeeDirectory extends CraterWebParts {
 							{ element: 'p', attributes: { class: 'crater-employee-directory-contact' } },
 							{
 								element: 'span', attributes: { class: 'crater-employee-directory-contact' }, children: [
-									{ element: 'img', attributes: { class: 'crater-employee-directory-icon crater-employee-directory-mail', src: this.sharePoint.images.mail } },
-									{ element: 'img', attributes: { class: 'crater-employee-directory-icon crater-employee-directory-message', src: this.sharePoint.images.message } },
-									{ element: 'img', attributes: { class: 'crater-employee-directory-icon crater-employee-directory-phone', src: this.sharePoint.images.phone } }
-									// {
-									// 	element: 'a', attributes: { href: `mailto:${employee.mail}`, id: 'crater-employee-directory-mail' }, children: [
-									// 		{ element: 'img', attributes: { class: 'crater-employee-directory-icon', src: this.sharePoint.images.mail } },
-									// 	]
-									// },
-									// {
-									// 	element: 'a', attributes: { href: `sms:${employee.mail}`, id: 'crater-employee-directory-message' }, children: [
-									// 		{ element: 'img', attributes: { class: 'crater-employee-directory-icon', src: this.sharePoint.images.message } },
-									// 	]
-									// },
-									// {
-									// 	element: 'a', attributes: { href: `callto:${employee.mail}`, id: 'crater-employee-directory-phone' }, children: [
-									// 		{ element: 'img', attributes: { class: 'crater-employee-directory-icon', src: this.sharePoint.images.phone } },
-									// 	]
-									// }
+									{ element: 'img', attributes: { class: 'crater-employee-directory-icon crater-employee-directory-mail', src: 'https://banner2.cleanpng.com/20180720/ixe/kisspng-computer-icons-email-icon-design-equipo-comercial-5b525b3cdb7d21.311695661532123964899.jpg' } },
+									{ element: 'img', attributes: { class: 'crater-employee-directory-icon crater-employee-directory-message', src: 'https://www.pinclipart.com/picdir/middle/107-1070124_message-png-clipart-computer-icons-clip-art-transparent.png' } },
+									{ element: 'img', attributes: { class: 'crater-employee-directory-icon crater-employee-directory-phone', src: 'https://p7.hiclipart.com/preview/211/783/729/telephone-symbol-icon-phone-download-png.jpg' } }
 								]
 							}
 						]
 					},
-					{ element: 'img', attributes: { class: 'crater-employee-directory-icon crater-employee-directory-toggle-view', src: this.sharePoint.images.append } }
+					{ element: 'img', attributes: { class: 'crater-employee-directory-icon crater-employee-directory-toggle-view', src: this.openImage } }
 				]
 			});
 		}
@@ -14061,7 +14055,279 @@ class Birthday extends CraterWebParts {
 	}
 }
 
+class Twitter extends CraterWebParts {
+	public key: any;
+	public params: any;
+	public elementModifier: any = new ElementModifier();
+	public paneContent: any;
+	public element: any;
+
+	constructor(params) {
+		super({ sharePoint: params.sharePoint });
+		this.sharePoint = params.sharePoint;
+		this.params = params;
+	}
+
+	public render(params) {
+		let twitter = this.createKeyedElement({
+			element: 'div', attributes: { class: 'crater-twitter crater-component', 'data-type': 'twitter' }, children: [
+				{ element: 'div', attributes: { class: 'crater-twitter-feed' } }
+			]
+		});
+
+
+		this.key = twitter.dataset.key;
+
+		this.sharePoint.properties.pane.content[this.key].settings.twitter = {
+			'data-width': '1000',
+			'data-height': '500',
+			'data-link-color': '#d6ff27',
+			'data-theme': 'light',
+			'data-tweet-limit': '3',
+			username: 'TwitterDev',
+		};
+
+
+		return twitter;
+	}
+
+	public rendered(params) {
+		this.element = params.element;
+		this.key = params.element.dataset.key;
+
+		this.runTwitter();
+	}
+
+	public runTwitter() {
+		let twitterObj = this.sharePoint.properties.pane.content[this.key].settings.twitter;
+		let self = this;
+
+		if (twitterObj['data-tweet-limit']) {
+			this.element.style.maxHeight = twitterObj['data-height'];
+		} else {
+			this.element.style.maxHeight = '100%';
+		}
+
+		this.element.querySelector('.crater-twitter-feed').innerHTML = `<a class='twitter-timeline' id='twitter-embed' max-width='100%' data-width= ${twitterObj['data-width']} data-height=${twitterObj['data-height']} lang='EN' href='https://twitter.com/${twitterObj.username}' data-link-color=${twitterObj['data-link-color']} data-theme=${twitterObj['data-theme']} data-tweet-limit=${twitterObj['data-tweet-limit']}>
+		Tweets by @${twitterObj.username}</a>`;
+
+		let twitterFunction = (s: string, id: string) => {
+			let js: any;
+			if (self.element.querySelector('#twitter-wjs')) self.element.querySelector('#twitter-wjs').remove();
+			let t = window['twttr'] || {};
+			js = document.createElement(s);
+			js.id = id;
+			js.src = "https://platform.twitter.com/widgets.js";
+			self.element.querySelector('.crater-twitter-feed').parentNode.insertBefore(js, self.element.querySelector('.crater-twitter-feed'));
+
+			t._e = [];
+			t.ready = (f) => {
+				t._e.push(f);
+			};
+
+			return t;
+		};
+
+		window['twttr'] = (twitterFunction("script", "twitter-wjs"));
+
+		// Define our custom event handlers
+		let clickEventToAnalytics = (intentEvent) => {
+			if (!intentEvent) return;
+			var label = intentEvent.region;
+			//@ts-ignore
+			pageTracker._trackEvent('twitter_web_intents', intentEvent.type, label);
+		};
+
+		let tweetIntentToAnalytics = (intentEvent) => {
+			if (!intentEvent) return;
+			var label = "tweet";
+			//@ts-ignore
+			pageTracker._trackEvent(
+				'twitter_web_intents',
+				intentEvent.type,
+				label
+			);
+		};
+
+		let likeIntentToAnalytics = (intentEvent) => {
+			tweetIntentToAnalytics(intentEvent);
+		};
+
+		let retweetIntentToAnalytics = (intentEvent) => {
+			if (!intentEvent) return;
+			var label = intentEvent.data.source_tweet_id;
+			//@ts-ignore
+			pageTracker._trackEvent(
+				'twitter_web_intents',
+				intentEvent.type,
+				label
+			);
+		};
+
+		let followIntentToAnalytics = (intentEvent) => {
+			if (!intentEvent) return;
+			var label = intentEvent.data.user_id + " (" + intentEvent.data.screen_name + ")";
+			//@ts-ignore
+			pageTracker._trackEvent(
+				'twitter_web_intents',
+				intentEvent.type,
+				label
+			);
+		};
+
+		// Wait for the asynchronous resources to load
+		try {
+			//@ts-ignore
+			twttr.ready((twttr) => {
+				// Now bind our custom intent events
+				twttr.events.bind('click', clickEventToAnalytics);
+				twttr.events.bind('tweet', tweetIntentToAnalytics);
+				twttr.events.bind('retweet', retweetIntentToAnalytics);
+				twttr.events.bind('like', likeIntentToAnalytics);
+				twttr.events.bind('follow', followIntentToAnalytics);
+			});
+		} catch (error) {
+			console.log(error.message);
+		}
+	}
+
+	public setUpPaneContent(params) {
+		let key = params.element.dataset['key'];
+		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.paneContent = this.elementModifier.createElement({
+			element: 'div', attributes: { class: 'crater-property-content' }
+		}).monitor();
+		let twitterObj = this.sharePoint.properties.pane.content[key].settings.twitter;
+
+		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		}
+		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		} else {
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'twitter-options-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'OPTIONS'
+							})
+						]
+					}),
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'message-note' }, children: [
+							{
+								element: 'div', attributes: { class: 'message-text' }, children: [
+									{ element: 'p', attributes: { style: { color: 'green' } }, text: `NOTE: Clear the 'number of tweets' field to display all tweets` },
+									{ element: 'p', attributes: { style: { color: 'green' } }, text: `      Please Enter a Valid Username` }
+								]
+							}
+						]
+					}),
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'username', value: twitterObj.username
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'theme', options: ['LIGHT', 'DARK'], value: twitterObj['data-theme'].toUpperCase()
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'link-color', value: twitterObj['data-link-color']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'number-of-tweets', value: twitterObj['data-tweet-limit']
+							})
+						]
+					})
+				]
+			});
+
+			this.paneContent.makeElement({
+				element: 'div', attributes: { class: 'twitter-size-pane card' }, children: [
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'card-title' }, children: [
+							this.elementModifier.createElement({
+								element: 'h2', attributes: { class: 'title' }, text: 'SIZE CONTROL'
+							})
+						]
+					}),
+
+					this.elementModifier.createElement({
+						element: 'div', attributes: { class: 'row' }, children: [
+							this.elementModifier.cell({
+								element: 'input', name: 'width', value: twitterObj['data-width']
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'height', value: twitterObj['data-height']
+							})
+						]
+					})
+				]
+			});
+
+		}
+		return this.paneContent;
+	}
+
+	public listenPaneContent(params) {
+		this.element = params.element;
+		this.key = this.element.dataset['key'];
+		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let twitterObj = this.sharePoint.properties.pane.content[this.key].settings.twitter;
+
+		let twitterOptions = this.paneContent.querySelector('.twitter-options-pane');
+		let twitterSize = this.paneContent.querySelector('.twitter-size-pane');
+
+		twitterOptions.querySelector('#username-cell').onChanged(value => {
+			twitterObj.username = value;
+		});
+
+		twitterOptions.querySelector('#theme-cell').onChanged(value => {
+			twitterObj['data-theme'] = value.toLowerCase();
+		});
+
+		twitterOptions.querySelector('#number-of-tweets-cell').onChanged(value => {
+			twitterObj['data-tweet-limit'] = value;
+		});
+
+
+		let linkColorCell = twitterOptions.querySelector('#link-color-cell').parentNode;
+		this.pickColor({ parent: linkColorCell, cell: linkColorCell.querySelector('#link-color-cell') }, (color) => {
+			twitterObj['data-link-color'] = ColorPicker.rgbToHex(color);
+			linkColorCell.querySelector('#link-color-cell').value = ColorPicker.rgbToHex(color);
+			linkColorCell.querySelector('#link-color-cell').setAttribute('value', ColorPicker.rgbToHex(color));
+		});
+
+		twitterSize.querySelector('#width-cell').onChanged(value => {
+			twitterObj['data-width'] = value;
+		});
+
+		twitterSize.querySelector('#height-cell').onChanged(value => {
+			twitterObj['data-height'] = value;
+		});
+
+		this.paneContent.addEventListener('mutated', event => {
+			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+		});
+
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
+			this.element.innerHTML = draftDom.innerHTML;
+			this.element.css(draftDom.css());
+			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
+		});
+	}
+}
+
 {
+	CraterWebParts.prototype['twitter'] = params => {
+		let twitter = new Twitter({ sharePoint: params.sharePoint });
+		return twitter[params.action](params);
+	};
+
 	CraterWebParts.prototype['birthday'] = params => {
 		let birthday = new Birthday({ sharePoint: params.sharePoint });
 		return birthday[params.action](params);

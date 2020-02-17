@@ -82,13 +82,13 @@
     text-align: left;
     display: grid;
     grid-template-columns: repeat(3, max-content);
-    grid-gap: .5em;
+    grid-gap: 1em;
     padding: .5em;
 }
 
 .crater-employee-directory-icon{
-    width: 20px;
-    height: 20px;
+    width: 2em;
+    height: 1.5em;
     cursor: pointer;
 }
 

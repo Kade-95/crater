@@ -13,8 +13,10 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 	public app: any;
 	public propertyPane: any = new PropertyPane({ sharePoint: this });
 	public saved: boolean = false;
+	public editted: boolean = false;
 	public changingState: boolean = false;
 	public savedWebPart: any;
+	public dontSave: boolean = false;
 	public craterWebparts = new CraterWebParts({ sharePoint: this });
 	public displayPanelWindow: any;
 	public displayPanelWindowExpanded: any = false;
@@ -37,6 +39,8 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 				this.domContent = this.elementModifier.createElement(this.properties.dom.content);
 			} else {
 				this.domContent = this.appendWebpart(this.app, 'crater');
+				this.domContent.find('#undo-me').css({ opacity: 0.3 });
+				this.domContent.find('#redo-me').css({ opacity: 0.3 });
 				// Create single section for webpart
 			}
 
@@ -60,9 +64,12 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 
 			this.app.addEventListener('mutated', event => {
 				//check for changes
-				if (!this.changingState) {
+				if (this.dontSave) {
+					this.dontSave = false;
+				}
+				else if (!this.changingState) {
 					this.properties.dom.content = this.app.innerHTML;
-					if (this.saved) {
+					if (this.saved || this.editted) {
 						this.saveCrater();
 					}
 				} else {
@@ -195,7 +202,7 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 
 	public displayPanel(selected) {
 
-		let webparts = ['Panel', 'List', 'Slider', 'Counter', 'Tiles', 'News', 'Table', 'TextArea', 'Icons', 'Button', 'Count Down', 'Tab', 'Events', 'Carousel', 'Map', 'Date List', 'Instagram', 'Facebook', 'Before After', 'Youtube', 'Event', 'Power', 'Employee Directory', 'Birthday'];
+		let webparts = ['Panel', 'List', 'Slider', 'Counter', 'Tiles', 'News', 'Table', 'TextArea', 'Icons', 'Button', 'Count Down', 'Tab', 'Events', 'Carousel', 'Map', 'Date List', 'Instagram', 'Facebook', 'Youtube', 'Twitter', 'Before After', 'Event', 'Power', 'Employee Directory', 'Birthday'];
 
 		this.displayPanelWindow = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-display-panel' }
@@ -307,6 +314,8 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 					this.appendWebpart(container.find('.crater-tab-content'), webpart.dataset.webpart);
 					this.craterWebparts['tab']({ action: 'rendered', element: container, sharePoint: this });
 				}
+
+				this.editted = true;
 			})
 		);
 	}
@@ -338,7 +347,7 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 				}
 				this.properties.dom.content = this.domContent.outerHTML;
 			}
-			delete this.properties.pane.content[key];
+			this.editted = true;
 		}
 	}
 
@@ -364,6 +373,7 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 		this.craterWebparts[clone.dataset.type]({ action: 'rendered', element: clone, sharePoint: this });
 
 		this.craterWebparts[container.dataset.type]({ action: 'rendered', element: container, sharePoint: this });
+		this.editted = true;
 	}
 
 	public pasteWebpart(element) {
@@ -389,12 +399,15 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 		this.craterWebparts[container.dataset.type]({ action: 'rendered', element: container, sharePoint: this });
 
 		this.pasteActive = false;
+		this.editted = true;
 	}
 
 	public changeState() {
 		this.changingState = true;
 		this.app.innerHTML = this.properties.states.data[this.properties.states.currentPosition] || this.app.innerHTML;
 		this.runAll();
+
+		this.setCorrection();
 	}
 
 	public redoWebpart(element: any) {
@@ -413,16 +426,36 @@ export default class Crater extends BaseClientSideWebPart<ICraterProps> {
 
 	private saveCrater() {
 		//show options of the keyed elements
-		let type = this.savedWebPart.dataset.type;
-		//start the re-running the webpart
-		this.craterWebparts[type]({ action: 'rendered', element: this.savedWebPart, sharePoint: this });
-		this.propertyPane.clearDraft(this.properties.pane.content[this.savedWebPart.dataset.key].draft);
-		this.saved = false;
+		if (this.saved) {
+			let type = this.savedWebPart.dataset.type;
+			//start the re-running the webpart
+			this.craterWebparts[type]({ action: 'rendered', element: this.savedWebPart, sharePoint: this });
+			this.propertyPane.clearDraft(this.properties.pane.content[this.savedWebPart.dataset.key].draft);
+		}
 		this.properties.states.currentPosition = this.properties.states.currentPosition / 1 + 1;
+		this.app.find('#undo-me').css({ opacity: 1 });
 		for (let i in this.properties.states.data) {
 			if (i < this.properties.states.currentPosition) continue;
 			this.properties.states.data.pop(i);
 		}
 		this.properties.states.data.push(this.properties.dom.content);
+
+		this.saved = false;
+		this.editted = false;
+	}
+
+	private setCorrection(){
+		if (this.properties.states.currentPosition == 0) {
+			this.app.find('#undo-me').css({ opacity: 0.3 });
+		} else {
+			this.app.find('#undo-me').css({ opacity: 1 });
+		}
+
+		if (this.properties.states.currentPosition + 1 == this.properties.states.data.length) {
+			this.app.find('#redo-me').css({ opacity: 0.3 });
+		}
+		else {
+			this.app.find('#redo-me').css({ opacity: 1 });
+		}
 	}
 }
