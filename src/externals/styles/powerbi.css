@@ -1,4 +1,4 @@
-.crater-power{
+.crater-powerbi{
     box-shadow: rgba(0, 0, 0,.30) 0 2px 3px;
     -webkit-box-shadow: rgba(0, 0, 0,.30) 0 2px 3px;
     position: relative;
@@ -59,13 +59,13 @@
     padding: 2px 16px;
     background-color: bisque;
 }
-.crater-power-container{
+.crater-powerbi-container{
     margin: 0 auto;
     background: #F2F2F2;
     border: 1px solid #ccc;
     box-shadow: 1px 1px 2px #fff inset, -1px -1px 2px #fff inset;             
 }
-.crater-power-timer{
+.crater-powerbi-timer{
     background-color: bisque;
     border: 2px solid tomato;
     color: tomato;
@@ -82,7 +82,7 @@
     display: block;
 }
 
-.crater-power-connect{
+.crater-powerbi-connect{
     align-items: center;
     display: grid;
     grid-template-columns: repeat(2, 1fr);

@@ -1,10 +1,11 @@
-import { ColorPicker, func } from '.';
+import { Func } from '.';
 
 class ElementModifier {
     public sharepoint: any;
+    public func = new Func();
     constructor(params?) {
         //Get the sharepoint webpart
-        if (func.isset(params)) this.sharepoint = params.sharePoint;
+        if (this.func.isset(params)) this.sharepoint = params.sharePoint;
         //add the Element add-ons
         prepareFrameWork();
     }
@@ -71,7 +72,7 @@ class ElementModifier {
                 let clicked = event.target;
                 if (!clicked.classList.contains('drop-content')) clicked = clicked.getParents('.drop-content');
 
-                if (!func.isnull(clicked)) {
+                if (!this.func.isnull(clicked)) {
                     mDrop.querySelector('#drop-control').querySelector('input').value = clicked.getAttribute('value') || '';
                     mDrop.querySelector('#drop-control').querySelector('input').setAttribute('value', clicked.getAttribute('value') || '');
                 }
@@ -85,7 +86,7 @@ class ElementModifier {
 
     //Import image as string64
     public importImage(params, callBack) {
-        params.attributes = func.isset(params.attributes) ? params.attributes : {};
+        params.attributes = this.func.isset(params.attributes) ? params.attributes : {};
         let upload = this.cell({
             element: 'input', name: params.name, dataAttributes: { type: 'file' }
         });
@@ -166,7 +167,7 @@ class ElementModifier {
                 });
             });
 
-            params.attributes.style = (func.isset(params.attributes.style)) ? params.attributes.style : {};
+            params.attributes.style = (this.func.isset(params.attributes.style)) ? params.attributes.style : {};
 
             params.attributes.style.minHeight = '10px';
             params.attributes.style.position = 'relative';
@@ -187,13 +188,13 @@ class ElementModifier {
 
             link.querySelector(`#submit`).addEventListener('click', event => {
                 let value = link.querySelector(`#${params.name}`).value;
-                if (!func.isSpaceString(value)) callBack({ src: link.querySelector(`#${params.name}`).value });
+                if (!this.func.isSpaceString(value)) callBack({ src: link.querySelector(`#${params.name}`).value });
             });
 
             imageSelector.ondblclick = (event) => {
                 let clicked = event.target;
                 if (!clicked.classList.contains('single-image')) clicked = clicked.getParents('.single-image');
-                if (!func.isnull(clicked)) {
+                if (!this.func.isnull(clicked)) {
                     link.querySelector(`#submit`).click();
                 }
             };
@@ -260,7 +261,7 @@ class ElementModifier {
             //if params is object
             else if (typeof params == 'object') {
                 element = document.createElement(params.element);//generate the element
-                if (func.isset(params.attributes)) {//set the attributes
+                if (this.func.isset(params.attributes)) {//set the attributes
                     for (var attr in params.attributes) {
                         if (attr == 'style') {//set the styles
                             element.css(params.attributes[attr]);
@@ -268,7 +269,7 @@ class ElementModifier {
                         else element.setAttribute(attr, params.attributes[attr]);
                     }
                 }
-                if (func.isset(params.children)) {//add the children if set
+                if (this.func.isset(params.children)) {//add the children if set
                     for (var child of params.children) {
                         if (child instanceof Element) {
                             element.append(child);
@@ -277,23 +278,23 @@ class ElementModifier {
                         }
                     }
                 }
-                if (func.isset(params.text)) element.textContent = params.text;//set the innerText
-                if (func.isset(params.value)) element.value = params.value;//set the value
-                if (func.isset(params.options)) {//add options if isset
+                if (this.func.isset(params.text)) element.textContent = params.text;//set the innerText
+                if (this.func.isset(params.value)) element.value = params.value;//set the value
+                if (this.func.isset(params.options)) {//add options if isset
                     for (var i of params.options) {
                         element.makeElement({ element: 'option', value: i, text: i, attachment: 'append' });
                     }
                 }
 
-                if (func.isset(params.currentContent)) {
+                if (this.func.isset(params.currentContent)) {
                     element.value = params.currentContent;//if has content value is currentContent
                 }
             }
 
             this.setCratetKey(element).then(key => {
-                if (func.isset(params.state)) {
+                if (this.func.isset(params.state)) {
                     let owner = element.getParents(params.state.owner);
-                    if (!func.isnull(owner)) {
+                    if (!this.func.isnull(owner)) {
                         owner.addState({ name: params.state.name, state: element });
                     }
                 }
@@ -326,24 +327,24 @@ class ElementModifier {
         if (type == 'file' && value == '') {
             return false;
         }
-        else if (type == 'text' || func.isnull(type)) {
-            return !func.isSpaceString(value);
+        else if (type == 'text' || this.func.isnull(type)) {
+            return !this.func.isSpaceString(value);
         }
         else if (type == 'date') {
-            if (func.hasString(element.className, 'future')) {
-                return func.isDate(value);
+            if (this.func.hasString(element.className, 'future')) {
+                return this.func.isDate(value);
             } else {
-                return func.isDateValid(value);
+                return this.func.isDateValid(value);
             }
         }
         else if (type == 'email') {
-            return func.isEmail(value);
+            return this.func.isEmail(value);
         }
         else if (type == 'number') {
-            return func.isNumber(value);
+            return this.func.isNumber(value);
         }
         else if (type == 'password') {
-            return func.isPasswordValid(value);
+            return this.func.isPasswordValid(value);
         }
     }
 
@@ -355,14 +356,14 @@ class ElementModifier {
     }
 
     public validateForm(form, nodeNames) {
-        if (!func.isset(nodeNames)) nodeNames = 'INPUT, SELECT, TEXTAREA';
+        if (!this.func.isset(nodeNames)) nodeNames = 'INPUT, SELECT, TEXTAREA';
         var final = true,
             nodeName = '',
             elementValue = true,
             prototype = null;
         form.querySelectorAll(nodeNames).forEach(element => {
             nodeName = element.nodeName;
-            if (!func.isnull(element.getParents('#content_prototype'))) {
+            if (!this.func.isnull(element.getParents('#content_prototype'))) {
                 prototype = element.getParents('#content_prototype').id;
                 if (prototype == 'content_prototype') {
                     elementValue = true;
@@ -392,12 +393,12 @@ class ElementModifier {
             ]
         });
 
-        if (func.isset(params.parent)) params.parent.append(form);
+        if (this.func.isset(params.parent)) params.parent.append(form);
         var note;
         let formContents = form.querySelector('.form-contents');
 
         for (let key in params.contents) {
-            note = (func.isset(params.contents[key].note)) ? `(${params.contents[key].note})` : '';
+            note = (this.func.isset(params.contents[key].note)) ? `(${params.contents[key].note})` : '';
             let block = formContents.makeElement({
                 element: 'div', attributes: { class: 'form-single-content' }, children: [
                     { element: 'label', text: key.toLowerCase(), attributes: { class: 'form-label', for: key.toLowerCase() } }
@@ -405,7 +406,7 @@ class ElementModifier {
             });
 
             block.makeElement(params.contents[key]).classList.add('form-data');
-            if (func.isset(params.contents[key].note)) block.makeElement({ element: 'span', text: params.contents[key].note, attributes: { class: 'form-note' } });
+            if (this.func.isset(params.contents[key].note)) block.makeElement({ element: 'span', text: params.contents[key].note, attributes: { class: 'form-note' } });
         }
 
         for (let key in params.buttons) {
@@ -467,7 +468,7 @@ class ElementModifier {
 
         let data = [];
         let heads = [];
-        if (!func.isnull(header)) {
+        if (!this.func.isnull(header)) {
             for (let head of header.querySelectorAll('th')) {
                 heads.push(head.textContent);
             }
@@ -497,7 +498,7 @@ class ElementModifier {
             a = a[by];
             b = b[by];
 
-            if (func.isNumber(a) && func.isNumber(b)) {
+            if (this.func.isNumber(a) && this.func.isNumber(b)) {
                 a = a / 1;
                 b = b / 1;
             }
@@ -541,16 +542,16 @@ class ElementModifier {
     //create cell component
     public cell(params) {
         //set the cell-data id
-        var id = func.stringReplace(params.name, ' ', '-') + '-cell';
+        var id = this.func.stringReplace(params.name, ' ', '-') + '-cell';
 
         //create the cell label
         var label = this.createElement({ element: 'label', attributes: { class: 'cell-label' }, text: params.name });
 
         //cell attributes
-        params.attributes = (func.isset(params.attributes)) ? params.attributes : {};
+        params.attributes = (this.func.isset(params.attributes)) ? params.attributes : {};
 
         //cell data attributes
-        params.dataAttributes = (func.isset(params.dataAttributes)) ? params.dataAttributes : {};
+        params.dataAttributes = (this.func.isset(params.dataAttributes)) ? params.dataAttributes : {};
         params.dataAttributes.id = id;
 
         var components;
@@ -567,22 +568,22 @@ class ElementModifier {
             components = { element: params.element, attributes: params.dataAttributes, text: params.value };
         }
 
-        if (func.isset(params.value)) components.attributes.value = params.value;
-        if (func.isset(params.options)) components.options = params.options;
+        if (this.func.isset(params.value)) components.attributes.value = params.value;
+        if (this.func.isset(params.options)) components.options = params.options;
 
         var data = this.createElement(components);//create the cell-data
         data.classList.add('cell-data');
 
-        if (func.isset(params.value)) data.value = params.value;
+        if (this.func.isset(params.value)) data.value = params.value;
 
         //create cell element
         var cell = this.createElement({ element: 'span', attributes: params.attributes, children: [label, data] });
 
         cell.classList.add('cell');
 
-        if (func.isset(params.text)) data.text = params.text;
+        if (this.func.isset(params.text)) data.text = params.text;
 
-        if (func.isset(params.list)) {
+        if (this.func.isset(params.list)) {
             cell.makeElement({
                 element: 'datalist', attributes: { id: `${id}-list` }, options: params.list.sort()
             });
@@ -590,7 +591,7 @@ class ElementModifier {
             data.setAttribute('list', `${id}-list`);
         }
 
-        if (func.isset(params.text)) data.textContent = params.text;
+        if (this.func.isset(params.text)) data.textContent = params.text;
         return cell;
     }
 
@@ -617,7 +618,7 @@ class ElementModifier {
     public message(params) {
         var me = this.createElement({
             element: 'span', attributes: { class: 'alert' }, children: [
-                func.isset(params.link) ?
+                this.func.isset(params.link) ?
                     this.createElement({ element: 'a', text: params.text, attributes: { class: 'text', href: params.link } })
                     :
                     this.createElement({ element: 'a', text: params.text, attributes: { class: 'text' } }),
@@ -626,7 +627,7 @@ class ElementModifier {
             ]
         });
 
-        if (func.isset(params.temp)) {
+        if (this.func.isset(params.temp)) {
             var time = setTimeout(() => {
                 me.remove();
                 clearTimeout(time);
@@ -644,11 +645,11 @@ class ElementModifier {
         return new Promise((resolve, reject) => {
             let key = '';
             let found = false;
-            if (!func.isset(window['craterdom'])) window['craterdom'] = {};
+            if (!this.func.isset(window['craterdom'])) window['craterdom'] = {};
             if (!element.hasAttribute('domKey')) {
                 do {
-                    key = func.generateRandom(32);
-                    found = func.isset(window['craterdom'][key]);
+                    key = this.func.generateRandom(32);
+                    found = this.func.isset(window['craterdom'][key]);
                 } while (found);
 
                 element.dataset.craterKey = key;
@@ -683,7 +684,7 @@ class ElementModifier {
             if (event.target.id == 'crater-pop-up-close') {
                 popUp.remove();
             }
-            else if (!event.target.classList.contains('crater-pop-up-window') && func.isnull(event.target.getParents('.crater-pop-up-window'))) {
+            else if (!event.target.classList.contains('crater-pop-up-window') && this.func.isnull(event.target.getParents('.crater-pop-up-window'))) {
                 popUp.remove();
             }
             else if (event.target.id == 'crater-pop-up-toggle') {
@@ -736,9 +737,9 @@ class ElementModifier {
     }
 }
 
-function prepareFrameWork(): void {
+function prepareFrameWork(): any{
     //Framework with JsDom
-
+    let func = new Func();
     NodeList.prototype['indexOf'] = function (element) {
         for (let i in this) {
             if (this[i] == element) return i;

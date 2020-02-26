@@ -1,4 +1,4 @@
-import { ElementModifier, func } from '.';
+import { ElementModifier, Func } from '.';
 require('./../styles/colorpicker.css');
 
 class ColorPicker {

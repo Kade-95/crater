@@ -3,15 +3,18 @@
 }
 
 .crater-countdown-content {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    width: 100%;
+    display: flex;
+    place-content: center;
+    justify-content: space-around;
 }
 
 .crater-countdown .crater-countdown-block {
-    margin: 1em 1em;
+    margin: 1em 0em;
+    min-width: fit-content;
+    width: 20%;
     color: var(--secondary-color);
     background-color: var(--lighter-primary-color);
-    /* display: inline-block; */
 }
 
 .crater-countdown .crater-countdown-block:hover{
@@ -23,8 +26,8 @@
     justify-content: center;
     flex-direction: row;
     align-content: center;
-    padding: 1em;
     font-size: 3em;
+    padding: 1em 0em;
     border-bottom: 5px solid var(--lighter-secondary-color);
 }
 

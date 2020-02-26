@@ -1,4 +1,4 @@
-import { ElementModifier, func, ColorPicker, Connection, BaseClientSideWebPart } from '.';
+import { ElementModifier, Func, ColorPicker, Connection, BaseClientSideWebPart } from '.';
 import FroalaEditor from 'froala-editor';
 import 'froala-editor/js/plugins/align.min.js';
 
@@ -26,7 +26,7 @@ require('./../styles/datelist.css');
 require('./../styles/instagram.css');
 require('./../styles/beforeafter.css');
 require('./../styles/table.css');
-require('./../styles/power.css');
+require('./../styles/powerbi.css');
 require('./../styles/employeedirectory.css');
 require('./../styles/birthday.css');
 require('./../../../node_modules/froala-editor/css/froala_editor.pkgd.min.css');
@@ -38,8 +38,9 @@ class CraterWebParts {
 	public elementModifier = new ElementModifier();
 	public sharePoint: any;
 	public connectable: any = [
-		'list', 'slider', 'counter', 'tiles', 'news', 'table', 'icons', 'button', 'events', 'carousel', 'datelist', 'event'
+		'list', 'slider', 'counter', 'tiles', 'news', 'table', 'icons', 'buttons', 'events', 'carousel', 'datelist', 'event'
 	];
+	public func = new Func();
 
 	constructor(params) {
 		this.sharePoint = params.sharePoint;
@@ -59,7 +60,7 @@ class CraterWebParts {
 		};
 
 		//append the options data to options
-		if (func.isset(params.options)) {
+		if (this.func.isset(params.options)) {
 			for (let option of params.options) {
 				options.makeElement({
 					element: 'button', text: option, attributes: { class: `${paneOptionsData[option].class}-${params.owner} small btn`, title: paneOptionsData[option].title }
@@ -182,7 +183,7 @@ class CraterWebParts {
 			});
 		}
 
-		if (func.isset(params.attributes)) optionContainer.setAttributes(params.attributes);
+		if (this.func.isset(params.attributes)) optionContainer.setAttributes(params.attributes);
 		return optionContainer;
 	}
 
@@ -235,10 +236,10 @@ class CraterWebParts {
 	//generate webpart key
 	public generateKey() {
 		let found = true;
-		let key = func.generateRandom(10);
+		let key = this.func.generateRandom(10);
 		while (found) {
-			key = func.generateRandom(10);
-			found = this.sharePoint.properties.pane.content.hasOwnProperty(key);
+			key = this.func.generateRandom(10);
+			found = this.sharePoint.storage.pane.content.hasOwnProperty(key);
 		}
 		return key;
 	}
@@ -246,13 +247,13 @@ class CraterWebParts {
 	//create webpart element
 	public createKeyedElement(params) {
 		let key = this.generateKey();
-		if (!func.isset(params.attributes)) params.attributes = {};
+		if (!this.func.isset(params.attributes)) params.attributes = {};
 		params.attributes['data-key'] = key;
-		if (!func.isset(params.attributes['data-type'])) params.attributes['data-type'] = 'sample';
+		if (!this.func.isset(params.attributes['data-type'])) params.attributes['data-type'] = 'sample';
 
-		this.sharePoint.properties.pane.content[key] = { content: '', styles: '', connection: '', settings: {}, sync: {}, draft: { dom: '', html: '', pane: { content: '', styles: '', connection: '' } } };
+		this.sharePoint.storage.pane.content[key] = { content: '', styles: '', connection: '', settings: {}, sync: {}, draft: { dom: '', html: '', pane: { content: '', styles: '', connection: '' } } };
 
-		if (!func.isset(params.options)) params.options = ['Edit', 'Delete', 'Clone'];
+		if (!this.func.isset(params.options)) params.options = ['Edit', 'Delete', 'Clone'];
 
 		let options = params.options;
 		delete params.options;
@@ -267,7 +268,7 @@ class CraterWebParts {
 
 		element.prepend(optionsMenu);
 
-		if (func.isset(params.alignOptions)) {
+		if (this.func.isset(params.alignOptions)) {
 			let align = {};
 			if (params.alignOptions == 'bottom') {
 				element.find('.webpart-options').css({ top: 'unset' });
@@ -309,17 +310,17 @@ class CraterWebParts {
 
 		let key = params.element.dataset['key'];
 
-		if (func.isset(params.options)) {//set the options
+		if (this.func.isset(params.options)) {//set the options
 			let styleOptions = block.makeElement({
 				element: 'div', attributes: { class: 'crater-style-options' }
 			});
 
-			if (func.isset(params.options.sync)) {//set the sync and async option
-				if (!func.isset(this.sharePoint.properties.pane.content[key].sync[params.title.toLowerCase()])) {
-					this.sharePoint.properties.pane.content[key].sync[params.title.toLowerCase()] = false;
+			if (this.func.isset(params.options.sync)) {//set the sync and async option
+				if (!this.func.isset(this.sharePoint.storage.pane.content[key].sync[params.title.toLowerCase()])) {
+					this.sharePoint.storage.pane.content[key].sync[params.title.toLowerCase()] = false;
 				}
 
-				let sync = this.sharePoint.properties.pane.content[key].sync[params.title.toLowerCase()];
+				let sync = this.sharePoint.storage.pane.content[key].sync[params.title.toLowerCase()];
 
 				styleOptions.makeElement({
 					element: 'img', attributes: {
@@ -331,11 +332,11 @@ class CraterWebParts {
 
 		for (let i in params.children) {//append the style data to the block
 			let value = '';
-			if (func.isset(params.element.css()[func.cssStyleName(i)])) {
-				value = params.element.css()[func.cssStyleName(i)];
+			if (this.func.isset(params.element.css()[this.func.cssStyleName(i)])) {
+				value = params.element.css()[this.func.cssStyleName(i)];
 			}
 			let styleSync = '';
-			if (func.isset(params.options) && func.isset(params.options.sync)) {
+			if (this.func.isset(params.options) && this.func.isset(params.options.sync)) {
 				styleSync = params.title.toLowerCase();
 			}
 
@@ -345,26 +346,26 @@ class CraterWebParts {
 				}));
 			}
 			else if (i == 'fontFamily') {
-				let list = func.fontStyles;
+				let list = this.func.fontStyles;
 				blockRow.append(this.elementModifier.cell({
 					element: 'input', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value, list
 				}));
 			}
 			//@ts-ignore
 			else if (i.includes('color') || i.includes('Color')) {
-				let list = func.colors;
+				let list = this.func.colors;
 				blockRow.append(this.elementModifier.cell({
 					element: 'input', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value, list
 				}));
 			}
 			else if (i == 'fontWeight') {
 				blockRow.append(this.elementModifier.cell({
-					element: 'select', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value, options: func.boldness
+					element: 'select', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value, options: this.func.boldness
 				}));
 			}
 			else if (i == 'fontSize') {
 				blockRow.append(this.elementModifier.cell({
-					element: 'input', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value, list: func.pixelSizes
+					element: 'input', dataAttributes: { 'data-action': i, 'data-style-sync': styleSync, class: 'crater-style-attr' }, name: params.children[i], value, list: this.func.pixelSizes
 				}));
 			}
 			else {
@@ -401,14 +402,6 @@ class EmployeeDirectory extends CraterWebParts {
 	}
 
 	public render(params) {
-		if (!func.isset(params.source)) params.source = [
-			{ image: this.sharePoint.images.append, text: 'One here' },
-			{ image: this.sharePoint.images.edit, text: 'Two now' },
-			{ image: this.sharePoint.images.sync, text: 'Three then' },
-			{ image: this.sharePoint.images.async, text: 'Four done' },
-			{ image: this.sharePoint.images.delete, text: 'Five when' }
-		];
-
 		let employeeDirectory = this.createKeyedElement({
 			element: 'div', attributes: { class: 'crater-employee-directory crater-component', 'data-type': 'employeedirectory' }, children: [
 				{
@@ -435,7 +428,7 @@ class EmployeeDirectory extends CraterWebParts {
 		});
 
 		this.key = this.key || employeeDirectory.dataset.key;
-		let settings = this.sharePoint.properties.pane.content[this.key].settings;
+		let settings = this.sharePoint.storage.pane.content[this.key].settings;
 
 		settings.searchType = 'All';
 		settings.searchQuery = '';
@@ -454,7 +447,7 @@ class EmployeeDirectory extends CraterWebParts {
 		this.key = this.element.dataset.key;
 		let displayed = false;
 
-		let settings = this.sharePoint.properties.pane.content[this.key].settings;
+		let settings = this.sharePoint.storage.pane.content[this.key].settings;
 
 		let display = this.element.find('.crater-employee-directory-display');
 
@@ -480,7 +473,7 @@ class EmployeeDirectory extends CraterWebParts {
 								client.api(`/users/${id}/photo/$value`)
 									.responseType('blob')
 									.get((error: any, result: any, rawResponse?: any) => {
-										if (!func.setNotNull(result)) return;
+										if (!this.func.setNotNull(result)) return;
 										settings.employees[id].photo = result;
 										if (displayed) {
 											display.find(`#row-${id}`).find('.crater-employee-directory-dp').src = window.URL.createObjectURL(result);
@@ -494,7 +487,7 @@ class EmployeeDirectory extends CraterWebParts {
 							return new Promise((resolve, reject) => {
 								client.api(`/users/${id}/department`)
 									.get((error: any, result: any, rawResponse?: any) => {
-										if (!func.setNotNull(result)) return;
+										if (!this.func.setNotNull(result)) return;
 										settings.employees[id].department = result.value;
 										resolve();
 									});
@@ -623,7 +616,7 @@ class EmployeeDirectory extends CraterWebParts {
 
 	public displayUsers(display) {
 		display.innerHTML = '';
-		let settings = this.sharePoint.properties.pane.content[this.key].settings;
+		let settings = this.sharePoint.storage.pane.content[this.key].settings;
 		let stored = JSON.parse(localStorage[`crater-${this.key}`]);
 
 		for (let i = 0; i < this.users.length; i++) {
@@ -635,26 +628,26 @@ class EmployeeDirectory extends CraterWebParts {
 				}
 				else if (settings.searchType == 'By Department') {
 					let department = settings.employees[employee.id].department || stored.employees[employee.id].department;
-					if (!func.setNotNull(department)) continue;
+					if (!this.func.setNotNull(department)) continue;
 					if (!department.toLowerCase().includes(settings.searchQuery.toLowerCase())) continue;
 				}
 				else if (settings.searchType == 'By Location') {
 					let office = settings.employees[employee.id].office || stored.employees[employee.id].office;
 
-					if (!func.setNotNull(office)) continue;
+					if (!this.func.setNotNull(office)) continue;
 					if (!office.toLowerCase().includes(settings.searchQuery.toLowerCase())) continue;
 				}
 				else if (settings.searchType == 'By Job Title') {
 					let jobTitle = settings.employees[employee.id].jobTitle || stored.employees[employee.id].jobTitle;
 
-					if (!func.setNotNull(jobTitle)) continue;
+					if (!this.func.setNotNull(jobTitle)) continue;
 					if (!jobTitle.toLowerCase().includes(settings.searchQuery.toLowerCase())) continue;
 				}
 			}
 
 			let photo = this.sharePoint.images.user;
 			let image = settings.employees[employee.id].photo;
-			if (func.setNotNull(settings.employees[employee.id].photo)) {
+			if (this.func.setNotNull(settings.employees[employee.id].photo)) {
 				photo = window.URL.createObjectURL(image);
 			}
 
@@ -693,11 +686,11 @@ class EmployeeDirectory extends CraterWebParts {
 			attributes: { class: 'crater-property-content' }
 		});
 
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		else {
 			let menuPane = this.paneContent.makeElement({
@@ -712,16 +705,16 @@ class EmployeeDirectory extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Background Color', list: func.colors
+								element: 'input', name: 'Background Color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Border Size', list: func.pixelSizes
+								element: 'input', name: 'Border Size', list: this.func.pixelSizes
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Border Color', list: func.colors
+								element: 'input', name: 'Border Color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Border Type', list: func.borderTypes
+								element: 'input', name: 'Border Type', list: this.func.borderTypes
 							})
 						]
 					})
@@ -740,16 +733,16 @@ class EmployeeDirectory extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Shadow', list: func.shadows
+								element: 'input', name: 'Shadow', list: this.func.shadows
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Border', list: func.borders
+								element: 'input', name: 'Border', list: this.func.borders
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Color', list: func.colors
+								element: 'input', name: 'Color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Background Color', list: func.colors
+								element: 'input', name: 'Background Color', list: this.func.colors
 							})
 						]
 					})
@@ -768,25 +761,25 @@ class EmployeeDirectory extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Height', list: func.pixelSizes
+								element: 'input', name: 'Height', list: this.func.pixelSizes
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Background Color', list: func.colors
+								element: 'input', name: 'Background Color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Font Color', list: func.colors
+								element: 'input', name: 'Font Color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Font Size', list: func.pixelSizes
+								element: 'input', name: 'Font Size', list: this.func.pixelSizes
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Font Style', list: func.fontStyles
+								element: 'input', name: 'Font Style', list: this.func.fontStyles
 							}),
 							this.elementModifier.cell({
 								element: 'img', name: 'Default Avatar'
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Avater Background', list: func.colors
+								element: 'input', name: 'Avater Background', list: this.func.colors
 							})
 						]
 					})
@@ -826,9 +819,9 @@ class EmployeeDirectory extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset.key;
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
-		let settings = this.sharePoint.properties.pane.content[this.key].settings;
+		let settings = this.sharePoint.storage.pane.content[this.key].settings;
 
-		let domDraft = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let domDraft = this.sharePoint.storage.pane.content[this.key].draft.dom;
 
 		let menuPane = this.paneContent.find('.menu-pane');
 		let searchTypePane = this.paneContent.find('.search-type-pane');
@@ -898,20 +891,20 @@ class EmployeeDirectory extends CraterWebParts {
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.mailApp = appsPane.find('#Mail-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.mailApp = appsPane.find('#Mail-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.messageApp = appsPane.find('#Message-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.messageApp = appsPane.find('#Message-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.callApp = appsPane.find('#Call-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.callApp = appsPane.find('#Call-cell').value;
 		});
 	}
 }
@@ -936,7 +929,7 @@ class Carousel extends CraterWebParts {
 	}
 
 	public render(params) {
-		if (!func.isset(params.source)) params.source = [
+		if (!this.func.isset(params.source)) params.source = [
 			{ image: this.sharePoint.images.append, text: 'One here' },
 			{ image: this.sharePoint.images.edit, text: 'Two now' },
 			{ image: this.sharePoint.images.sync, text: 'Three then' },
@@ -967,8 +960,8 @@ class Carousel extends CraterWebParts {
 
 		this.key = this.key || carousel.dataset.key;
 		//upload the pre-defined settings of the webpart
-		this.sharePoint.properties.pane.content[this.key].settings.columns = 3;
-		this.sharePoint.properties.pane.content[this.key].settings.duration = 1000;
+		this.sharePoint.storage.pane.content[this.key].settings.columns = 3;
+		this.sharePoint.storage.pane.content[this.key].settings.duration = 1000;
 		return carousel;
 	}
 
@@ -977,9 +970,9 @@ class Carousel extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 
-		this.columns = this.sharePoint.properties.pane.content[this.key].settings.columns / 1;
+		this.columns = this.sharePoint.storage.pane.content[this.key].settings.columns / 1;
 
-		this.duration = this.sharePoint.properties.pane.content[this.key].settings.duration / 1;
+		this.duration = this.sharePoint.storage.pane.content[this.key].settings.duration / 1;
 
 		this.startSlide();
 	}
@@ -1043,11 +1036,11 @@ class Carousel extends CraterWebParts {
 
 		//move to next slide
 		let keepSliding = () => {
-			clearInterval(this.sharePoint.properties.pane.content[this.key].settings.animation);
-			this.sharePoint.properties.pane.content[this.key].settings.animation = setInterval(() => {
+			clearInterval(this.sharePoint.storage.pane.content[this.key].settings.animation);
+			this.sharePoint.storage.pane.content[this.key].settings.animation = setInterval(() => {
 				key++;
 				runSliding();
-			}, this.sharePoint.properties.pane.content[this.key].settings.duration);
+			}, this.sharePoint.storage.pane.content[this.key].settings.duration);
 		};
 
 		//run animation when arrow is clicked
@@ -1061,7 +1054,7 @@ class Carousel extends CraterWebParts {
 					key++;
 				}
 
-				clearInterval(this.sharePoint.properties.pane.content[this.key].settings.animation);
+				clearInterval(this.sharePoint.storage.pane.content[this.key].settings.animation);
 				runSliding();
 			});
 		}
@@ -1069,7 +1062,7 @@ class Carousel extends CraterWebParts {
 		//run animation when a controller is clicked
 		for (let position = 0; position < radios.length; position++) {
 			radios[position].addEventListener('click', () => {
-				clearInterval(this.sharePoint.properties.pane.content[this.key].settings.animation);
+				clearInterval(this.sharePoint.storage.pane.content[this.key].settings.animation);
 				key = position;
 				runSliding();
 			});
@@ -1089,14 +1082,14 @@ class Carousel extends CraterWebParts {
 			attributes: { class: 'crater-property-content' }
 		});
 
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		else {
-			let columns = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-carousel-column');
+			let columns = this.sharePoint.storage.pane.content[this.key].draft.dom.findAll('.crater-carousel-column');
 
 			this.paneContent.makeElement({
 				element: 'div', children: [
@@ -1120,10 +1113,10 @@ class Carousel extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Duration', value: this.sharePoint.properties.pane.content[this.key].settings.duration || ''
+								element: 'input', name: 'Duration', value: this.sharePoint.storage.pane.content[this.key].settings.duration || ''
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Columns', value: this.sharePoint.properties.pane.content[this.key].settings.columns || ''
+								element: 'input', name: 'Columns', value: this.sharePoint.storage.pane.content[this.key].settings.columns || ''
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'FontSize'
@@ -1135,13 +1128,13 @@ class Carousel extends CraterWebParts {
 								element: 'input', name: 'ImageSize'
 							}),
 							this.elementModifier.cell({
-								element: 'select', name: 'ShowText', value: this.sharePoint.properties.pane.content[this.key].settings.showText || '', options: ['Yes', 'No']
+								element: 'select', name: 'ShowText', value: this.sharePoint.storage.pane.content[this.key].settings.showText || '', options: ['Yes', 'No']
 							}),
 							this.elementModifier.cell({
-								element: 'select', name: 'Curved', value: this.sharePoint.properties.pane.content[this.key].settings.curved || '', options: ['Yes', 'No']
+								element: 'select', name: 'Curved', value: this.sharePoint.storage.pane.content[this.key].settings.curved || '', options: ['Yes', 'No']
 							}),
 							this.elementModifier.cell({
-								element: 'select', name: 'Shadow', value: this.sharePoint.properties.pane.content[this.key].settings.shadow || '', options: ['Yes', 'No']
+								element: 'select', name: 'Shadow', value: this.sharePoint.storage.pane.content[this.key].settings.shadow || '', options: ['Yes', 'No']
 							}),
 						]
 					})
@@ -1180,7 +1173,7 @@ class Carousel extends CraterWebParts {
 						element: 'input', name: 'Text', attributes: {}, value: params.columns[i].find('.crater-carousel-text').innerText || ''
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Color', attributes: {}, value: params.columns[i].find('.crater-carousel-text').css().color || '', list: func.colors
+						element: 'input', name: 'Color', attributes: {}, value: params.columns[i].find('.crater-carousel-text').css().color || '', list: this.func.colors
 					}),
 					this.elementModifier.cell({
 						element: 'input', name: 'BackgroundColor', attributes: {}, value: params.columns[i].find('.crater-carousel-text').css().backgroundColor || ''
@@ -1197,7 +1190,7 @@ class Carousel extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let domDraft = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let domDraft = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		let content = domDraft.find('.crater-carousel-content');
 		let columns = domDraft.findAll('.crater-carousel-column');
 
@@ -1215,10 +1208,10 @@ class Carousel extends CraterWebParts {
 					element: 'input', name: 'Text', attributes: {}, value: 'Text Here'
 				}),
 				this.elementModifier.cell({
-					element: 'input', name: 'Color', attributes: {}, list: func.colors
+					element: 'input', name: 'Color', attributes: {}, list: this.func.colors
 				}),
 				this.elementModifier.cell({
-					element: 'input', name: 'BackgroundColor', attributes: {}, list: func.colors
+					element: 'input', name: 'BackgroundColor', attributes: {}, list: this.func.colors
 				}),
 			]
 		});
@@ -1358,24 +1351,24 @@ class Carousel extends CraterWebParts {
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.find('#Columns-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.columns = this.paneContent.find('#Columns-cell').value;
 		});
 	}
 
 	public update(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
 		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
@@ -1397,25 +1390,25 @@ class Carousel extends CraterWebParts {
 			event.preventDefault();
 			data.image = updateWindow.find('#meta-data-image').value;
 			data.text = updateWindow.find('#meta-data-text').value;
-			source = func.extractFromJsonArray(data, params.source);
+			source = this.func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
 			draftDom.find('.crater-carousel-content').innerHTML = newContent.find('.crater-carousel-content').innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = draftDom.outerHTML;
 
 			this.paneContent.find('.columns-pane').innerHTML = this.generatePaneContent({ columns: newContent.findAll('.crater-carousel-column') }).innerHTML;
 
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
-		if (!func.isnull(paneConnection)) {
+		if (!this.func.isnull(paneConnection)) {
 			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
 
-				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+				this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			});
 		}
 
@@ -1437,10 +1430,10 @@ class Events extends CraterWebParts {
 	}
 
 	private render(params) {
-		if (!func.isset(params.source)) params.source = [
-			{ task: 'Facebook', date: func.today(), icon: this.sharePoint.images.append, location: 'London', duration: func.time() },
-			{ task: 'Facebook', date: func.today(), icon: this.sharePoint.images.append, location: 'London', duration: func.time() },
-			{ task: 'Facebook', date: func.today(), icon: this.sharePoint.images.append, location: 'London', duration: func.time() },
+		if (!this.func.isset(params.source)) params.source = [
+			{ task: 'Facebook', date: this.func.today(), icon: this.sharePoint.images.append, location: 'London', duration: this.func.time() },
+			{ task: 'Facebook', date: this.func.today(), icon: this.sharePoint.images.append, location: 'London', duration: this.func.time() },
+			{ task: 'Facebook', date: this.func.today(), icon: this.sharePoint.images.append, location: 'London', duration: this.func.time() },
 		];
 
 		let events = this.createKeyedElement({
@@ -1494,7 +1487,7 @@ class Events extends CraterWebParts {
 		content.css({ gridTemplateRows: `repeat${params.source.length}, 1fr` });
 
 		this.key = this.key || events.dataset.key;
-		this.sharePoint.properties.pane.content[this.key].settings.layout = 'Icon, Details, Date';
+		this.sharePoint.storage.pane.content[this.key].settings.layout = 'Icon, Details, Date';
 		return events;
 	}
 
@@ -1502,7 +1495,7 @@ class Events extends CraterWebParts {
 		this.element = params.element;
 		this.key = params.element.dataset.key;
 
-		let layout = this.sharePoint.properties.pane.content[this.key].settings.layout.split(', ');
+		let layout = this.sharePoint.storage.pane.content[this.key].settings.layout.split(', ');
 		let iconPosition = layout.indexOf('Icon') + 1;
 		let detailsPosition = layout.indexOf('Details') + 1;
 		let datePosition = layout.indexOf('Date') + 1;
@@ -1518,20 +1511,20 @@ class Events extends CraterWebParts {
 
 	public setUpPaneContent(params): any {
 		let key = params.element.dataset['key'];
-		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.element = this.sharePoint.storage.pane.content[key].draft.dom;
 		this.paneContent = this.elementModifier.createElement({
 			element: 'div',
 			attributes: { class: 'crater-property-content' }
 		}).monitor();
 
-		if (this.sharePoint.properties.pane.content[key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		else if (this.sharePoint.storage.pane.content[key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].content;
 		}
 		else {
-			let eventsContent = this.sharePoint.properties.pane.content[key].draft.dom.find('.crater-events-content');
+			let eventsContent = this.sharePoint.storage.pane.content[key].draft.dom.find('.crater-events-content');
 			let eventsRows = eventsContent.findAll('.crater-events-row');
 
 			this.paneContent.makeElement({
@@ -1563,10 +1556,10 @@ class Events extends CraterWebParts {
 								element: 'input', name: 'title', value: this.element.find('.crater-events-title-text').textContent
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'backgroundcolor', value: this.element.find('.crater-events-title').css()['background-color'], list: func.colors
+								element: 'input', name: 'backgroundcolor', value: this.element.find('.crater-events-title').css()['background-color'], list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.find('.crater-events-title').css().color, list: func.colors
+								element: 'input', name: 'color', value: this.element.find('.crater-events-title').css().color, list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'fontsize', value: this.element.find('.crater-events-title').css()['font-size']
@@ -1624,7 +1617,7 @@ class Events extends CraterWebParts {
 								element: 'input', name: 'fontstyle'
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', list: func.colors
+								element: 'input', name: 'color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'show', options: ['Yes', 'No']
@@ -1785,7 +1778,7 @@ class Events extends CraterWebParts {
 	private listenPaneContent(params) {
 		this.key = params.element.dataset['key'];
 		this.element = params.element;
-		let domDraft = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let domDraft = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
 		let eventPrototype = this.elementModifier.createElement({
@@ -1814,7 +1807,7 @@ class Events extends CraterWebParts {
 				},
 				{
 					element: 'span', attributes: { class: 'crater-events-date' }, children: [
-						{ element: 'a', attributes: { class: 'crater-events-date-value', id: 'date' }, text: func.today() }
+						{ element: 'a', attributes: { class: 'crater-events-date-value', id: 'date' }, text: this.func.today() }
 					]
 				}
 			]
@@ -1838,7 +1831,7 @@ class Events extends CraterWebParts {
 					element: 'input', name: 'location', value: 'Lagos'
 				}),
 				this.elementModifier.cell({
-					element: 'input', name: 'date', value: func.today()
+					element: 'input', name: 'date', value: this.func.today()
 				}),
 			]
 		});
@@ -2016,23 +2009,23 @@ class Events extends CraterWebParts {
 		settingsPane.find('#Layout-cell').onChanged();
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		//on save clicked save the webpart settings and re-render
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart			
-			this.sharePoint.properties.pane.content[this.key].settings.layout = settingsPane.find('#Layout-cell').value;
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart			
+			this.sharePoint.storage.pane.content[this.key].settings.layout = settingsPane.find('#Layout-cell').value;
 		});
 	}
 
 	public update(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
 		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
@@ -2060,23 +2053,23 @@ class Events extends CraterWebParts {
 			data.duration = updateWindow.find('#meta-data-duration').value;
 			data.location = updateWindow.find('#meta-data-location').value;
 			data.date = updateWindow.find('#meta-data-date').value;
-			source = func.extractFromJsonArray(data, params.source);
+			source = this.func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
 			draftDom.find('.crater-events-content').innerHTML = newContent.find('.crater-events-content').innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = draftDom.outerHTML;
 			this.paneContent.find('.events-pane').innerHTML = this.generatePaneContent({ events: newContent.findAll('.crater-events-row') }).innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
-		if (!func.isnull(paneConnection)) {
+		if (!this.func.isnull(paneConnection)) {
 			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
 
-				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+				this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			});
 		}
 
@@ -2084,7 +2077,7 @@ class Events extends CraterWebParts {
 	}
 }
 
-class Button extends CraterWebParts {
+class Buttons extends CraterWebParts {
 	public params: any;
 	public elementModifier = new ElementModifier();
 	public paneContent: any;
@@ -2099,23 +2092,23 @@ class Button extends CraterWebParts {
 
 	//create the Button webpart
 	public render(params) {
-		if (!func.isset(params.source)) params.source = [
+		if (!this.func.isset(params.source)) params.source = [
 			{ title: 'Facebook', link: 'https://facebook.com', image: this.sharePoint.images.append, text: 'Button1' },
 			{ title: 'Twitter', link: 'https://twitter.com', image: this.sharePoint.images.append, text: 'Button2' },
 			{ title: 'Youtube', link: 'https://youtube.com', image: this.sharePoint.images.append, text: 'Button3' }
 		];
 
-		let button = this.createKeyedElement({ element: 'div', attributes: { class: 'crater-button crater-component', 'data-type': 'button' } });
+		let button = this.createKeyedElement({ element: 'div', attributes: { class: 'crater-buttons crater-component', 'data-type': 'buttons' } });
 
 		let content = button.makeElement({
-			element: 'div', attributes: { class: 'crater-button-content' }
+			element: 'div', attributes: { class: 'crater-buttons-content' }
 		});
 
 		for (let singleButton of params.source) {
 			content.makeElement({
-				element: 'a', attributes: { class: 'crater-button-single', href: singleButton.link, title: singleButton.title }, children: [
-					{ element: 'img', attributes: { class: 'crater-button-icon', src: singleButton.image, alt: 'Icon' } },
-					{ element: 'span', attributes: { class: 'crater-button-text' }, text: singleButton.text }
+				element: 'a', attributes: { class: 'crater-buttons-single', href: singleButton.link, title: singleButton.title }, children: [
+					{ element: 'img', attributes: { class: 'crater-buttons-icon', src: singleButton.image, alt: 'Icon' } },
+					{ element: 'span', attributes: { class: 'crater-buttons-text' }, text: singleButton.text }
 				]
 			});
 		}
@@ -2130,21 +2123,21 @@ class Button extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 
-		let buttons = this.element.findAll('.crater-button-single');
+		let buttons = this.element.findAll('.crater-buttons-single');
 
-		let imageDisplay = this.sharePoint.properties.pane.content[this.key].settings.imageDisplay;
-		let imageSize = this.sharePoint.properties.pane.content[this.key].settings.imageSize;
-		let fontSize = this.sharePoint.properties.pane.content[this.key].settings.fontSize;
-		let fontFamily = this.sharePoint.properties.pane.content[this.key].settings.fontFamily;
-		let width = this.sharePoint.properties.pane.content[this.key].settings.width;
-		let height = this.sharePoint.properties.pane.content[this.key].settings.height;
+		let imageDisplay = this.sharePoint.storage.pane.content[this.key].settings.imageDisplay;
+		let imageSize = this.sharePoint.storage.pane.content[this.key].settings.imageSize;
+		let fontSize = this.sharePoint.storage.pane.content[this.key].settings.fontSize;
+		let fontFamily = this.sharePoint.storage.pane.content[this.key].settings.fontFamily;
+		let width = this.sharePoint.storage.pane.content[this.key].settings.width;
+		let height = this.sharePoint.storage.pane.content[this.key].settings.height;
 
 		buttons.forEach(button => {
 			button.css({ height, width });
-			button.find('.crater-button-text').css({ fontSize, fontFamily });
-			button.find('.crater-button-icon').css({ width: imageSize });
-			if (imageDisplay == 'No') button.find('.crater-button-icon').hide();
-			else button.find('.crater-button-icon').show();
+			button.find('.crater-buttons-text').css({ fontSize, fontFamily });
+			button.find('.crater-buttons-icon').css({ width: imageSize });
+			if (imageDisplay == 'No') button.find('.crater-buttons-icon').hide();
+			else button.find('.crater-buttons-icon').show();
 		});
 	}
 
@@ -2159,17 +2152,17 @@ class Button extends CraterWebParts {
 		}).monitor();
 
 		//check if button draft is empty
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
 		//check if button pane has been generated before
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		//generate new button pane
 		else {
-			let button = this.sharePoint.properties.pane.content[this.key].draft.dom;
-			let buttons = button.findAll('.crater-button-single');
+			let button = this.sharePoint.storage.pane.content[this.key].draft.dom;
+			let buttons = button.findAll('.crater-buttons-single');
 
 			this.paneContent.makeElement({
 				element: 'div', children: [
@@ -2236,7 +2229,7 @@ class Button extends CraterWebParts {
 				element: 'div', attributes: { class: 'row button-pane' }, children: [
 					this.paneOptions({ options: ['AB', 'AA', 'D'], owner: 'crater-single-button' }),
 					this.elementModifier.cell({
-						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: element.find('.crater-button-icon').src }
+						element: 'img', name: 'Image', attributes: {}, dataAttributes: { class: 'crater-icon', src: element.find('.crater-buttons-icon').src }
 					}),
 					this.elementModifier.cell({
 						element: 'input', name: 'Text',
@@ -2245,10 +2238,10 @@ class Button extends CraterWebParts {
 						element: 'input', name: 'Link'
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'FontColor', list: func.colors
+						element: 'input', name: 'FontColor', list: this.func.colors
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'BackgroundColor', list: func.colors
+						element: 'input', name: 'BackgroundColor', list: this.func.colors
 					})
 				]
 			});
@@ -2264,19 +2257,19 @@ class Button extends CraterWebParts {
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
 		//fetch the content of Button
-		let content = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-button-content');
-		let singleButtons = content.findAll('.crater-button-single');
+		let content = this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-buttons-content');
+		let singleButtons = content.findAll('.crater-buttons-single');
 
 		//fetch the icon
-		let icons = content.findAll('.crater-button-icon');
+		let icons = content.findAll('.crater-buttons-icon');
 
 		//fetch the text
-		let texts = content.findAll('.crater-button-text');
+		let texts = content.findAll('.crater-buttons-text');
 
 		let buttonPrototype = this.elementModifier.createElement({
-			element: 'a', attributes: { class: 'crater-button-single', href: 'www.google.com', title: 'Title' }, children: [
-				{ element: 'img', attributes: { class: 'crater-button-icon', src: this.sharePoint.images.append, alt: 'Icon' } },
-				{ element: 'span', attributes: { class: 'crater-button-text' }, text: 'Button' }
+			element: 'a', attributes: { class: 'crater-buttons-single', href: 'www.google.com', title: 'Title' }, children: [
+				{ element: 'img', attributes: { class: 'crater-buttons-icon', src: this.sharePoint.images.append, alt: 'Icon' } },
+				{ element: 'span', attributes: { class: 'crater-buttons-text' }, text: 'Button' }
 			]
 		});
 
@@ -2335,7 +2328,7 @@ class Button extends CraterWebParts {
 			});
 
 			buttonPane.find('#Text-cell').onChanged(value => {
-				buttonDom.find('.crater-button-text').innerText = value;
+				buttonDom.find('.crater-buttons-text').innerText = value;
 			});
 
 			buttonPane.find('#Link-cell').onChanged(href => {
@@ -2344,7 +2337,7 @@ class Button extends CraterWebParts {
 
 			let colorCell = buttonPane.find('#FontColor-cell').parentNode;
 			this.pickColor({ parent: colorCell, cell: colorCell.find('#FontColor-cell') }, (color) => {
-				buttonDom.find('.crater-button-text').css({ color }); colorCell.find('#FontColor-cell').value = color;
+				buttonDom.find('.crater-buttons-text').css({ color }); colorCell.find('#FontColor-cell').value = color;
 				colorCell.find('#FontColor-cell').setAttribute('value', color);
 			});
 
@@ -2359,7 +2352,7 @@ class Button extends CraterWebParts {
 			//upload the icon
 			this.uploadImage({ parent: imageCell }, (image) => {
 				imageCell.find('#Image-cell').src = image.src;
-				buttonDom.find('.crater-button-icon').src = image.src;
+				buttonDom.find('.crater-buttons-icon').src = image.src;
 			});
 		};
 
@@ -2394,29 +2387,29 @@ class Button extends CraterWebParts {
 
 		// on panecontent changed set the state
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		//on save clicked save the webpart settings and re-render
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.ImageSize = settingsPane.find('#Image-Size-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.imageDisplay = settingsPane.find('#Image-Display-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.fontSize = settingsPane.find('#Font-Size-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.fontFamily = settingsPane.find('#Font-Family-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.width = settingsPane.find('#Width-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.height = settingsPane.find('#Height-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.ImageSize = settingsPane.find('#Image-Size-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.imageDisplay = settingsPane.find('#Image-Display-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.fontSize = settingsPane.find('#Font-Size-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.fontFamily = settingsPane.find('#Font-Family-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.width = settingsPane.find('#Width-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.height = settingsPane.find('#Height-cell').value;
 		});
 	}
 
 	public update(params) {
 		this.element = params.element;
 		this.key = this.element.dataset.key;
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
 		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
@@ -2442,26 +2435,26 @@ class Button extends CraterWebParts {
 			data.link = updateWindow.find('#meta-data-link').value;
 			data.title = updateWindow.find('#meta-data-title').value;
 			data.text = updateWindow.find('#meta-data-text').value;
-			source = func.extractFromJsonArray(data, params.source);
+			source = this.func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
-			draftDom.find('.crater-button-content').innerHTML = newContent.find('.crater-button-content').innerHTML;
+			draftDom.find('.crater-buttons-content').innerHTML = newContent.find('.crater-buttons-content').innerHTML;
 
-			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = draftDom.outerHTML;
 
-			this.paneContent.find('.content-pane').innerHTML = this.generatePaneContent({ buttons: newContent.findAll('.crater-button-single') }).innerHTML;
+			this.paneContent.find('.content-pane').innerHTML = this.generatePaneContent({ buttons: newContent.findAll('.crater-buttons-single') }).innerHTML;
 
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
-		if (!func.isnull(paneConnection)) {
+		if (!this.func.isnull(paneConnection)) {
 			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
 
-				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+				this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			});
 		}
 
@@ -2483,7 +2476,7 @@ class Icons extends CraterWebParts {
 	}
 
 	public render(params) {
-		if (!func.isset(params.source)) params.source = [
+		if (!this.func.isset(params.source)) params.source = [
 			{ title: 'Facebook', link: 'https://facebook.com', image: this.sharePoint.images.append },
 			{ title: 'Twitter', link: 'https://twitter.com', image: this.sharePoint.images.append },
 			{ title: 'Youtube', link: 'https://youtube.com', image: this.sharePoint.images.append }
@@ -2561,14 +2554,14 @@ class Icons extends CraterWebParts {
 			attributes: { class: 'crater-property-content' }
 		}).monitor();
 
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		else {
-			let icons = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-icons-icon');
+			let icons = this.sharePoint.storage.pane.content[this.key].draft.dom.findAll('.crater-icons-icon');
 			this.paneContent.makeElement({
 				element: 'div', children: [
 					this.elementModifier.createElement({
@@ -2597,10 +2590,10 @@ class Icons extends CraterWebParts {
 								element: 'input', name: 'Height',
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'BackgroundColor', list: func.colors
+								element: 'input', name: 'BackgroundColor', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Color', list: func.colors
+								element: 'input', name: 'Color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'Curved', options: ['Yes', 'No']
@@ -2621,8 +2614,8 @@ class Icons extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
-		let content = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-icons-content');
-		let icons = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-icons-icon');
+		let content = this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-icons-content');
+		let icons = this.sharePoint.storage.pane.content[this.key].draft.dom.findAll('.crater-icons-icon');
 
 		let iconPanePrototype = this.elementModifier.createElement({
 			element: 'div',
@@ -2719,7 +2712,7 @@ class Icons extends CraterWebParts {
 		let backgroundColorCell = this.paneContent.find('#BackgroundColor-cell').parentNode;
 
 		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#BackgroundColor-cell') }, (backgroundColor) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-icons-icon').forEach(icon => {
+			this.sharePoint.storage.pane.content[this.key].draft.dom.findAll('.crater-icons-icon').forEach(icon => {
 				icon.css({
 					backgroundColor
 				});
@@ -2731,7 +2724,7 @@ class Icons extends CraterWebParts {
 		let colorCell = this.paneContent.find('#Color-cell').parentNode;
 
 		this.pickColor({ parent: colorCell, cell: colorCell.find('#Color-cell') }, (color) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-icons-icon').forEach(icon => {
+			this.sharePoint.storage.pane.content[this.key].draft.dom.findAll('.crater-icons-icon').forEach(icon => {
 				icon.css({
 					color
 				});
@@ -2741,14 +2734,14 @@ class Icons extends CraterWebParts {
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
 			this.element.findAll('.crater-icons-icon').forEach(icon => {
 				if (this.paneContent.find('#Curved-cell').value == 'Yes') {
@@ -2769,7 +2762,7 @@ class Icons extends CraterWebParts {
 	public update(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
 		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
@@ -2793,25 +2786,25 @@ class Icons extends CraterWebParts {
 			data.image = updateWindow.find('#meta-data-image').value;
 			data.title = updateWindow.find('#meta-data-title').value;
 			data.link = updateWindow.find('#meta-data-link').value;
-			source = func.extractFromJsonArray(data, params.source);
+			source = this.func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
 			draftDom.find('.crater-icons-content').innerHTML = newContent.find('.crater-icons-content').innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = draftDom.outerHTML;
 
 			this.paneContent.find('.counter-pane').innerHTML = this.generatePaneContent({ icons: newContent.findAll('.crater-icons-icon') }).innerHTML;
 
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
-		if (!func.isnull(paneConnection)) {
+		if (!this.func.isnull(paneConnection)) {
 			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
 
-				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+				this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			});
 		}
 
@@ -2852,13 +2845,13 @@ class TextArea extends CraterWebParts {
 		}).monitor();
 		this.key = this.element.dataset.key;
 
-		let view = this.sharePoint.properties.pane.content[this.key].settings.view;
+		let view = this.sharePoint.storage.pane.content[this.key].settings.view;
 
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		else {
 			let textAreaPane = this.paneContent.makeElement({
@@ -2900,19 +2893,19 @@ class TextArea extends CraterWebParts {
 		}, 1);
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			this.element.find('.crater-textarea-content').innerHTML = '';
 			let children = this.paneContent.find('.fr-element').childNodes;
 			for (let i of children) {
 				this.element.find('.crater-textarea-content').append(i);
 			}
 
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
 		});
 	}
 }
@@ -2939,19 +2932,19 @@ class Section extends CraterWebParts {
 		this.key = this.element.dataset.key;
 
 		//get the the section's view[tabbed, straight]
-		let view = this.sharePoint.properties.pane.content[this.key].settings.view;
+		let view = this.sharePoint.storage.pane.content[this.key].settings.view;
 
 		//fetch the section menu
 		let menu = this.element.find('.crater-section-menu');
 
-		if (!func.isnull(menu) && func.isset(this.element.dataset.view) && this.element.dataset.view == 'Tabbed') {//if menu exists and section is tabbed
+		if (!this.func.isnull(menu) && this.func.isset(this.element.dataset.view) && this.element.dataset.view == 'Tabbed') {//if menu exists and section is tabbed
 			menu.findAll('li').forEach(li => {
 				let found = false;
 				let owner = li.dataset.owner;
 				for (let keyedElement of this.element.find('.crater-section-content').findAll('.keyed-element')) {
 					if (owner == keyedElement.dataset.key) {
 						found = true;
-						li.innerText = func.isset(keyedElement.dataset.title) ? keyedElement.dataset.title : keyedElement.dataset.type;
+						li.innerText = this.func.isset(keyedElement.dataset.title) ? keyedElement.dataset.title : keyedElement.dataset.type;
 						break;
 					}
 				}
@@ -3020,13 +3013,13 @@ class Section extends CraterWebParts {
 		this.key = this.element.dataset.key;
 
 		//fetch the sections view
-		let view = this.sharePoint.properties.pane.content[this.key].settings.view;
+		let view = this.sharePoint.storage.pane.content[this.key].settings.view;
 
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		else {
 			this.paneContent.makeElement({
@@ -3066,7 +3059,7 @@ class Section extends CraterWebParts {
 
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let sectionContents = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-section-content');
+		let sectionContents = this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-section-content');
 
 		let sectionContentDom = sectionContents.childNodes;
 		let sectionContentPane = this.paneContent.find('.section-contents-pane');
@@ -3156,16 +3149,16 @@ class Section extends CraterWebParts {
 
 		//monitor pane contents and note the changes
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		//save the the noted changes when save button is clicked
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
 
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
 
 			for (let keyedElement of this.element.findAll('.keyed-element')) {
 				this[keyedElement.dataset.type]({ action: 'rendered', element: keyedElement, sharePoint: this.sharePoint });
@@ -3208,14 +3201,14 @@ class Tab extends CraterWebParts {
 		let menu = this.element.find('.crater-menu');
 
 		let list = [];
-		let showIcons = this.sharePoint.properties.pane.content[this.key].settings.showMenuIcons;
+		let showIcons = this.sharePoint.storage.pane.content[this.key].settings.showMenuIcons;
 
 		for (let keyedElement of this.element.find('.crater-tab-content').childNodes) {
 			if (keyedElement.classList.contains('keyed-element')) {
 				list.push({
 					name: keyedElement.dataset.title || keyedElement.dataset.type,
 					owner: keyedElement.dataset.key,
-					icon: (func.isset(showIcons) && showIcons.toLowerCase() == 'yes') ? keyedElement.dataset.icon : ''
+					icon: (this.func.isset(showIcons) && showIcons.toLowerCase() == 'yes') ? keyedElement.dataset.icon : ''
 				});
 			}
 		}
@@ -3224,7 +3217,7 @@ class Tab extends CraterWebParts {
 		menu.css({ gridTemplateColumns: `repeat(${list.length}, 1fr)` });
 
 		menu.findAll('.crater-menu-item-icon').forEach(icon => {
-			let width = this.sharePoint.properties.pane.content[this.key].settings.iconSize || '2em';
+			let width = this.sharePoint.storage.pane.content[this.key].settings.iconSize || '2em';
 			icon.css({ width });
 		});
 
@@ -3244,7 +3237,7 @@ class Tab extends CraterWebParts {
 		});
 
 		let menuButtons = menu.findAll('.crater-menu-item');
-		if (func.setNotNull(menuButtons[menuButtons.length - 1])) menuButtons[menuButtons.length - 1].click();
+		if (this.func.setNotNull(menuButtons[menuButtons.length - 1])) menuButtons[menuButtons.length - 1].click();
 
 		this.showOptions(this.element);
 	}
@@ -3291,15 +3284,15 @@ class Tab extends CraterWebParts {
 		});
 
 		this.key = this.element.dataset.key;
-		let tab = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let tab = this.sharePoint.storage.pane.content[this.key].draft.dom;
 
 		//fetch the sections view
 
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		else {
 			this.paneContent.makeElement({
@@ -3380,8 +3373,8 @@ class Tab extends CraterWebParts {
 
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let menu = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-menu');
-		let tabContents = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-tab-content');
+		let menu = this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-menu');
+		let tabContents = this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-tab-content');
 
 		let tabContentDom = tabContents.childNodes;
 		let tabContentPane = this.paneContent.find('.tab-contents-pane');
@@ -3511,16 +3504,16 @@ class Tab extends CraterWebParts {
 
 		//monitor pane contents and note the changes
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		//save the the noted changes when save button is clicked
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
 
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
 
 			for (let keyedElement of this.element.findAll('.keyed-element')) {
 				this[keyedElement.dataset.type]({ action: 'rendered', element: keyedElement, sharePoint: this.sharePoint });
@@ -3528,8 +3521,8 @@ class Tab extends CraterWebParts {
 
 			}
 
-			this.sharePoint.properties.pane.content[this.key].settings.showMenuIcons = menuPane.find('#ShowIcons-cell').value;
-			this.sharePoint.properties.pane.content[this.key].settings.iconSize = menuPane.find('#IconSize-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.showMenuIcons = menuPane.find('#ShowIcons-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.iconSize = menuPane.find('#IconSize-cell').value;
 		});
 	}
 }
@@ -3548,7 +3541,7 @@ class Slider extends CraterWebParts {
 	}
 
 	public render(params) {
-		if (!func.isset(params.source)) params.source = [
+		if (!this.func.isset(params.source)) params.source = [
 			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/photo-1542178036-2e5efe4d8f83.jpg', text: 'text0', link: 'https://www.google.com', linkText: 'Button 0', subTitle: 'Sub Title 0' },
 			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/application-3426397_1920.jpg', text: 'text1', link: 'https://www.facebook.com', linkText: 'Button 1', subTitle: 'Sub Title 1' },
 			{ image: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/l1.jpg', text: 'text2', link: 'https://www.twitter.com', linkText: 'Button 2', subTitle: 'Sub Title 2' }
@@ -3562,7 +3555,7 @@ class Slider extends CraterWebParts {
 		let radioToggle = slider.makeElement({ element: 'span', attributes: { class: 'crater-top-right', id: 'crater-slide-controller' } });
 		let slidesContainer = slider.makeElement({ element: 'div', attributes: { class: 'crater-slides' } });
 
-		this.sharePoint.properties.pane.content[slider.dataset['key']].settings.duration = 10000;
+		this.sharePoint.storage.pane.content[slider.dataset['key']].settings.duration = 10000;
 
 		//add the slides
 		for (let j in params.source) {
@@ -3596,7 +3589,7 @@ class Slider extends CraterWebParts {
 		this.element = params.element;
 		this.key = params.element.dataset.key;
 
-		let settings = this.sharePoint.properties.pane.content[this.key].settings;
+		let settings = this.sharePoint.storage.pane.content[this.key].settings;
 		this.startSlide();
 
 		let imageBightness = settings.imageBrightness || '50%';
@@ -3703,11 +3696,11 @@ class Slider extends CraterWebParts {
 
 		//move to next slide
 		let keepSliding = () => {
-			clearInterval(this.sharePoint.properties.pane.content[this.key].settings.animation);
-			this.sharePoint.properties.pane.content[this.key].settings.animation = setInterval(() => {
+			clearInterval(this.sharePoint.storage.pane.content[this.key].settings.animation);
+			this.sharePoint.storage.pane.content[this.key].settings.animation = setInterval(() => {
 				key++;
 				runFading();
-			}, this.sharePoint.properties.pane.content[this.key].settings.duration);
+			}, this.sharePoint.storage.pane.content[this.key].settings.duration);
 		};
 
 		//run animation when arrow is clicked
@@ -3721,7 +3714,7 @@ class Slider extends CraterWebParts {
 					key++;
 				}
 
-				clearInterval(this.sharePoint.properties.pane.content[this.key].settings.animation);
+				clearInterval(this.sharePoint.storage.pane.content[this.key].settings.animation);
 				runFading();
 			});
 		}
@@ -3729,7 +3722,7 @@ class Slider extends CraterWebParts {
 		//run animation when a controller is clicked
 		for (let position = 0; position < radios.length; position++) {
 			radios[position].addEventListener('click', () => {
-				clearInterval(this.sharePoint.properties.pane.content[this.key].settings.animation);
+				clearInterval(this.sharePoint.storage.pane.content[this.key].settings.animation);
 				key = position;
 				runFading();
 			});
@@ -3748,11 +3741,11 @@ class Slider extends CraterWebParts {
 		});
 
 		let key = params.element.dataset['key'];
-		if (this.sharePoint.properties.pane.content[key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		else if (this.sharePoint.storage.pane.content[key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].content;
 		}
 		else {
 			this.paneContent.makeElement({
@@ -3763,7 +3756,7 @@ class Slider extends CraterWebParts {
 				]
 			});
 
-			let slides = this.sharePoint.properties.pane.content[key].draft.dom.findAll('.crater-slide');
+			let slides = this.sharePoint.storage.pane.content[key].draft.dom.findAll('.crater-slide');
 
 			this.paneContent.append(this.generatePaneContent({ slides }));
 
@@ -3778,13 +3771,13 @@ class Slider extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Font Style', list: func.fontStyles
+								element: 'input', name: 'Font Style', list: this.func.fontStyles
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Color', list: func.colors
+								element: 'input', name: 'Color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Font Size', list: func.pixelSizes
+								element: 'input', name: 'Font Size', list: this.func.pixelSizes
 							})
 						]
 					})
@@ -3802,22 +3795,22 @@ class Slider extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Font Style', list: func.fontStyles
+								element: 'input', name: 'Font Style', list: this.func.fontStyles
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Color', list: func.colors
+								element: 'input', name: 'Color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Font Size', list: func.pixelSizes
+								element: 'input', name: 'Font Size', list: this.func.pixelSizes
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'Show', options: ['Yes', 'No']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Background Color', list: func.colors
+								element: 'input', name: 'Background Color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Border', list: func.borders
+								element: 'input', name: 'Border', list: this.func.borders
 							})
 						]
 					})
@@ -3835,13 +3828,13 @@ class Slider extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Font Style', list: func.fontStyles
+								element: 'input', name: 'Font Style', list: this.func.fontStyles
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Color', list: func.colors
+								element: 'input', name: 'Color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Font Size', list: func.pixelSizes
+								element: 'input', name: 'Font Size', list: this.func.pixelSizes
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'Show', options: ['Yes', 'No']
@@ -3864,7 +3857,7 @@ class Slider extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Duration', value: this.sharePoint.properties.pane.content[key].settings.duration
+								element: 'input', name: 'Duration', value: this.sharePoint.storage.pane.content[key].settings.duration
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'Content Location', options: ['Top', 'Center', 'Bottom']
@@ -3873,10 +3866,10 @@ class Slider extends CraterWebParts {
 								element: 'select', name: 'View', options: ['Same Window', 'New Window', 'Pop Up']
 							}),
 							this.elementModifier.cell({
-								element: 'select', name: 'Image Blur', options: func.pixelSizes
+								element: 'select', name: 'Image Blur', options: this.func.pixelSizes
 							}),
 							this.elementModifier.cell({
-								element: 'select', name: 'Image Brightness', options: func.range(0, 100)
+								element: 'select', name: 'Image Brightness', options: this.func.range(0, 100)
 							}),
 						]
 					})
@@ -3934,7 +3927,7 @@ class Slider extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let slides = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-slides');
+		let slides = this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-slides');
 
 		let slideListRows = slides.findAll('.crater-slide');
 
@@ -4073,58 +4066,58 @@ class Slider extends CraterWebParts {
 		subTitleSettings.find('#Show-cell').onChanged();
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
 
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.view = this.paneContent.find('#View-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.view = this.paneContent.find('#View-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.imageBrightness = this.paneContent.find('#Image-Brightness-cell').value + '%';
+			this.sharePoint.storage.pane.content[this.key].settings.imageBrightness = this.paneContent.find('#Image-Brightness-cell').value + '%';
 
-			this.sharePoint.properties.pane.content[this.key].settings.imageBlur = this.paneContent.find('#Image-Blur-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.imageBlur = this.paneContent.find('#Image-Blur-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.contentLocation = this.paneContent.find('#Content-Location-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.contentLocation = this.paneContent.find('#Content-Location-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.textFontStyle = textSettings.find('#Font-Style-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.textFontStyle = textSettings.find('#Font-Style-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.textColor = textSettings.find('#Color-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.textColor = textSettings.find('#Color-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.textFontSize = textSettings.find('#Font-Size-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.textFontSize = textSettings.find('#Font-Size-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.linkFontStyle = linkSettings.find('#Font-Style-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.linkFontStyle = linkSettings.find('#Font-Style-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.linkColor = linkSettings.find('#Color-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.linkColor = linkSettings.find('#Color-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.linkFontSize = linkSettings.find('#Font-Size-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.linkFontSize = linkSettings.find('#Font-Size-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.linkShow = linkSettings.find('#Show-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.linkShow = linkSettings.find('#Show-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.linkBackgroundColor = linkSettings.find('#Background-Color-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.linkBackgroundColor = linkSettings.find('#Background-Color-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.linkBorder = linkSettings.find('#Border-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.linkBorder = linkSettings.find('#Border-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.subTitleFontStyle = subTitleSettings.find('#Font-Style-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.subTitleFontStyle = subTitleSettings.find('#Font-Style-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.subTitleColor = subTitleSettings.find('#Color-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.subTitleColor = subTitleSettings.find('#Color-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.subTitleFontSize = subTitleSettings.find('#Font-Size-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.subTitleFontSize = subTitleSettings.find('#Font-Size-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.subTitleShow = subTitleSettings.find('#Show-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.subTitleShow = subTitleSettings.find('#Show-cell').value;
 		});
 	}
 
 	public update(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
 		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
@@ -4147,25 +4140,25 @@ class Slider extends CraterWebParts {
 			data.image = updateWindow.find('#meta-data-image').value;
 			data.text = updateWindow.find('#meta-data-text').value;
 
-			source = func.extractFromJsonArray(data, params.source);
+			source = this.func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
 			draftDom.find('.crater-slides').innerHTML = newContent.find('.crater-slides').innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = draftDom.outerHTML;
 
 			this.paneContent.find('.list-pane').innerHTML = this.generatePaneContent({ slides: draftDom.findAll('.crater-slide') }).innerHTML;
 
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
-		if (!func.isnull(paneConnection)) {
+		if (!this.func.isnull(paneConnection)) {
 			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
 
-				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+				this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			});
 		}
 
@@ -4187,7 +4180,7 @@ class List extends CraterWebParts {
 	}
 
 	public render(params) {
-		if (!func.isset(params.source))
+		if (!this.func.isset(params.source))
 			params.source = [
 				{ title: 'Person One', job: 'CEO', image: null, link: '#' },
 				{ title: 'Person Two', job: 'Manager', image: null, link: '#' },
@@ -4209,7 +4202,7 @@ class List extends CraterWebParts {
 		for (let person of params.source) {
 			content.append(this.elementModifier.createElement({
 				element: 'div', attributes: { class: 'crater-list-content-row' }, children: [
-					this.elementModifier.createElement({ element: 'img', attributes: { class: 'crater-list-content-row-image', id: 'image', src: func.isnull(person.image) ? this.sharePoint.images.append : person.image, alt: "DP" } }),
+					this.elementModifier.createElement({ element: 'img', attributes: { class: 'crater-list-content-row-image', id: 'image', src: this.func.isnull(person.image) ? this.sharePoint.images.append : person.image, alt: "DP" } }),
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'crater-list-content-row-details' }, children: [
 							this.elementModifier.createElement({ element: 'a', attributes: { class: 'crater-list-content-row-details-title', id: 'title' }, text: person.title }),
@@ -4229,20 +4222,20 @@ class List extends CraterWebParts {
 
 	public setUpPaneContent(params): any {
 		let key = params.element.dataset['key'];
-		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.element = this.sharePoint.storage.pane.content[key].draft.dom;
 		this.paneContent = this.elementModifier.createElement({
 			element: 'div',
 			attributes: { class: 'crater-property-content' }
 		}).monitor();
 
-		if (this.sharePoint.properties.pane.content[key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		else if (this.sharePoint.storage.pane.content[key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].content;
 		}
 		else {
-			let peopleList = this.sharePoint.properties.pane.content[key].draft.dom.find('.crater-list-content');
+			let peopleList = this.sharePoint.storage.pane.content[key].draft.dom.find('.crater-list-content');
 			let peopleListRows = peopleList.findAll('.crater-list-content-row');
 			this.paneContent.makeElement({
 				element: 'div', children: [
@@ -4270,10 +4263,10 @@ class List extends CraterWebParts {
 								element: 'input', name: 'title', value: this.element.find('.crater-list-title').textContent
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'backgroundcolor', value: this.element.find('.crater-list-title').css()['background-color'], list: func.colors
+								element: 'input', name: 'backgroundcolor', value: this.element.find('.crater-list-title').css()['background-color'], list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.find('.crater-list-title').css().color, list: func.colors
+								element: 'input', name: 'color', value: this.element.find('.crater-list-title').css().color, list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'fontsize', value: this.element.find('.crater-list-title').css()['font-size']
@@ -4338,7 +4331,7 @@ class List extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 
 		let peopleList = draftDom.find('.crater-list-content');
 		let peopleListRows = peopleList.findAll('.crater-list-content-row');
@@ -4435,48 +4428,48 @@ class List extends CraterWebParts {
 
 		this.uploadImage({ parent: iconCell }, (image) => {
 			iconCell.find('#icon-cell').src = image.src;
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title-icon').src = image.src;
+			this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-list-title-icon').src = image.src;
 		});
 
 		titlePane.find('#title-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').innerHTML = value;
+			this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-list-title').innerHTML = value;
 		});
 
 		titlePane.find('#Show-cell').onChanged(value => {
 			if (value == 'No') {
-				this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').hide();
+				this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-list-title').hide();
 			} else {
-				this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').show();
+				this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-list-title').show();
 			}
 		});
 
 		let backgroundColorCell = titlePane.find('#backgroundcolor-cell').parentNode;
 		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#backgroundcolor-cell') }, (backgroundColor) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').css({ backgroundColor });
+			this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-list-title').css({ backgroundColor });
 			backgroundColorCell.find('#backgroundcolor-cell').value = backgroundColor;
 			backgroundColorCell.find('#backgroundcolor-cell').setAttribute('value', backgroundColor);
 		});
 
 		let colorCell = titlePane.find('#color-cell').parentNode;
 		this.pickColor({ parent: colorCell, cell: colorCell.find('#color-cell') }, (color) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').css({ color });
+			this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-list-title').css({ color });
 			colorCell.find('#color-cell').value = color;
 			colorCell.find('#color-cell').setAttribute('value', color);
 		});
 
 		this.paneContent.find('.title-pane').find('#fontsize-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').css({ fontSize: value });
+			this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-list-title').css({ fontSize: value });
 		});
 
 		this.paneContent.find('.title-pane').find('#height-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-title').css({ height: value });
+			this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-list-title').css({ height: value });
 		});
 
 		this.paneContent.find('.new-component').addEventListener('click', event => {
 			let newPeopleListRow = peopleContentRowPrototype.cloneNode(true);
 			let newListRow = listRowPrototype.cloneNode(true);
 
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-list-content').append(newPeopleListRow);//c
+			this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-list-content').append(newPeopleListRow);//c
 			this.paneContent.find('.list-pane').append(newListRow);
 
 			listRowHandler(newListRow, newPeopleListRow);
@@ -4487,8 +4480,8 @@ class List extends CraterWebParts {
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
@@ -4496,14 +4489,14 @@ class List extends CraterWebParts {
 
 			this.element.css(draftDom.css());
 
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 		});
 	}
 
 	public update(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
 		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
@@ -4529,25 +4522,25 @@ class List extends CraterWebParts {
 			data.title = updateWindow.find('#meta-data-title').value;
 			data.job = updateWindow.find('#meta-data-job').value;
 			data.link = updateWindow.find('#meta-data-link').value;
-			source = func.extractFromJsonArray(data, params.source);
+			source = this.func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
 			draftDom.find('.crater-list-content').innerHTML = newContent.find('.crater-list-content').innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = draftDom.outerHTML;
 
 			this.paneContent.find('.list-pane').innerHTML = this.generatePaneContent({ list: newContent.findAll('.crater-list-content-row') }).innerHTML;
 
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
-		if (!func.isnull(paneConnection)) {
+		if (!this.func.isnull(paneConnection)) {
 			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
 
-				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+				this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			});
 		}
 
@@ -4580,7 +4573,7 @@ class Tiles extends CraterWebParts {
 	}
 
 	public render(params) {
-		if (!func.isset(params.source))
+		if (!this.func.isset(params.source))
 			params.source = [
 				{ name: 'Tile One', about: 'Hello welcome to this place', image: this.sharePoint.images.append, color: '#333333' },
 				{ name: 'Tile Two', about: 'Hello welcome to this place', image: this.sharePoint.images.append, color: '#999999' },
@@ -4614,10 +4607,10 @@ class Tiles extends CraterWebParts {
 
 		//set the webparts pre-defined settings
 		this.key = this.key || tiles.dataset['key'];
-		this.sharePoint.properties.pane.content[this.key].settings.columns = 3;
-		this.sharePoint.properties.pane.content[this.key].settings.duration = 10;
-		this.sharePoint.properties.pane.content[this.key].settings.backgroundSize = 'auto 60%';
-		this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition = 'center';
+		this.sharePoint.storage.pane.content[this.key].settings.columns = 3;
+		this.sharePoint.storage.pane.content[this.key].settings.duration = 10;
+		this.sharePoint.storage.pane.content[this.key].settings.backgroundSize = 'auto 60%';
+		this.sharePoint.storage.pane.content[this.key].settings.backgroundPosition = 'center';
 		return tiles;
 	}
 
@@ -4632,11 +4625,11 @@ class Tiles extends CraterWebParts {
 		let currentContent;
 
 		//fetch the settings
-		this.columns = this.sharePoint.properties.pane.content[this.key].settings.columns / 1;
-		this.duration = this.sharePoint.properties.pane.content[this.key].settings.duration;
-		this.backgroundPosition = this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition;
-		this.backgroundWidth = this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth;
-		this.backgroundHeight = this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight;
+		this.columns = this.sharePoint.storage.pane.content[this.key].settings.columns / 1;
+		this.duration = this.sharePoint.storage.pane.content[this.key].settings.duration;
+		this.backgroundPosition = this.sharePoint.storage.pane.content[this.key].settings.backgroundPosition;
+		this.backgroundWidth = this.sharePoint.storage.pane.content[this.key].settings.backgroundWidth;
+		this.backgroundHeight = this.sharePoint.storage.pane.content[this.key].settings.backgroundHeight;
 
 		this.height = this.element.css().height;
 
@@ -4670,7 +4663,7 @@ class Tiles extends CraterWebParts {
 				else return position;
 			};
 
-			let direction = getPosition(func.trem(this.backgroundPosition).toLowerCase());
+			let direction = getPosition(this.func.trem(this.backgroundPosition).toLowerCase());
 
 			tileBackground[`margin-${direction}`] = 'auto';
 			tileBackground.width = this.backgroundWidth;
@@ -4678,7 +4671,7 @@ class Tiles extends CraterWebParts {
 
 			tile.find('.crater-tiles-content-column-image').css(tileBackground);
 
-			if (!func.isset(this.height) || tile.position().height > this.height) {
+			if (!this.func.isset(this.height) || tile.position().height > this.height) {
 				this.height = tile.position().height;
 			}
 			//set height to the height of the longest tile
@@ -4687,11 +4680,11 @@ class Tiles extends CraterWebParts {
 
 		this.element.css({ gridTemplateRows: `repeat(${Math.ceil(length / this.columns)}, '1fr)`, height: this.height });
 
-		this.height = func.isset(this.sharePoint.properties.pane.content[this.key].settings.height)
-			? this.sharePoint.properties.pane.content[this.key].settings.height
+		this.height = this.func.isset(this.sharePoint.storage.pane.content[this.key].settings.height)
+			? this.sharePoint.storage.pane.content[this.key].settings.height
 			: this.height;
 
-		if (func.isset(this.height) && this.height.toString().indexOf('px') == -1) this.height += 'px';
+		if (this.func.isset(this.height) && this.height.toString().indexOf('px') == -1) this.height += 'px';
 
 		//run animation
 		for (let i = 0; i < length; i++) {
@@ -4725,14 +4718,14 @@ class Tiles extends CraterWebParts {
 			attributes: { class: 'crater-property-content' }
 		}).monitor();
 
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		else {
-			let tiles = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-tiles-content-column');
+			let tiles = this.sharePoint.storage.pane.content[this.key].draft.dom.findAll('.crater-tiles-content-column');
 			this.paneContent.makeElement({
 				element: 'div', children: [
 					this.elementModifier.createElement({
@@ -4755,22 +4748,22 @@ class Tiles extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Duration', value: this.sharePoint.properties.pane.content[this.key].settings.duration
+								element: 'input', name: 'Duration', value: this.sharePoint.storage.pane.content[this.key].settings.duration
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Columns', value: this.sharePoint.properties.pane.content[this.key].settings.columns || ''
+								element: 'input', name: 'Columns', value: this.sharePoint.storage.pane.content[this.key].settings.columns || ''
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'BackgroundWidth', value: this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth || ''
+								element: 'input', name: 'BackgroundWidth', value: this.sharePoint.storage.pane.content[this.key].settings.backgroundWidth || ''
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'BackgroundHeight', value: this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight || ''
+								element: 'input', name: 'BackgroundHeight', value: this.sharePoint.storage.pane.content[this.key].settings.backgroundHeight || ''
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'BackgroundPosition', options: ['Left', 'Right', 'Center']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Height', value: this.sharePoint.properties.pane.content[this.key].settings.height || ''
+								element: 'input', name: 'Height', value: this.sharePoint.storage.pane.content[this.key].settings.height || ''
 							})
 						]
 					})
@@ -4779,17 +4772,17 @@ class Tiles extends CraterWebParts {
 		}
 
 		//upload the settings
-		this.paneContent.find('#Duration-cell').value = this.sharePoint.properties.pane.content[this.key].settings.duration || '';
+		this.paneContent.find('#Duration-cell').value = this.sharePoint.storage.pane.content[this.key].settings.duration || '';
 
-		this.paneContent.find('#Columns-cell').value = this.sharePoint.properties.pane.content[this.key].settings.columns || '';
+		this.paneContent.find('#Columns-cell').value = this.sharePoint.storage.pane.content[this.key].settings.columns || '';
 
-		this.paneContent.find('#BackgroundPosition-cell').value = this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition || '';
+		this.paneContent.find('#BackgroundPosition-cell').value = this.sharePoint.storage.pane.content[this.key].settings.backgroundPosition || '';
 
-		this.paneContent.find('#BackgroundWidth-cell').value = this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth || '';
+		this.paneContent.find('#BackgroundWidth-cell').value = this.sharePoint.storage.pane.content[this.key].settings.backgroundWidth || '';
 
-		this.paneContent.find('#BackgroundHeight-cell').value = this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight || '';
+		this.paneContent.find('#BackgroundHeight-cell').value = this.sharePoint.storage.pane.content[this.key].settings.backgroundHeight || '';
 
-		this.paneContent.find('#Height-cell').value = this.sharePoint.properties.pane.content[this.key].settings.height || '';
+		this.paneContent.find('#Height-cell').value = this.sharePoint.storage.pane.content[this.key].settings.height || '';
 
 		return this.paneContent;
 	}
@@ -4825,10 +4818,10 @@ class Tiles extends CraterWebParts {
 						element: 'input', name: 'About', value: params.tiles[i].find('#about').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Color', value: func.isset(params.tiles[i].css().color) ? params.tiles[i].css().color : this.color, list: func.colors
+						element: 'input', name: 'Color', value: this.func.isset(params.tiles[i].css().color) ? params.tiles[i].css().color : this.color, list: this.func.colors
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Background', value: func.isset(params.tiles[i].css()['background-color']) ? params.tiles[i].css()['background-color'] : this.backgroundColor, list: func.colors
+						element: 'input', name: 'Background', value: this.func.isset(params.tiles[i].css()['background-color']) ? params.tiles[i].css()['background-color'] : this.backgroundColor, list: this.func.colors
 					})
 				]
 			});
@@ -4842,7 +4835,7 @@ class Tiles extends CraterWebParts {
 
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let content = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-tiles-content');
+		let content = this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-tiles-content');
 		let tiles = content.findAll('.crater-tiles-content-column');
 
 		let columnPanePrototype = this.elementModifier.createElement({
@@ -4862,10 +4855,10 @@ class Tiles extends CraterWebParts {
 					element: 'input', name: 'About', value: 'About'
 				}),
 				this.elementModifier.cell({
-					element: 'input', name: 'Color', value: this.color, list: func.colors
+					element: 'input', name: 'Color', value: this.color, list: this.func.colors
 				}),
 				this.elementModifier.cell({
-					element: 'input', name: 'Background', value: this.backgroundColor, list: func.colors
+					element: 'input', name: 'Background', value: this.backgroundColor, list: this.func.colors
 				}),
 			]
 		});
@@ -4963,37 +4956,37 @@ class Tiles extends CraterWebParts {
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			//update webpart            
 
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
 
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;
 
 			//save the new settings
-			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.find('#Columns-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.columns = this.paneContent.find('#Columns-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition = this.paneContent.find('#BackgroundPosition-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.backgroundPosition = this.paneContent.find('#BackgroundPosition-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight = this.paneContent.find('#BackgroundHeight-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.backgroundHeight = this.paneContent.find('#BackgroundHeight-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth = this.paneContent.find('#BackgroundWidth-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.backgroundWidth = this.paneContent.find('#BackgroundWidth-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.height = this.paneContent.find('#Height-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.height = this.paneContent.find('#Height-cell').value;
 		});
 	}
 
 	public update(params) {
 		this.element = params.element;
 		this.key = this.element.dataset.key;
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
 		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
@@ -5019,26 +5012,26 @@ class Tiles extends CraterWebParts {
 			data.name = updateWindow.find('#meta-data-name').value;
 			data.about = updateWindow.find('#meta-data-about').value;
 			data.color = updateWindow.find('#meta-data-color').value;
-			source = func.extractFromJsonArray(data, params.source);
+			source = this.func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
 			draftDom.find('.crater-tiles-content').innerHTML = newContent.find('.crater-tiles-content').innerHTML;
 
-			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = draftDom.outerHTML;
 
 			this.paneContent.find('.tiles-pane').innerHTML = this.generatePaneContent({ tiles: newContent.findAll('.crater-tiles-content-column') }).innerHTML;
 
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
-		if (!func.isnull(paneConnection)) {
+		if (!this.func.isnull(paneConnection)) {
 			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
 
-				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+				this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			});
 		}
 
@@ -5070,7 +5063,7 @@ class Counter extends CraterWebParts {
 	}
 
 	public render(params) {
-		if (!func.isset(params.source)) params.source = [
+		if (!this.func.isset(params.source)) params.source = [
 			{ name: 'Count One', count: 50, image: this.sharePoint.images.append, unit: '%', color: '#333333' },
 			{ name: 'Count Two', count: 63, image: this.sharePoint.images.append, unit: 'eggs', color: '#999999' },
 			{ name: 'Count Three', count: 633, image: this.sharePoint.images.append, unit: 'people', color: '#666666' }
@@ -5109,10 +5102,10 @@ class Counter extends CraterWebParts {
 		}
 		this.key = this.key || counter.dataset.key;
 		//upload the pre-defined settings of the webpart
-		this.sharePoint.properties.pane.content[this.key].settings.columns = 3;
-		this.sharePoint.properties.pane.content[this.key].settings.duration = 10;
-		this.sharePoint.properties.pane.content[this.key].settings.backgroundSize = 'auto 40%';
-		this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition = 'left';
+		this.sharePoint.storage.pane.content[this.key].settings.columns = 3;
+		this.sharePoint.storage.pane.content[this.key].settings.duration = 10;
+		this.sharePoint.storage.pane.content[this.key].settings.backgroundSize = 'auto 40%';
+		this.sharePoint.storage.pane.content[this.key].settings.backgroundPosition = 'left';
 		return counter;
 	}
 
@@ -5120,17 +5113,17 @@ class Counter extends CraterWebParts {
 		this.params = params;
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		let settings = this.sharePoint.properties.pane.content[this.key].settings;
+		let settings = this.sharePoint.storage.pane.content[this.key].settings;
 
 		let counters = this.element.findAll('.crater-counter-content-column');
 		let length = counters.length;
 		let currentContent;
 
-		this.columns = this.sharePoint.properties.pane.content[this.key].settings.columns / 1;
-		this.duration = this.sharePoint.properties.pane.content[this.key].settings.duration / 1;
-		this.backgroundPosition = this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition;
-		this.backgroundWidth = this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth;
-		this.backgroundHeight = this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight;
+		this.columns = this.sharePoint.storage.pane.content[this.key].settings.columns / 1;
+		this.duration = this.sharePoint.storage.pane.content[this.key].settings.duration / 1;
+		this.backgroundPosition = this.sharePoint.storage.pane.content[this.key].settings.backgroundPosition;
+		this.backgroundWidth = this.sharePoint.storage.pane.content[this.key].settings.backgroundWidth;
+		this.backgroundHeight = this.sharePoint.storage.pane.content[this.key].settings.backgroundHeight;
 
 		this.height = this.element.css().height;
 
@@ -5183,7 +5176,7 @@ class Counter extends CraterWebParts {
 				}
 			}, this.duration / count);
 
-			if (!func.isset(this.height) || counter.position().height > this.height) {
+			if (!this.func.isset(this.height) || counter.position().height > this.height) {
 				this.height = counter.position().height;
 			}
 		}
@@ -5192,7 +5185,7 @@ class Counter extends CraterWebParts {
 
 		if (this.height.toString().indexOf('px') == -1) this.height += 'px';
 
-		if (func.isset(settings.height)) {
+		if (this.func.isset(settings.height)) {
 			this.height = settings.height;
 		}
 
@@ -5212,14 +5205,14 @@ class Counter extends CraterWebParts {
 			attributes: { class: 'crater-property-content' }
 		}).monitor();
 
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		else {
-			let counters = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-counter-content-column');
+			let counters = this.sharePoint.storage.pane.content[this.key].draft.dom.findAll('.crater-counter-content-column');
 
 			this.paneContent.makeElement({
 				element: 'div', children: [
@@ -5243,28 +5236,28 @@ class Counter extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Duration', value: this.sharePoint.properties.pane.content[this.key].settings.duration || ''
+								element: 'input', name: 'Duration', value: this.sharePoint.storage.pane.content[this.key].settings.duration || ''
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Columns', value: this.sharePoint.properties.pane.content[this.key].settings.columns || ''
+								element: 'input', name: 'Columns', value: this.sharePoint.storage.pane.content[this.key].settings.columns || ''
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'BackgroundWidth', value: this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth || '', list: func.pixelSizes
+								element: 'input', name: 'BackgroundWidth', value: this.sharePoint.storage.pane.content[this.key].settings.backgroundWidth || '', list: this.func.pixelSizes
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'BackgroundHeight', value: this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight || '', list: func.pixelSizes
+								element: 'input', name: 'BackgroundHeight', value: this.sharePoint.storage.pane.content[this.key].settings.backgroundHeight || '', list: this.func.pixelSizes
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'BackgroundPosition', options: ['Left', 'Right']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Box Height', value: this.sharePoint.properties.pane.content[this.key].settings.height || '', list: func.pixelSizes
+								element: 'input', name: 'Box Height', value: this.sharePoint.storage.pane.content[this.key].settings.height || '', list: this.func.pixelSizes
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'Show Icons', options: ['Yes', 'No']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Gap', list: func.pixelSizes
+								element: 'input', name: 'Gap', list: this.func.pixelSizes
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'Background Filter'
@@ -5275,7 +5268,7 @@ class Counter extends CraterWebParts {
 			});
 		}
 
-		this.paneContent.find('#Box-Height-cell').value = this.sharePoint.properties.pane.content[this.key].settings.height || '';
+		this.paneContent.find('#Box-Height-cell').value = this.sharePoint.storage.pane.content[this.key].settings.height || '';
 
 		return this.paneContent;
 	}
@@ -5317,10 +5310,10 @@ class Counter extends CraterWebParts {
 						element: 'input', name: 'Name', value: params.counters[i].find('#name').textContent
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Color', value: func.isset(params.counters[i].css().color) ? params.counters[i].css().color : this.color, list: func.colors
+						element: 'input', name: 'Color', value: this.func.isset(params.counters[i].css().color) ? params.counters[i].css().color : this.color, list: this.func.colors
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Background', value: func.isset(params.counters[i].css()['background-color']) ? params.counters[i].css()['background-color'] : this.backgroundColor, list: func.colors
+						element: 'input', name: 'Background', value: this.func.isset(params.counters[i].css()['background-color']) ? params.counters[i].css()['background-color'] : this.backgroundColor, list: this.func.colors
 					})
 				]
 			});
@@ -5333,8 +5326,8 @@ class Counter extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
-		let content = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-counter-content');
-		let counters = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-counter-content-column');
+		let content = this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-counter-content');
+		let counters = this.sharePoint.storage.pane.content[this.key].draft.dom.findAll('.crater-counter-content-column');
 
 		let columnPanePrototype = this.elementModifier.createElement({
 			element: 'div',
@@ -5359,10 +5352,10 @@ class Counter extends CraterWebParts {
 					element: 'input', name: 'Name'
 				}),
 				this.elementModifier.cell({
-					element: 'input', name: 'Color', list: func.colors
+					element: 'input', name: 'Color', list: this.func.colors
 				}),
 				this.elementModifier.cell({
-					element: 'input', name: 'Background', value: this.backgroundColor, list: func.colors
+					element: 'input', name: 'Background', value: this.backgroundColor, list: this.func.colors
 				})
 			]
 		});
@@ -5484,40 +5477,40 @@ class Counter extends CraterWebParts {
 		this.paneContent.find('#BackgroundWidth-cell').onChanged();
 		this.paneContent.find('#BackgroundHeight-cell').onChanged();
 
-		this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition = this.paneContent.find('#BackgroundPosition-cell').value;
+		this.sharePoint.storage.pane.content[this.key].settings.backgroundPosition = this.paneContent.find('#BackgroundPosition-cell').value;
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.find('#Columns-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.columns = this.paneContent.find('#Columns-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.height = this.paneContent.find('#Box-Height-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.height = this.paneContent.find('#Box-Height-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.gap = this.paneContent.find('#Gap-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.gap = this.paneContent.find('#Gap-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.showIcons = this.paneContent.find('#Show-Icons-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.showIcons = this.paneContent.find('#Show-Icons-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundFilter = this.paneContent.find('#Background-Filter-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.backgroundFilter = this.paneContent.find('#Background-Filter-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundWidth = this.paneContent.find('#BackgroundWidth-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.backgroundWidth = this.paneContent.find('#BackgroundWidth-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundHeight = this.paneContent.find('#BackgroundHeight-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.backgroundHeight = this.paneContent.find('#BackgroundHeight-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.backgroundPosition = this.paneContent.find('#BackgroundPosition-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.backgroundPosition = this.paneContent.find('#BackgroundPosition-cell').value;
 
 			this.element.findAll('.crater-counter-content-column').forEach((element, position) => {
 				let pane = this.paneContent.findAll('.crater-counter-content-column-pane')[position];
 
-				if (func.isset(pane.dataset.backgroundImage)) {
+				if (this.func.isset(pane.dataset.backgroundImage)) {
 					element.setBackgroundImage(pane.dataset.backgroundImage);
 				}
 			});
@@ -5527,7 +5520,7 @@ class Counter extends CraterWebParts {
 	public update(params) {
 		this.element = params.element;
 		this.key = this.element.dataset.key;
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
 		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
@@ -5555,26 +5548,26 @@ class Counter extends CraterWebParts {
 			data.count = updateWindow.find('#meta-data-count').value;
 			data.unit = updateWindow.find('#meta-data-unit').value;
 			data.color = updateWindow.find('#meta-data-color').value;
-			source = func.extractFromJsonArray(data, params.source);
+			source = this.func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
 			draftDom.find('.crater-counter-content').innerHTML = newContent.find('.crater-counter-content').innerHTML;
 
-			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = draftDom.outerHTML;
 
 			this.paneContent.find('.counter-pane').innerHTML = this.generatePaneContent({ counters: newContent.findAll('.crater-counter-content-column') }).innerHTML;
 
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
-		if (!func.isnull(paneConnection)) {
+		if (!this.func.isnull(paneConnection)) {
 			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
 
-				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+				this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			});
 		}
 
@@ -5596,7 +5589,7 @@ class News extends CraterWebParts {
 	}
 
 	public render(params) {
-		if (!func.isset(params.source)) params.source = [
+		if (!this.func.isset(params.source)) params.source = [
 			{ link: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/photo-1542178036-2e5efe4d8f83.jpg', details: 'details 1' },
 			{ link: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/photo-1542178036-2e5efe4d8f83.jpg', details: 'details 2' },
 			{ link: 'https://ipigroup.sharepoint.com/sites/ShortPointTrial/SiteAssets/photo-1542178036-2e5efe4d8f83.jpg', details: 'details 3' }
@@ -5626,8 +5619,8 @@ class News extends CraterWebParts {
 
 		let newsContainer = news.find('.crater-ticker-news-container');
 
-		this.sharePoint.properties.pane.content[news.dataset['key']].settings.duration = 10000;
-		this.sharePoint.properties.pane.content[news.dataset['key']].settings.animationType = 'Fade';
+		this.sharePoint.storage.pane.content[news.dataset['key']].settings.duration = 10000;
+		this.sharePoint.storage.pane.content[news.dataset['key']].settings.animationType = 'Fade';
 
 		for (let content of params.source) {
 			newsContainer.makeElement({
@@ -5650,7 +5643,7 @@ class News extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 
 		let news = this.element.findAll('.crater-ticker-news'),
-			action = this.sharePoint.properties.pane.content[this.key].settings.animationType.toLowerCase();
+			action = this.sharePoint.storage.pane.content[this.key].settings.animationType.toLowerCase();
 
 		if (news.length < 2) return;
 
@@ -5685,11 +5678,11 @@ class News extends CraterWebParts {
 		};
 
 		let keepAnimating = () => {
-			clearInterval(this.sharePoint.properties.pane.content[this.key].settings.animation);
-			this.sharePoint.properties.pane.content[this.key].settings.animation = setInterval(() => {
+			clearInterval(this.sharePoint.storage.pane.content[this.key].settings.animation);
+			this.sharePoint.storage.pane.content[this.key].settings.animation = setInterval(() => {
 				key++;
 				runAnimation();
-			}, this.sharePoint.properties.pane.content[this.key].settings.duration);
+			}, this.sharePoint.storage.pane.content[this.key].settings.duration);
 		};
 
 		this.element.findAll('.crater-arrow').forEach(arrow => {
@@ -5701,7 +5694,7 @@ class News extends CraterWebParts {
 					else if (event.target.classList.contains('crater-up-arrow')) {
 						key++;
 					}
-					clearInterval(this.sharePoint.properties.pane.content[this.key].settings.animation);
+					clearInterval(this.sharePoint.storage.pane.content[this.key].settings.animation);
 					runAnimation();
 				}
 			});
@@ -5720,11 +5713,11 @@ class News extends CraterWebParts {
 		}).monitor();
 
 		this.key = params.element.dataset['key'];
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		else {
 			this.paneContent.makeElement({
@@ -5748,17 +5741,17 @@ class News extends CraterWebParts {
 								element: 'input', name: 'Title', value: this.element.find('.crater-ticker-title-text').innerText
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'BackgroundColor', value: this.element.find('.crater-ticker-title').css()['background-color'], list: func.colors
+								element: 'input', name: 'BackgroundColor', value: this.element.find('.crater-ticker-title').css()['background-color'], list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'TextColor', value: this.element.find('.crater-ticker-title').css()['color'], list: func.colors
+								element: 'input', name: 'TextColor', value: this.element.find('.crater-ticker-title').css()['color'], list: this.func.colors
 							}),
 						]
 					}
 				]
 			});
 
-			let news = this.sharePoint.properties.pane.content[this.key].draft.dom.findAll('.crater-ticker-news');
+			let news = this.sharePoint.storage.pane.content[this.key].draft.dom.findAll('.crater-ticker-news');
 
 			this.paneContent.append(this.generatePaneContent({ news }));
 
@@ -5775,13 +5768,13 @@ class News extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Duration', value: this.sharePoint.properties.pane.content[this.key].settings.duration
+								element: 'input', name: 'Duration', value: this.sharePoint.storage.pane.content[this.key].settings.duration
 							}),
 							this.elementModifier.cell({
-								element: 'select', name: 'Animation', options: ['Fade', 'Swipe', 'Slide'], value: this.sharePoint.properties.pane.content[this.key].settings.animationType
+								element: 'select', name: 'Animation', options: ['Fade', 'Swipe', 'Slide'], value: this.sharePoint.storage.pane.content[this.key].settings.animationType
 							}),
 							this.elementModifier.cell({
-								element: 'select', name: 'View', options: ['Same Window', 'New Window', 'Pop Up'], value: this.sharePoint.properties.pane.content[this.key].settings.view
+								element: 'select', name: 'View', options: ['Same Window', 'New Window', 'Pop Up'], value: this.sharePoint.storage.pane.content[this.key].settings.view
 							}),
 						]
 					})
@@ -5831,7 +5824,7 @@ class News extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
-		let domDraft = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let domDraft = this.sharePoint.storage.pane.content[this.key].draft.dom;
 
 		let tickerNewsContainer = domDraft.find('.crater-ticker-news-container');
 
@@ -5916,20 +5909,20 @@ class News extends CraterWebParts {
 
 		let backgroundColorCell = this.paneContent.find('.title-pane').find('#BackgroundColor-cell').parentNode;
 		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#BackgroundColor-cell') }, (backgroundColor) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-ticker-title').css({ backgroundColor });
+			this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-ticker-title').css({ backgroundColor });
 			backgroundColorCell.find('#BackgroundColor-cell').value = backgroundColor;
 			backgroundColorCell.find('#BackgroundColor-cell').setAttribute('value', backgroundColor);
 		});
 
 		let colorCell = this.paneContent.find('.title-pane').find('#TextColor-cell').parentNode;
 		this.pickColor({ parent: colorCell, cell: colorCell.find('#TextColor-cell') }, (color) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-ticker-title').css({ color });
+			this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-ticker-title').css({ color });
 			colorCell.find('#TextColor-cell').value = color;
 			colorCell.find('#TextColor-cell').setAttribute('value', color);
 		});
 
 		this.paneContent.find('.title-pane').find('#Title-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-ticker-title-text').innerText = value;
+			this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-ticker-title-text').innerText = value;
 		});
 
 		this.paneContent.findAll('.crater-ticker-news-pane').forEach((newsPane, position) => {
@@ -5937,28 +5930,28 @@ class News extends CraterWebParts {
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
 
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.duration = this.paneContent.find('#Duration-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.animationType = this.paneContent.find('#Animation-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.animationType = this.paneContent.find('#Animation-cell').value;
 
-			this.sharePoint.properties.pane.content[this.key].settings.view = this.paneContent.find('#View-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.view = this.paneContent.find('#View-cell').value;
 		});
 	}
 
 	public update(params) {
 		this.element = params.element;
 		this.key = this.element.dataset.key;
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
 		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
@@ -5980,26 +5973,26 @@ class News extends CraterWebParts {
 			event.preventDefault();
 			data.link = updateWindow.find('#meta-data-link').value;
 			data.details = updateWindow.find('#meta-data-details').value;
-			source = func.extractFromJsonArray(data, params.source);
+			source = this.func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
 			draftDom.find('.crater-ticker-news-container').innerHTML = newContent.find('.crater-ticker-news-container').innerHTML;
 
-			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = draftDom.outerHTML;
 
 			this.paneContent.find('.news-pane').innerHTML = this.generatePaneContent({ news: newContent.findAll('.crater-ticker-news') }).innerHTML;
 
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
-		if (!func.isnull(paneConnection)) {
+		if (!this.func.isnull(paneConnection)) {
 			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
 
-				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+				this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			});
 		}
 
@@ -6029,9 +6022,9 @@ class Crater extends CraterWebParts {
 			], alignOptions: 'left',
 		});
 		this.key = this.element.dataset['key'];
-		this.sharePoint.properties.pane.content[this.element.dataset['key']].settings.columns = 1;
-		this.sharePoint.properties.pane.content[this.element.dataset['key']].settings.columnsSizes = '1fr';
-		this.sharePoint.properties.pane.content[this.element.dataset['key']].settings.widths = [];
+		this.sharePoint.storage.pane.content[this.element.dataset['key']].settings.columns = 1;
+		this.sharePoint.storage.pane.content[this.element.dataset['key']].settings.columnsSizes = '1fr';
+		this.sharePoint.storage.pane.content[this.element.dataset['key']].settings.widths = [];
 		return this.element;
 	}
 
@@ -6067,7 +6060,7 @@ class Crater extends CraterWebParts {
 			let currentWidth = currentSection.position().width;
 			let siblingWidth = currentSibling.position().width;
 
-			if (func.isnull(currentSection) || func.isnull(currentSibling)) return;
+			if (this.func.isnull(currentSection) || this.func.isnull(currentSibling)) return;
 
 			if (event.clientX > this.element.position().left - 50 && event.clientX < this.element.position().right + 50) {
 				let myWidth = currentWidth;
@@ -6090,20 +6083,20 @@ class Crater extends CraterWebParts {
 
 				if (myWidth <= 50 || mySiblingWidth <= 50) return;
 
-				this.sharePoint.properties.pane.content[this.key].settings.widths[sections.indexOf(currentSection)] = myWidth + 'px';
+				this.sharePoint.storage.pane.content[this.key].settings.widths[sections.indexOf(currentSection)] = myWidth + 'px';
 
-				this.sharePoint.properties.pane.content[this.key].settings.widths[sections.indexOf(currentSibling)] = mySiblingWidth + 'px';
+				this.sharePoint.storage.pane.content[this.key].settings.widths[sections.indexOf(currentSibling)] = mySiblingWidth + 'px';
 
-				this.sharePoint.properties.pane.content[this.key].settings.columnsSizes = func.stringReplace(this.sharePoint.properties.pane.content[this.key].settings.widths.toString(), ',', ' ');
+				this.sharePoint.storage.pane.content[this.key].settings.columnsSizes = this.func.stringReplace(this.sharePoint.storage.pane.content[this.key].settings.widths.toString(), ',', ' ');
 
-				craterSectionsContainer.css({ gridTemplateColumns: this.sharePoint.properties.pane.content[this.key].settings.columnsSizes });
+				craterSectionsContainer.css({ gridTemplateColumns: this.sharePoint.storage.pane.content[this.key].settings.columnsSizes });
 			}
 		};
 
 		let adjustHeight = (event) => {
 			return;
 			//make sure that section does not exceed the bounds of the parent/crater
-			if (func.isnull(currentSection)) return;
+			if (this.func.isnull(currentSection)) return;
 			if (event.clientY < this.element.position().bottom - 100 && event.clientY > this.element.position().bottom + 100) return;
 
 			let currentHeight = currentSection.position().height;
@@ -6119,7 +6112,7 @@ class Crater extends CraterWebParts {
 			this.element.removeEventListener('mousemove', adjustWidth, false);
 			this.element.removeEventListener('mousemove', adjustHeight, false);
 			// get the sibling to work with
-			if (func.isnull(currentSection)) return;
+			if (this.func.isnull(currentSection)) return;
 			position = { X: event.clientX, Y: event.clientY };
 
 			currentSibling = currentSection.dataset.direction == 'left' ? currentSection.previousSibling : currentSection.nextSibling;
@@ -6150,7 +6143,7 @@ class Crater extends CraterWebParts {
 			this.element.findAll('.crater-section').forEach(section => {
 				section.css({ visibility: 'visible' });
 			});
-			if (!func.isnull(currentSection)) currentSection.cssRemove('box-shadow');
+			if (!this.func.isnull(currentSection)) currentSection.cssRemove('box-shadow');
 			this.element.css({ cursor: 'auto' });
 		};
 
@@ -6158,7 +6151,7 @@ class Crater extends CraterWebParts {
 			//check if dragging
 			if (dragging) return;
 
-			if (!func.isnull(event.target.getParents('.webpart-options'))) {
+			if (!this.func.isnull(event.target.getParents('.webpart-options'))) {
 				stopDraggingSection();
 				return;
 			}
@@ -6167,9 +6160,9 @@ class Crater extends CraterWebParts {
 			//get current element being hovered
 			if (!currentSection.classList.contains('crater-section')) currentSection = currentSection.getParents('.crater-section');
 			// get the current section being hovered
-			if (!func.isnull(currentSection)) currentSection.dataset.position = func.getPositionInArray(sections, currentSection);
+			if (!this.func.isnull(currentSection)) currentSection.dataset.position = this.func.getPositionInArray(sections, currentSection);
 			//set the position of the section			
-			if (!func.isnull(currentSection)) {
+			if (!this.func.isnull(currentSection)) {
 				//if the left or right of the section is hover 
 				if (event.clientX - 10 <= currentSection.position().left && currentSection.dataset.position != '0') {
 					currentSection.dataset.direction = 'left';
@@ -6189,7 +6182,7 @@ class Crater extends CraterWebParts {
 					currentSection.dataset.orientation = '';
 				}
 
-				if (func.isset(currentSection.dataset.direction) && currentSection.dataset.direction != '') {
+				if (this.func.isset(currentSection.dataset.direction) && currentSection.dataset.direction != '') {
 					//check for dragging if bar is hovered         
 					currentSection.dataset.orientation == 'X' ? currentSection.css({ cursor: 'ew-resize' }) : currentSection.css({ cursor: 'ns-resize' });
 
@@ -6201,7 +6194,7 @@ class Crater extends CraterWebParts {
 
 		this.element.addEventListener('mouseleave', event => {
 			// stop all dragging
-			if (!func.isnull(currentSection) && !func.isset(currentSection.dataset.orientation)) this.element.addEventListener('mouseup', stopDraggingSection, false);
+			if (!this.func.isnull(currentSection) && !this.func.isset(currentSection.dataset.orientation)) this.element.addEventListener('mouseup', stopDraggingSection, false);
 		});
 	}
 
@@ -6246,16 +6239,16 @@ class Crater extends CraterWebParts {
 			attributes: { class: 'crater-property-content', 'data-property-key': this.key }
 		}).monitor();
 
-		// this.sharePoint.properties.pane.content[this.key].draft.pane.content = '';
-		// this.sharePoint.properties.pane.content[this.key].content = '';
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		// this.sharePoint.storage.pane.content[this.key].draft.pane.content = '';
+		// this.sharePoint.storage.pane.content[this.key].content = '';
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		else {
-			let container = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-sections-container');
+			let container = this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-sections-container');
 
 			let elementContents = container.findAll('.crater-section');
 
@@ -6271,11 +6264,11 @@ class Crater extends CraterWebParts {
 						]
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'Columns', value: this.sharePoint.properties.pane.content[this.key].settings.columns
+						element: 'input', name: 'Columns', value: this.sharePoint.storage.pane.content[this.key].settings.columns
 					}),
 
 					this.elementModifier.cell({
-						element: 'input', name: 'Columns Sizes', value: this.sharePoint.properties.pane.content[this.key].settings.columnsSizes || ''
+						element: 'input', name: 'Columns Sizes', value: this.sharePoint.storage.pane.content[this.key].settings.columnsSizes || ''
 					}),
 
 					this.elementModifier.cell({
@@ -6286,11 +6279,11 @@ class Crater extends CraterWebParts {
 		}
 
 		// upload the settings
-		this.paneContent.find('#Columns-cell').value = this.sharePoint.properties.pane.content[this.key].settings.columns;
+		this.paneContent.find('#Columns-cell').value = this.sharePoint.storage.pane.content[this.key].settings.columns;
 
-		this.paneContent.find('#Columns-Sizes-cell').value = this.sharePoint.properties.pane.content[this.key].settings.columnsSizes;
+		this.paneContent.find('#Columns-Sizes-cell').value = this.sharePoint.storage.pane.content[this.key].settings.columnsSizes;
 
-		let contents = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-sections-container').findAll('.crater-section');
+		let contents = this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-sections-container').findAll('.crater-section');
 
 		this.paneContent.find('.sections-pane').innerHTML = this.generatePaneContent({ source: contents }).innerHTML;
 
@@ -6301,7 +6294,7 @@ class Crater extends CraterWebParts {
 		this.key = params.element.dataset['key'];
 		this.element = params.element;
 		this.paneContent = this.sharePoint.app.find('.crater-property-content');
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 
 		let sectionRowPanes = this.paneContent.findAll('.crater-section-row-pane');
 		let sections = draftDom.findAll('.crater-section');
@@ -6326,37 +6319,37 @@ class Crater extends CraterWebParts {
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
 
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 
-			this.sharePoint.properties.pane.content[this.key].settings.columnsSizes = settingsPane.find('#Columns-Sizes-cell').value;
+			this.sharePoint.storage.pane.content[this.key].settings.columnsSizes = settingsPane.find('#Columns-Sizes-cell').value;
 
-			if (this.sharePoint.properties.pane.content[this.key].settings.columns < this.paneContent.find('#Columns-cell').value) {
-				this.sharePoint.properties.pane.content[this.key].settings.columns = this.paneContent.find('#Columns-cell').value;
-				this.sharePoint.properties.pane.content[this.key].settings.resetWidth = true;
+			if (this.sharePoint.storage.pane.content[this.key].settings.columns < this.paneContent.find('#Columns-cell').value) {
+				this.sharePoint.storage.pane.content[this.key].settings.columns = this.paneContent.find('#Columns-cell').value;
+				this.sharePoint.storage.pane.content[this.key].settings.resetWidth = true;
 
 				this.resetSections({ resetWidth: true });
 			}
-			else if (this.sharePoint.properties.pane.content[this.key].settings.columns > this.paneContent.find('#Columns-cell').value) { //check if the columns is less than current
+			else if (this.sharePoint.storage.pane.content[this.key].settings.columns > this.paneContent.find('#Columns-cell').value) { //check if the columns is less than current
 				alert("New number of column should be more than current");
 			}
 		});
 	}
 
 	private resetSections(params) {
-		params = func.isset(params) ? params : {};
+		params = this.func.isset(params) ? params : {};
 		let craterSectionsContainer = this.element.find('.crater-sections-container');
 		let sections = craterSectionsContainer.findAll('.crater-section');
 		let count = sections.length;
 
-		let number = this.sharePoint.properties.pane.content[this.key].settings.columns - count;
+		let number = this.sharePoint.storage.pane.content[this.key].settings.columns - count;
 		let newSections = this.createSections({ number, height: '100px' }).findAll('.crater-section');
 		//copy the current contents of the sections into the newly created sections
 		for (let i = 0; i < newSections.length; i++) {
@@ -6372,10 +6365,10 @@ class Crater extends CraterWebParts {
 			this[section.dataset.type]({ action: 'rendered', element: section, sharePoint: this.sharePoint });
 			section.css({ width: '100%' });
 
-			this.sharePoint.properties.pane.content[this.key].settings.widths[position] = section.position().width + 'px';
+			this.sharePoint.storage.pane.content[this.key].settings.widths[position] = section.position().width + 'px';
 		});
 
-		craterSectionsContainer.css({ gridTemplateColumns: this.sharePoint.properties.pane.content[this.key].settings.columnsSizes });
+		craterSectionsContainer.css({ gridTemplateColumns: this.sharePoint.storage.pane.content[this.key].settings.columnsSizes });
 	}
 
 	public createSections(params) {
@@ -6416,7 +6409,7 @@ class Table extends CraterWebParts {
 		let sample = { name: 'Person Two', job: 'Manager', age: '30', salary: '2000000' };
 		let tableContainer = this.createKeyedElement({ element: 'div', attributes: { class: 'crater-table-container crater-component', 'data-type': 'table' } });
 
-		if (!func.isset(params.source)) {
+		if (!this.func.isset(params.source)) {
 			params.source = [];
 			for (let i = 0; i < 5; i++) {
 				params.source.push(sample);
@@ -6429,12 +6422,12 @@ class Table extends CraterWebParts {
 
 		table.classList.add('crater-table');
 
-		this.sharePoint.properties.pane.content[tableContainer.dataset.key].settings.sorting = this.sharePoint.properties.pane.content[tableContainer.dataset.key].settings.sorting || {};
-		this.sharePoint.properties.pane.content[tableContainer.dataset.key].settings.headers = [];
+		this.sharePoint.storage.pane.content[tableContainer.dataset.key].settings.sorting = this.sharePoint.storage.pane.content[tableContainer.dataset.key].settings.sorting || {};
+		this.sharePoint.storage.pane.content[tableContainer.dataset.key].settings.headers = [];
 
 		let headers = table.findAll('th');
 		for (let i = 0; i < headers.length; i++) {
-			this.sharePoint.properties.pane.content[tableContainer.dataset.key].settings.headers.push(headers[i].textContent);
+			this.sharePoint.storage.pane.content[tableContainer.dataset.key].settings.headers.push(headers[i].textContent);
 		}
 		this.key = this.key || tableContainer.dataset.key;
 
@@ -6455,14 +6448,14 @@ class Table extends CraterWebParts {
 			attributes: { class: 'crater-property-content' }
 		}).monitor();
 
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		else {
-			let table = this.sharePoint.properties.pane.content[this.key].draft.dom.find('table');
+			let table = this.sharePoint.storage.pane.content[this.key].draft.dom.find('table');
 
 			this.paneContent.append(this.generatePaneContent({ table }));
 
@@ -6481,10 +6474,10 @@ class Table extends CraterWebParts {
 								element: 'input', name: 'fontsize'
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', list: func.colors
+								element: 'input', name: 'color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'backgroundcolor', list: func.colors
+								element: 'input', name: 'backgroundcolor', list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'height'
@@ -6512,10 +6505,10 @@ class Table extends CraterWebParts {
 								element: 'input', name: 'fontsize', attributes: { type: 'number', min: 1 }, value: ''
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', attributes: { type: 'number', min: 1 }, value: '', list: func.colors
+								element: 'input', name: 'color', attributes: { type: 'number', min: 1 }, value: '', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'backgroundcolor', attributes: { type: 'number', min: 1 }, value: '', list: func.colors
+								element: 'input', name: 'backgroundcolor', attributes: { type: 'number', min: 1 }, value: '', list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'height', attributes: { type: 'number', min: 1 }, value: ''
@@ -6540,7 +6533,7 @@ class Table extends CraterWebParts {
 								element: 'input', name: 'bordersize', attributes: { type: 'text' }, value: ''
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'bordercolor', attributes: { type: 'text' }, value: '', list: func.colors
+								element: 'input', name: 'bordercolor', attributes: { type: 'text' }, value: '', list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'borderstyle', attributes: { type: 'text' }, value: ''
@@ -6573,13 +6566,13 @@ class Table extends CraterWebParts {
 			]
 		});
 
-		if (func.isset(params.header)) {
+		if (this.func.isset(params.header)) {
 			tablePane.find('thead').innerHTML = params.header;
 		}
 
 		tablePane.find('thead').findAll('th').forEach(th => {
 			th.css({ position: 'relative' });
-			let order = this.sharePoint.properties.pane.content[this.key].settings.sorting[th.dataset.name] == 1 ? 'crater-up-arrow' : 'crater-down-arrow';
+			let order = this.sharePoint.storage.pane.content[this.key].settings.sorting[th.dataset.name] == 1 ? 'crater-up-arrow' : 'crater-down-arrow';
 
 			let data = this.elementModifier.createElement({
 				element: 'span', attributes: { style: { width: '100%', display: 'grid', gridTemplateColumns: '80% 20%', gridGap: '1em', } }, children: [
@@ -6616,7 +6609,7 @@ class Table extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		let table = draftDom.find('table');
 		let tableBody = table.find('tbody');
 
@@ -6684,12 +6677,12 @@ class Table extends CraterWebParts {
 				let data = this.elementModifier.sortTable(table, name, order);
 				let newContent = this.render({ source: data });
 
-				this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-table').innerHTML = newContent.find('.crater-table').innerHTML;
+				this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-table').innerHTML = newContent.find('.crater-table').innerHTML;
 
 				thPane.find('.crater-table-sorter').classList.toggle('crater-up-arrow');
 				thPane.find('.crater-table-sorter').classList.toggle('crater-down-arrow');
 
-				this.sharePoint.properties.pane.content[this.key].settings.sorting[thPane.dataset.name] = order;
+				this.sharePoint.storage.pane.content[this.key].settings.sorting[thPane.dataset.name] = order;
 
 				this.paneContent.find('.table-pane').innerHTML = this.generatePaneContent({ table: newContent.find('.table') }).innerHTML;
 
@@ -6883,15 +6876,15 @@ class Table extends CraterWebParts {
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
 
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart            
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart            
 		});
 
 		let tableSettings = this.paneContent.find('.table-settings');
@@ -6993,10 +6986,10 @@ class Table extends CraterWebParts {
 	public update(params) {
 		this.element = params.element;
 		this.key = this.element.dataset.key;
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
-		let headers = this.sharePoint.properties.pane.content[this.key].settings.headers.toString();
+		let headers = this.sharePoint.storage.pane.content[this.key].settings.headers.toString();
 
 		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
 
@@ -7017,11 +7010,11 @@ class Table extends CraterWebParts {
 			let contents = {};
 
 			for (let i in names) {
-				names[i] = func.trem(names[i]);
-				contents[names[i]] = { element: 'select', attributes: { id: 'meta-data-' + names[i], name: func.capitalize(names[i]) }, options: params.options };
+				names[i] = this.func.trem(names[i]);
+				contents[names[i]] = { element: 'select', attributes: { id: 'meta-data-' + names[i], name: this.func.capitalize(names[i]) }, options: params.options };
 			}
 
-			this.sharePoint.properties.pane.content[this.key].settings.headers = names;
+			this.sharePoint.storage.pane.content[this.key].settings.headers = names;
 
 			let updateWindow = this.elementModifier.createForm({
 				title: 'Setup Meta Data', attributes: { id: 'meta-data-form', class: 'form' },
@@ -7042,16 +7035,16 @@ class Table extends CraterWebParts {
 					data[formData[i].name.toLowerCase()] = formData[i].value;
 				}
 
-				source = func.extractFromJsonArray(data, params.source);
+				source = this.func.extractFromJsonArray(data, params.source);
 
 				let newContent = this.render({ source });
 				draftDom.find('.crater-table').innerHTML = newContent.find('.crater-table').innerHTML;
 
-				this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+				this.sharePoint.storage.pane.content[this.key].draft.html = draftDom.outerHTML;
 
 				this.paneContent.find('.table-pane').innerHTML = this.generatePaneContent({ table: newContent.find('table') }).innerHTML;
 
-				this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+				this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 			});
 
 			let parent = metaWindow.parentNode;
@@ -7059,14 +7052,14 @@ class Table extends CraterWebParts {
 			parent.append(metaWindow, updateWindow);
 		});
 
-		if (!func.isnull(paneConnection)) {
+		if (!this.func.isnull(paneConnection)) {
 			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
 
-				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+				this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			});
 		}
 
@@ -7091,12 +7084,14 @@ class Panel extends CraterWebParts {
 		let panel = this.createKeyedElement({
 			element: 'div', attributes: { class: 'crater-panel crater-component crater-container', 'data-type': 'panel' }, options: ['Append', 'Edit', 'Delete', 'Clone'], children: [
 				{
-					element: 'div', attributes: { class: 'crater-panel-title' }, children: [
-						{ element: 'p', attributes: { class: 'crater-panel-title-text' }, text: 'Panel Title' },
-						{ element: 'a', attributes: { class: 'crater-panel-title-link btn' }, text: 'Link' }
+					element: 'div', attributes: { class: 'crater-panel-content' }, children: [
+						{
+							element: 'div', attributes: { class: 'crater-panel-title' }, text: 'Panel Title'
+						},
+						{ element: 'div', attributes: { class: 'crater-panel-webparts' } },
+						{ element: 'a', attributes: { class: 'crater-panel-link', href: 'https://google.com' }, text: 'Link' }
 					]
-				},
-				{ element: 'div', attributes: { class: 'crater-panel-content' } }
+				}
 			]
 		});
 		return panel;
@@ -7117,13 +7112,13 @@ class Panel extends CraterWebParts {
 		});
 		this.key = this.element.dataset.key;
 
-		let view = this.sharePoint.properties.pane.content[this.key].settings.view;
+		let view = this.sharePoint.storage.pane.content[this.key].settings.view;
 
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		else {
 			this.paneContent.makeElement({
@@ -7134,7 +7129,7 @@ class Panel extends CraterWebParts {
 				]
 			});
 
-			this.paneContent.append(this.createKeyedElement({
+			this.paneContent.append(this.elementModifier.createElement({
 				element: 'div', attributes: { class: 'title-pane card' }, children: [
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'card-title' }, children: [
@@ -7149,10 +7144,13 @@ class Panel extends CraterWebParts {
 								element: 'input', name: 'title', value: this.element.find('.crater-panel-title').textContent
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'backgroundcolor', value: this.element.find('.crater-panel-title').css()['background-color'], list: func.colors
+								element: 'input', name: 'backgroundcolor', value: this.element.find('.crater-panel-title').css()['background-color'], list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.find('.crater-panel-title').css().color, list: func.colors
+								element: 'input', name: 'color', value: this.element.find('.crater-panel-title').css().color, list: this.func.colors
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Border', list: this.func.borders
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'fontsize', value: this.element.find('.crater-panel-title').css()['font-size']
@@ -7174,22 +7172,22 @@ class Panel extends CraterWebParts {
 				]
 			}));
 
-			this.paneContent.append(this.createKeyedElement({
-				element: 'div', attributes: { class: 'title-link-pane card' }, children: [
+			this.paneContent.append(this.elementModifier.createElement({
+				element: 'div', attributes: { class: 'link-pane card' }, children: [
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'card-title' }, children: [
 							this.elementModifier.createElement({
-								element: 'h2', attributes: { class: 'title' }, text: 'Title Link Settings'
+								element: 'h2', attributes: { class: 'title' }, text: 'Link Settings'
 							})
 						]
 					}),
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'color', list: func.colors
+								element: 'input', name: 'color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'background color', list: func.colors
+								element: 'input', name: 'background color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'url'
@@ -7198,10 +7196,13 @@ class Panel extends CraterWebParts {
 								element: 'input', name: 'text'
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'border', list: func.borders
+								element: 'input', name: 'border', list: this.func.borders
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'Show', options: ['Yes', 'No']
+							}),
+							this.elementModifier.cell({
+								element: 'select', name: 'Position', options: ['Top', 'Bottom']
 							})
 						]
 					})
@@ -7237,19 +7238,22 @@ class Panel extends CraterWebParts {
 				});
 			}
 
-			this.paneContent.append(this.createKeyedElement({
-				element: 'div', attributes: { class: 'settings-pane card' }, children: [
+			this.paneContent.append(this.elementModifier.createElement({
+				element: 'div', attributes: { class: 'contents-pane card' }, children: [
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'card-title' }, children: [
 							this.elementModifier.createElement({
-								element: 'h2', attributes: { class: 'title' }, text: 'Panel Settings'
+								element: 'h2', attributes: { class: 'title' }, text: 'Panel Contents'
 							})
 						]
 					}),
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'select', name: 'Box Content', options: ['Yes', 'No']
+								element: 'input', name: 'Border', list: this.func.borders
+							}),
+							this.elementModifier.cell({
+								element: 'input', name: 'Background Color', list: this.func.colors
 							})
 						]
 					})
@@ -7264,11 +7268,13 @@ class Panel extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
-		let panelContents = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-content');
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
+		let panelContents = draftDom.find('.crater-panel-webparts');
 		let panelContentDom = panelContents.childNodes;
+		
 		let panelContentPane = this.paneContent.find('.panel-contents-pane');
 
-		let view = this.sharePoint.properties.pane.content[this.key].settings.view;
+		let view = this.sharePoint.storage.pane.content[this.key].settings.view;
 		let panelContentPanePrototype = this.elementModifier.createElement({
 			element: 'div',
 			attributes: {
@@ -7282,8 +7288,7 @@ class Panel extends CraterWebParts {
 			]
 		});
 
-		let panelContentRowHandler = (panelContentRowPane, panelContentRowDom) => {
-
+		let panelContentRowHandler = (panelContentRowPane, panelContentRowDom) => {	
 			panelContentRowPane.find('#name').innerHTML = panelContentRowDom.dataset.type.toUpperCase();
 
 			panelContentRowPane.addEventListener('mouseover', event => {
@@ -7331,10 +7336,10 @@ class Panel extends CraterWebParts {
 		};
 
 		let titlePane = this.paneContent.find('.title-pane');
-		let titleLinkPane = this.paneContent.find('.title-link-pane');
-		let settingsPane = this.paneContent.find('.settings-pane');
+		let linkPane = this.paneContent.find('.link-pane');
+		let contentPane = this.paneContent.find('.contents-pane');
 
-		let title = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-title');
+		let title = draftDom.find('.crater-panel-title');
 		titlePane.find('#height-cell').onChanged(height => {
 			title.css({ height });
 		});
@@ -7374,43 +7379,15 @@ class Panel extends CraterWebParts {
 			title.find('.crater-panel-title-text').innerText = value;
 		});
 
-		titleLinkPane.find('#text-cell').onChanged(value => {
-			title.find('.crater-panel-title-link').innerText = value;
-		});
-
-		titleLinkPane.find('#color-cell').onChanged(color => {
-			title.find('.crater-panel-title-link').css({ color });
-		});
-
-		titleLinkPane.find('#background-color-cell').onChanged(backgroundColor => {
-			title.find('.crater-panel-title-link').css({ backgroundColor });
-		});
-
-		titleLinkPane.find('#border-cell').onChanged(border => {
-			title.find('.crater-panel-title-link').css({ border });
-		});
-
-		titleLinkPane.find('#url-cell').onChanged(value => {
-			title.find('.crater-panel-title-link').href = value;
-		});
-
-		titleLinkPane.find('#Show-cell').onChanged(value => {
-			if (value == 'No') {
-				title.find('.crater-panel-title-link').css({ display: 'none' });
-			}
-			else {
-				title.find('.crater-panel-title-link').cssRemove(['display']);
-			}
+		titlePane.find('#Border-cell').onChanged(border => {
+			title.css({ border });
 		});
 
 		let backgroundColorCell = titlePane.find('#backgroundcolor-cell').parentNode;
 		this.pickColor({ parent: backgroundColorCell, cell: backgroundColorCell.find('#backgroundcolor-cell') }, (backgroundColor) => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-title').css({ backgroundColor });
+			draftDom.find('.crater-panel-title').css({ backgroundColor });
 			backgroundColorCell.find('#backgroundcolor-cell').value = backgroundColor;
 			backgroundColorCell.find('#backgroundcolor-cell').setAttribute('value', backgroundColor);
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-content').css({
-				borderColor: backgroundColor
-			});
 		});
 
 		let colorCell = titlePane.find('#color-cell').parentNode;
@@ -7421,19 +7398,57 @@ class Panel extends CraterWebParts {
 		});
 
 		titlePane.find('#fontsize-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-title').css({ fontSize: value });
+			draftDom.find('.crater-panel-title').css({ fontSize: value });
 		});
 
-		settingsPane.find('#Box-Content-cell').onChanged(value => {
-			if (value == 'Yes') {
-				this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-content').css({
-					borderColor: title.css().backgroundColor
-				});
-			} else {
-				this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-panel-content').css({
-					borderColor: 'transparent'
-				});
+		linkPane.find('#text-cell').onChanged(value => {
+			draftDom.find('.crater-panel-link').innerText = value;
+		});
+
+		linkPane.find('#color-cell').onChanged(color => {
+			draftDom.find('.crater-panel-link').css({ color });
+		});
+
+		linkPane.find('#background-color-cell').onChanged(backgroundColor => {
+			draftDom.find('.crater-panel-link').css({ backgroundColor });
+		});
+
+		linkPane.find('#border-cell').onChanged(border => {
+			draftDom.find('.crater-panel-link').css({ border });
+		});
+
+		linkPane.find('#url-cell').onChanged(value => {
+			draftDom.find('.crater-panel-link').href = value;
+		});
+
+		linkPane.find('#Show-cell').onChanged(value => {
+			if (value == 'No') {
+				draftDom.find('.crater-panel-link').css({ display: 'none' });
 			}
+			else {
+				draftDom.find('.crater-panel-link').cssRemove(['display']);
+			}
+		});
+
+		linkPane.find('#Position-cell').onChanged(value => {
+			if (value == 'Bottom') {
+				draftDom.find('.crater-panel-link').css({ top: 'unset', bottom: 0 });
+			}
+			else {
+				draftDom.find('.crater-panel-link').css({ top: 0, bottom: 'unset' });
+			}
+		});
+
+		contentPane.find('#Border-cell').onChanged(border => {
+			draftDom.find('.crater-panel-webparts').css({
+				border
+			});
+		});
+
+		contentPane.find('#Background-Color-cell').onChanged(backgroundColor => {
+			draftDom.find('.crater-panel-webparts').css({
+				backgroundColor
+			});
 		});
 
 		this.paneContent.find('.new-component').addEventListener('click', event => {
@@ -7442,13 +7457,14 @@ class Panel extends CraterWebParts {
 				panel.remove();
 			});
 
-			this.paneContent.append(this.sharePoint.displayPanel(webpart => {
+			let generated = this.sharePoint.displayPanel(webpart => {
 				let newPanelContent = this.sharePoint.appendWebpart(panelContents, webpart.dataset.webpart);
 				let newPanelContentRow = panelContentPanePrototype.cloneNode(true);
 				panelContentPane.append(newPanelContentRow);
 
 				panelContentRowHandler(newPanelContentRow, newPanelContent);
-			}));
+			});
+			this.paneContent.append(generated);
 		});
 
 		this.paneContent.findAll('.crater-panel-content-row-pane').forEach((panelContent, position) => {
@@ -7456,15 +7472,15 @@ class Panel extends CraterWebParts {
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
 
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
 
 			for (let keyedElement of this.element.findAll('.keyed-element')) {
 				this[keyedElement.dataset.type]({ action: 'rendered', element: keyedElement, sharePoint: this.sharePoint });
@@ -7486,7 +7502,7 @@ class CountDown extends CraterWebParts {
 
 	public render(params) {
 
-		let endDate = Math.floor(func.dateValue(func.today())) + 2;
+		let endDate = Math.floor(this.func.dateValue(this.func.today())) + 2;
 
 		let endTime = 60 * 60 * 6;
 
@@ -7534,8 +7550,8 @@ class CountDown extends CraterWebParts {
 		countDown.dataset.time = endTime;
 		this.key = countDown.dataset.key;
 
-		this.sharePoint.properties.pane.content[this.key].settings.date = endDate;
-		this.sharePoint.properties.pane.content[this.key].settings.time = endTime;
+		this.sharePoint.storage.pane.content[this.key].settings.date = endDate;
+		this.sharePoint.storage.pane.content[this.key].settings.time = endTime;
 
 		return countDown;
 	}
@@ -7547,17 +7563,17 @@ class CountDown extends CraterWebParts {
 
 		let date: any;
 
-		this.element.dataset.date = this.sharePoint.properties.pane.content[this.key].settings.date;
+		this.element.dataset.date = this.sharePoint.storage.pane.content[this.key].settings.date;
 
-		this.element.dataset.time = this.sharePoint.properties.pane.content[this.key].settings.time;
+		this.element.dataset.time = this.sharePoint.storage.pane.content[this.key].settings.time;
 
-		let secondsInCurrentDaysBefore = func.secondsInDays(Math.floor(this.sharePoint.properties.pane.content[this.key].settings.date));
+		let secondsInCurrentDaysBefore = this.func.secondsInDays(Math.floor(this.sharePoint.storage.pane.content[this.key].settings.date));
 
-		let secondsInCurrentTime = Math.floor(this.sharePoint.properties.pane.content[this.key].settings.time);
+		let secondsInCurrentTime = Math.floor(this.sharePoint.storage.pane.content[this.key].settings.time);
 
 		let secondsTogoCurrently = secondsInCurrentDaysBefore + secondsInCurrentTime;
 
-		clearInterval(this.sharePoint.properties.pane.content[this.key].settings.interval);
+		clearInterval(this.sharePoint.storage.pane.content[this.key].settings.interval);
 
 		date = this.getDate(secondsTogoCurrently);
 
@@ -7569,7 +7585,7 @@ class CountDown extends CraterWebParts {
 
 		this.element.find('.crater-countdown-seconds').find('.crater-countdown-counting').innerText = date.seconds;
 
-		this.sharePoint.properties.pane.content[this.key].settings.interval = setInterval(() => {
+		this.sharePoint.storage.pane.content[this.key].settings.interval = setInterval(() => {
 			date = this.getDate(secondsTogoCurrently);
 
 			if (date.past) {
@@ -7596,11 +7612,11 @@ class CountDown extends CraterWebParts {
 		});
 		this.key = this.element.dataset.key;
 
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		}
 		else {
 			this.paneContent.makeElement({ element: 'div' });
@@ -7617,10 +7633,10 @@ class CountDown extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Color', list: func.colors
+								element: 'input', name: 'Color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'BackgroundColor', list: func.colors
+								element: 'input', name: 'BackgroundColor', list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'FontSize',
@@ -7645,10 +7661,10 @@ class CountDown extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'Color', list: func.colors
+								element: 'input', name: 'Color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'BackgroundColor', list: func.colors
+								element: 'input', name: 'BackgroundColor', list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'FontSize',
@@ -7698,7 +7714,7 @@ class CountDown extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 
 		let countingPane = this.paneContent.find('.counting-pane');
 
@@ -7772,12 +7788,12 @@ class CountDown extends CraterWebParts {
 		let settingsBorderRadius = settingsPane.find('#BorderRadius-cell');
 
 		settingsDate.onChanged(date => {
-			this.sharePoint.properties.pane.content[this.key].draft.dom.dataset.date = func.dateValue(date);
+			this.sharePoint.storage.pane.content[this.key].draft.dom.dataset.date = this.func.dateValue(date);
 		});
 
 		settingsTime.onChanged(time => {
-			if (func.isTimeValid(time)) {
-				this.sharePoint.properties.pane.content[this.key].draft.dom.dataset.time = func.isTimeValid(time);
+			if (this.func.isTimeValid(time)) {
+				this.sharePoint.storage.pane.content[this.key].draft.dom.dataset.time = this.func.isTimeValid(time);
 			}
 		});
 
@@ -7794,42 +7810,42 @@ class CountDown extends CraterWebParts {
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
 
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
 
-			let secondsInDayBefore = func.secondsInDays(Math.floor(this.sharePoint.properties.pane.content[this.key].draft.dom.dataset.date));
+			let secondsInDayBefore = this.func.secondsInDays(Math.floor(this.sharePoint.storage.pane.content[this.key].draft.dom.dataset.date));
 
-			let secondsInTime = Math.floor(this.sharePoint.properties.pane.content[this.key].draft.dom.dataset.time);
+			let secondsInTime = Math.floor(this.sharePoint.storage.pane.content[this.key].draft.dom.dataset.time);
 
-			let secondsInCurrentDaysBefore = func.secondsInDays(Math.floor(this.sharePoint.properties.pane.content[this.key].settings.date));
+			let secondsInCurrentDaysBefore = this.func.secondsInDays(Math.floor(this.sharePoint.storage.pane.content[this.key].settings.date));
 
-			let secondsInCurrentTime = Math.floor(this.sharePoint.properties.pane.content[this.key].settings.time);
+			let secondsInCurrentTime = Math.floor(this.sharePoint.storage.pane.content[this.key].settings.time);
 
 			let secondsTogo = secondsInDayBefore + secondsInTime;
 
 			let secondsTogoCurrently = secondsInCurrentDaysBefore + secondsInCurrentTime;
 
 			if (secondsTogo != secondsTogoCurrently) {
-				this.sharePoint.properties.pane.content[this.key].settings.date = this.sharePoint.properties.pane.content[this.key].draft.dom.dataset.date;
+				this.sharePoint.storage.pane.content[this.key].settings.date = this.sharePoint.storage.pane.content[this.key].draft.dom.dataset.date;
 
-				this.sharePoint.properties.pane.content[this.key].settings.time = this.sharePoint.properties.pane.content[this.key].draft.dom.dataset.time;
+				this.sharePoint.storage.pane.content[this.key].settings.time = this.sharePoint.storage.pane.content[this.key].draft.dom.dataset.time;
 			}
 		});
 	}
 
 	private getDate(endTime) {
-		let date = func.secondsInDays(func.dateValue(func.today()));
-		let time = func.timeToday();
+		let date = this.func.secondsInDays(this.func.dateValue(this.func.today()));
+		let time = this.func.timeToday();
 		let present = (endTime - (date + time) >= 0);
 
-		let dateObject: any = func.getDateObject(
+		let dateObject: any = this.func.getDateObject(
 			present
 				? endTime - (date + time)
 				: (date + time) - endTime
@@ -7847,7 +7863,7 @@ class DateList extends CraterWebParts {
 	public key;
 	public paneContent;
 	public elementModifier = new ElementModifier();
-	public monthArray = func.trimMonthArray();
+	public monthArray = this.func.trimMonthArray();
 
 
 	constructor(params) {
@@ -7858,7 +7874,7 @@ class DateList extends CraterWebParts {
 
 	public render(params) {
 
-		if (!func.isset(params.source)) {
+		if (!this.func.isset(params.source)) {
 			params.source = [
 				{
 					day: "19",
@@ -7933,17 +7949,17 @@ class DateList extends CraterWebParts {
 
 	public setUpPaneContent(params) {
 		let key = params.element.dataset['key'];//create a key variable and set it to the webpart key
-		this.element = this.sharePoint.properties.pane.content[key].draft.dom;//define the declared element to the draft dom content
+		this.element = this.sharePoint.storage.pane.content[key].draft.dom;//define the declared element to the draft dom content
 		this.paneContent = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-property-content' }
 		}).monitor(); //monitor the content pane 
-		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		else if (this.sharePoint.storage.pane.content[key].content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].content;
 		} else {
-			let dateList = this.sharePoint.properties.pane.content[key].draft.dom.find('.crater-datelist-content');
+			let dateList = this.sharePoint.storage.pane.content[key].draft.dom.find('.crater-datelist-content');
 			let dateListRows = dateList.findAll('.crater-datelist-content-item');
 			this.paneContent.makeElement({
 				element: 'div', children: [
@@ -7970,10 +7986,10 @@ class DateList extends CraterWebParts {
 								element: 'input', name: 'title', value: this.element.find('.crater-datelist-title').textContent
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'backgroundcolor', value: this.element.find('.crater-datelist-title').css()['background-color'], list: func.colors
+								element: 'input', name: 'backgroundcolor', value: this.element.find('.crater-datelist-title').css()['background-color'], list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.find('.crater-datelist-title').css().color, list: func.colors
+								element: 'input', name: 'color', value: this.element.find('.crater-datelist-title').css().color, list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'input', name: 'fontsize', value: this.element.find('.crater-datelist-title').css()['font-size']
@@ -8010,10 +8026,10 @@ class DateList extends CraterWebParts {
 								element: 'input', name: 'fontFamily', value: this.element.find('.crater-datelist-content-item-date').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'dayColor', value: this.element.find('.crater-datelist-content-item-date-day').css()['color'], list: func.colors
+								element: 'input', name: 'dayColor', value: this.element.find('.crater-datelist-content-item-date-day').css()['color'], list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'monthColor', value: this.element.find('.crater-datelist-content-item-date-month').css()['color'], list: func.colors
+								element: 'input', name: 'monthColor', value: this.element.find('.crater-datelist-content-item-date-month').css()['color'], list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleDate', options: ['show', 'hide']
@@ -8042,7 +8058,7 @@ class DateList extends CraterWebParts {
 								element: 'input', name: 'fontFamily', value: this.element.find('.crater-datelist-content-item-text-main').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'titleColor', value: this.element.find('.crater-datelist-content-item-text-main').css()['color'], list: func.colors
+								element: 'input', name: 'titleColor', value: this.element.find('.crater-datelist-content-item-text-main').css()['color'], list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleTitle', options: ['show', 'hide']
@@ -8070,7 +8086,7 @@ class DateList extends CraterWebParts {
 								element: 'input', name: 'fontFamily', value: this.element.find('.crater-datelist-content-item-text-subtitle').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'subtitleColor', value: this.element.find('.crater-datelist-content-item-text-subtitle').css().color, list: func.colors
+								element: 'input', name: 'subtitleColor', value: this.element.find('.crater-datelist-content-item-text-subtitle').css().color, list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleSubtitle', options: ['show', 'hide']
@@ -8098,7 +8114,7 @@ class DateList extends CraterWebParts {
 								element: 'input', name: 'fontFamily', value: this.element.find('.crater-datelist-content-item-text-body').css()['font-family']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'bodyColor', value: this.element.find('.crater-datelist-content-item-text-body').css()['color'], list: func.colors
+								element: 'input', name: 'bodyColor', value: this.element.find('.crater-datelist-content-item-text-body').css()['color'], list: this.func.colors
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'toggleBody', options: ['show', 'hide']
@@ -8161,7 +8177,7 @@ class DateList extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 		//get the content and all the events
-		let dateList = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-datelist-content');
+		let dateList = this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-datelist-content');
 		let dateListRow = dateList.findAll('.crater-datelist-content-item');
 
 		let dateListRowPanePrototype = this.elementModifier.createElement({//create a row on the property pane
@@ -8265,7 +8281,7 @@ class DateList extends CraterWebParts {
 			});
 		};
 
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 
 		let titlePane = this.paneContent.find('.title-pane');
 		let dateListDateRowPane = this.paneContent.find('.datelist-date-row-pane');
@@ -8524,14 +8540,14 @@ class DateList extends CraterWebParts {
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = draftDom.innerHTML;//upate the webpart
 			this.element.css(draftDom.css());
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;
 
 		});
 	}
@@ -8539,7 +8555,7 @@ class DateList extends CraterWebParts {
 	public update(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
 		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
@@ -8567,23 +8583,23 @@ class DateList extends CraterWebParts {
 			data.title = updateWindow.find('#meta-data-title').value;
 			data.subtitle = updateWindow.find('#meta-data-subtitle').value;
 			data.body = updateWindow.find('#meta-data-body').value;
-			source = func.extractFromJsonArray(data, params.source);
+			source = this.func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
 			draftDom.find('.crater-datelist-content').innerHTML = newContent.find('.crater-datelist-content').innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = draftDom.outerHTML;
 			this.paneContent.find('.datelist-pane').innerHTML = this.generatePaneContent({ list: newContent.findAll('.crater-datelist-content-item') }).innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
-		if (!func.isnull(paneConnection)) {
+		if (!this.func.isnull(paneConnection)) {
 			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
 
-				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+				this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			});
 		}
 
@@ -8617,7 +8633,7 @@ class Map extends CraterWebParts {
 
 		this.key = this.key || mapDiv.dataset.key;
 
-		this.sharePoint.properties.pane.content[this.key].settings = { myMap: { lat: -34.067, lng: 150.067, zoom: 4, markerChecked: true, color: '' } };
+		this.sharePoint.storage.pane.content[this.key].settings = { myMap: { lat: -34.067, lng: 150.067, zoom: 4, markerChecked: true, color: '' } };
 		window['initMap'] = this.initMap;
 
 		this.element = mapDiv;
@@ -8626,7 +8642,7 @@ class Map extends CraterWebParts {
 	}
 
 	public initMap = () => {
-		const mapColor = this.sharePoint.properties.pane.content[this.key].settings.myMap.color;
+		const mapColor = this.sharePoint.storage.pane.content[this.key].settings.myMap.color;
 		let mapStyles = [
 			{ elementType: 'geometry.stroke', stylers: [{ color: mapColor }, { lightness: 0 }] },
 			{ elementType: 'labels.text.fill', stylers: [{ color: mapColor }, { lightness: 0 }] },
@@ -8639,8 +8655,8 @@ class Map extends CraterWebParts {
 		];
 
 		let newMap = {
-			lat: this.sharePoint.properties.pane.content[this.key].settings.myMap.lat,
-			lng: this.sharePoint.properties.pane.content[this.key].settings.myMap.lng
+			lat: this.sharePoint.storage.pane.content[this.key].settings.myMap.lat,
+			lng: this.sharePoint.storage.pane.content[this.key].settings.myMap.lng
 		};
 
 		const styles = (mapColor !== '') ? mapStyles : '';
@@ -8648,11 +8664,11 @@ class Map extends CraterWebParts {
 		// @ts-ignore
 		let map = new google.maps.Map(this.element.find('#crater-map-div'), {
 			center: newMap,
-			zoom: this.sharePoint.properties.pane.content[this.key].settings.myMap.zoom,
+			zoom: this.sharePoint.storage.pane.content[this.key].settings.myMap.zoom,
 			styles
 		});
 
-		if (this.sharePoint.properties.pane.content[this.key].settings.myMap.markerChecked) {
+		if (this.sharePoint.storage.pane.content[this.key].settings.myMap.markerChecked) {
 			//@ts-ignore
 			let marker = new google.maps.Marker({
 				position: newMap,
@@ -8677,16 +8693,16 @@ class Map extends CraterWebParts {
 
 	public setUpPaneContent(params) {
 		let key = params.element.dataset['key'];
-		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.element = this.sharePoint.storage.pane.content[key].draft.dom;
 		this.paneContent = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-property-content' }
 		}).monitor();
 
-		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		else if (this.sharePoint.storage.pane.content[key].content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].content;
 		} else {
 			this.paneContent.makeElement({
 				element: 'div', attributes: { class: 'map-style-pane card' }, children: [
@@ -8725,13 +8741,13 @@ class Map extends CraterWebParts {
 								element: 'input', name: 'zoom', value: ''
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'color', list: func.colors
+								element: 'input', name: 'color', list: this.func.colors
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'width', value: this.element.find('#crater-map-div').css()['width'], list: func.pixelSizes
+								element: 'input', name: 'width', value: this.element.find('#crater-map-div').css()['width'], list: this.func.pixelSizes
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'height', value: this.element.find('#crater-map-div').css()['height'], list: func.pixelSizes
+								element: 'input', name: 'height', value: this.element.find('#crater-map-div').css()['height'], list: this.func.pixelSizes
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'marker', options: ['show', 'hide']
@@ -8750,14 +8766,14 @@ class Map extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
 		let mapPane = this.paneContent.find('.map-style-pane');
 
 		mapPane.find('#latitude-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].settings.myMap.lat = parseFloat(value);
+			this.sharePoint.storage.pane.content[this.key].settings.myMap.lat = parseFloat(value);
 		});
 
 		let colorValue = mapPane.find('#color-cell').parentNode;
@@ -8766,15 +8782,15 @@ class Map extends CraterWebParts {
 			colorValue.find('#color-cell').value = color;
 			let hexColor = ColorPicker.rgbToHex(color);
 			colorValue.find('#color-cell').setAttribute('value', hexColor); //set the value of the eventColor cell in the pane to the color
-			this.sharePoint.properties.pane.content[this.key].settings.myMap.color = hexColor;
+			this.sharePoint.storage.pane.content[this.key].settings.myMap.color = hexColor;
 		});
 
 		mapPane.find('#longitude-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].settings.myMap.lng = parseFloat(value);
+			this.sharePoint.storage.pane.content[this.key].settings.myMap.lng = parseFloat(value);
 		});
 
 		mapPane.find('#zoom-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].settings.myMap.zoom = parseInt(value);
+			this.sharePoint.storage.pane.content[this.key].settings.myMap.zoom = parseInt(value);
 		});
 
 		let markerValue = mapPane.find('#marker-cell');
@@ -8782,31 +8798,31 @@ class Map extends CraterWebParts {
 			let marker = markerValue.value;
 			switch (marker.toLowerCase()) {
 				case 'show':
-					this.sharePoint.properties.pane.content[this.key].settings.myMap.markerChecked = true;
+					this.sharePoint.storage.pane.content[this.key].settings.myMap.markerChecked = true;
 					break;
 				case 'hide':
-					this.sharePoint.properties.pane.content[this.key].settings.myMap.markerChecked = false;
+					this.sharePoint.storage.pane.content[this.key].settings.myMap.markerChecked = false;
 					break;
 			}
 		});
 
 		mapPane.find('#width-cell').onChanged(value => {
 			draftDom.find('#crater-map-div').css({ width: value });
-			this.sharePoint.properties.pane.content[this.key].settings.myMap.width = value;
+			this.sharePoint.storage.pane.content[this.key].settings.myMap.width = value;
 		});
 
 		mapPane.find('#height-cell').onChanged(value => {
 			draftDom.find('#crater-map-div').css({ height: value });
-			this.sharePoint.properties.pane.content[this.key].settings.myMap.height = value;
+			this.sharePoint.storage.pane.content[this.key].settings.myMap.height = value;
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
 			this.element.find('#crater-map-div').innerHTML = '';
 			this.element.removeChild(this.element.find('script'));
 			window['initMap'] = this.initMap;
@@ -8814,9 +8830,9 @@ class Map extends CraterWebParts {
 				element: 'script', attributes: { src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDdGAHe_9Ghatd4wZjyc3hRdirIQ1ttcv0&callback=initMap' }
 			});
 
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
 
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 		});
 
 	}
@@ -8850,7 +8866,7 @@ class Instagram extends CraterWebParts {
 			]
 		});
 
-		this.sharePoint.properties.pane.content[instagramDiv.dataset.key].settings = { myInstagram: {} };
+		this.sharePoint.storage.pane.content[instagramDiv.dataset.key].settings = { myInstagram: {} };
 		this.key = instagramDiv.dataset.key;
 		this.element = instagramDiv;
 		return instagramDiv;
@@ -8863,7 +8879,7 @@ class Instagram extends CraterWebParts {
 		};
 		let fetchHtml: any = new Promise((resolve, reject) => {
 			let urlPoint = 'https://api.instagram.com/oembed?url=' + this.defaultURL + `&amp;maxwidth=${width}&amp;minwidth=${320}&ampomitscript=true`;
-			if (func.isset(params)) {
+			if (this.func.isset(params)) {
 				urlPoint = 'https://api.instagram.com/oembed?url=' + params;
 			}
 
@@ -8925,16 +8941,16 @@ class Instagram extends CraterWebParts {
 
 	public setUpPaneContent(params) {
 		let key = params.element.dataset['key'];
-		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.element = this.sharePoint.storage.pane.content[key].draft.dom;
 		this.paneContent = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-property-content' }
 		});
 
-		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		else if (this.sharePoint.storage.pane.content[key].content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].content;
 		} else {
 			this.paneContent.makeElement({
 				element: 'div', attributes: { class: 'instagram-pane' }, children: [
@@ -8972,55 +8988,55 @@ class Instagram extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
 		let instagramPane = this.paneContent.find('.instagram-pane');
 		let postUrl = instagramPane.find('#postUrl-cell');
 		postUrl.onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL = value;
-			this.defaultURL = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL;
-			let finalWidth = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaWidth || '&amp;minwidth=320&amp;maxwidth=320';
-			const finalHide = (this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaCaption) ? '&amp;hidecaption=true' : '';
+			this.sharePoint.storage.pane.content[this.key].settings.myInstagram.instaURL = value;
+			this.defaultURL = this.sharePoint.storage.pane.content[this.key].settings.myInstagram.instaURL;
+			let finalWidth = this.sharePoint.storage.pane.content[this.key].settings.myInstagram.instaWidth || '&amp;minwidth=320&amp;maxwidth=320';
+			const finalHide = (this.sharePoint.storage.pane.content[this.key].settings.myInstagram.instaCaption) ? '&amp;hidecaption=true' : '';
 
-			this.sharePoint.properties.pane.content[this.key].draft.newEndPoint = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL + `&amp;omitscript=true${finalHide}${finalWidth}`;
+			this.sharePoint.storage.pane.content[this.key].draft.newEndPoint = this.sharePoint.storage.pane.content[this.key].settings.myInstagram.instaURL + `&amp;omitscript=true${finalHide}${finalWidth}`;
 		});
 
 		let hideCaption = instagramPane.find('#hideCaption-cell');
 		hideCaption.addEventListener('change', e => {
-			let finalWidth = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaWidth || '&amp;minwidth=320&amp;maxwidth=320';
-			let finalURL = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL || this.defaultURL;
+			let finalWidth = this.sharePoint.storage.pane.content[this.key].settings.myInstagram.instaWidth || '&amp;minwidth=320&amp;maxwidth=320';
+			let finalURL = this.sharePoint.storage.pane.content[this.key].settings.myInstagram.instaURL || this.defaultURL;
 			switch (hideCaption.value.toLowerCase()) {
 				case 'hide':
-					this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaCaption = true;
-					this.sharePoint.properties.pane.content[this.key].draft.newEndPoint = finalURL + `&amp;omitscript=true&amp;hidecaption=true${finalWidth}`;
+					this.sharePoint.storage.pane.content[this.key].settings.myInstagram.instaCaption = true;
+					this.sharePoint.storage.pane.content[this.key].draft.newEndPoint = finalURL + `&amp;omitscript=true&amp;hidecaption=true${finalWidth}`;
 					break;
 				case 'show':
-					this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaCaption = false;
-					this.sharePoint.properties.pane.content[this.key].draft.newEndPoint = finalURL + `&amp;omitscript=true${finalWidth}`;
+					this.sharePoint.storage.pane.content[this.key].settings.myInstagram.instaCaption = false;
+					this.sharePoint.storage.pane.content[this.key].draft.newEndPoint = finalURL + `&amp;omitscript=true${finalWidth}`;
 					break;
 			}
 		});
 
 		let changeWidth = instagramPane.find('#width-cell');
 		changeWidth.onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaWidth = `&amp;minwidth=${value}&amp;maxwidth=${value}`;
-			let finalURL = this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaURL || this.defaultURL;
-			const finalHide = (this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaCaption) ? '&amp;hidecaption=true' : '';
+			this.sharePoint.storage.pane.content[this.key].settings.myInstagram.instaWidth = `&amp;minwidth=${value}&amp;maxwidth=${value}`;
+			let finalURL = this.sharePoint.storage.pane.content[this.key].settings.myInstagram.instaURL || this.defaultURL;
+			const finalHide = (this.sharePoint.storage.pane.content[this.key].settings.myInstagram.instaCaption) ? '&amp;hidecaption=true' : '';
 
-			this.sharePoint.properties.pane.content[this.key].draft.newEndPoint = finalURL + `&amp;omitscript=true${finalHide}${this.sharePoint.properties.pane.content[this.key].settings.myInstagram.instaWidth}`;
+			this.sharePoint.storage.pane.content[this.key].draft.newEndPoint = finalURL + `&amp;omitscript=true${finalHide}${this.sharePoint.storage.pane.content[this.key].settings.myInstagram.instaWidth}`;
 
 		});
 
 
 		this.paneContent.addEventListener('mutated', event => {
-			// this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			// this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.getEmbed(this.sharePoint.properties.pane.content[this.key].draft.newEndPoint);
+			this.getEmbed(this.sharePoint.storage.pane.content[this.key].draft.newEndPoint);
 			this.element.innerHTML = draftDom.innerHTML;//upate the webpart
 			this.element.css(draftDom.css());
 		});
@@ -9058,7 +9074,7 @@ class YouTube extends CraterWebParts {
 		});
 
 		this.key = youtube.dataset.key;
-		this.sharePoint.properties.pane.content[this.key].settings = { myYoutube: { defaultVideo: 'https://www.youtube.com/embed/M7lc1UVf-VE', width: '640', height: '390' } };
+		this.sharePoint.storage.pane.content[this.key].settings = { myYoutube: { defaultVideo: 'https://www.youtube.com/embed/M7lc1UVf-VE', width: '640', height: '390' } };
 
 		let youtubeContent = youtube.find('.crater-youtube-contents');
 		youtubeContent.makeElement({
@@ -9072,16 +9088,16 @@ class YouTube extends CraterWebParts {
 
 	public setUpPaneContent(params) {
 		let key = params.element.dataset['key'];
-		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.element = this.sharePoint.storage.pane.content[key].draft.dom;
 		this.paneContent = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-property-content' }
 		}).monitor();
 
-		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		else if (this.sharePoint.storage.pane.content[key].content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].content;
 		} else {
 			this.paneContent.makeElement({
 				element: 'div', attributes: { class: 'youtube-pane card' }, children: [
@@ -9103,13 +9119,13 @@ class YouTube extends CraterWebParts {
 					this.elementModifier.createElement({
 						element: 'div', attributes: { class: 'row' }, children: [
 							this.elementModifier.cell({
-								element: 'input', name: 'videoURL', value: this.sharePoint.properties.pane.content[key].settings.myYoutube.defaultVideo
+								element: 'input', name: 'videoURL', value: this.sharePoint.storage.pane.content[key].settings.myYoutube.defaultVideo
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'width', value: this.sharePoint.properties.pane.content[key].settings.myYoutube.width
+								element: 'input', name: 'width', value: this.sharePoint.storage.pane.content[key].settings.myYoutube.width
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'height', value: this.sharePoint.properties.pane.content[key].settings.myYoutube.height
+								element: 'input', name: 'height', value: this.sharePoint.storage.pane.content[key].settings.myYoutube.height
 							})
 						]
 					})
@@ -9126,7 +9142,7 @@ class YouTube extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
@@ -9138,7 +9154,7 @@ class YouTube extends CraterWebParts {
 				youtubePane.find('#videoURL').textContent = 'Valid URL';
 				let afterEmbed = value.split('.be/')[1];
 				let newValue = 'https://www.youtube.com/embed/' + afterEmbed;
-				this.sharePoint.properties.pane.content[this.key].settings.myYoutube.defaultVideo = newValue;
+				this.sharePoint.storage.pane.content[this.key].settings.myYoutube.defaultVideo = newValue;
 			} else {
 				youtubePane.find('#videoURL').style.color = 'red';
 				youtubePane.find('#videoURL').textContent = 'Invalid Video URL. Please right click on the video to get the video URL';
@@ -9147,16 +9163,16 @@ class YouTube extends CraterWebParts {
 		});
 
 		youtubePane.find('#width-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].settings.myYoutube.width = value;
+			this.sharePoint.storage.pane.content[this.key].settings.myYoutube.width = value;
 		});
 
 		youtubePane.find('#height-cell').onChanged(value => {
-			this.sharePoint.properties.pane.content[this.key].settings.myYoutube.height = value;
+			this.sharePoint.storage.pane.content[this.key].settings.myYoutube.height = value;
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			// this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			// this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
@@ -9166,13 +9182,13 @@ class YouTube extends CraterWebParts {
 			draftDomIframe.innerHTML = '';
 
 			draftDomIframe.makeElement({
-				element: 'iframe', attributes: { id: 'player2', type: 'text/html', width: this.sharePoint.properties.pane.content[this.key].settings.myYoutube.width, height: this.sharePoint.properties.pane.content[this.key].settings.myYoutube.height, src: `${this.sharePoint.properties.pane.content[this.key].settings.myYoutube.defaultVideo}?origin=${location.href}&autoplay=1&enablejsapi=1&widgetid=1`, frameborder: '0' }
+				element: 'iframe', attributes: { id: 'player2', type: 'text/html', width: this.sharePoint.storage.pane.content[this.key].settings.myYoutube.width, height: this.sharePoint.storage.pane.content[this.key].settings.myYoutube.height, src: `${this.sharePoint.storage.pane.content[this.key].settings.myYoutube.defaultVideo}?origin=${location.href}&autoplay=1&enablejsapi=1&widgetid=1`, frameborder: '0' }
 			});
 
 
 			console.log(draftDom);
 			this.element.css(draftDom.css());
-			// this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
+			// this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;
 			this.element.innerHTML = draftDom.innerHTML;//upate the webpart
 		});
 
@@ -9200,15 +9216,16 @@ class Facebook extends CraterWebParts {
 
 		this.key = facebookDiv.dataset.key;
 		this.element = facebookDiv;
-		this.sharePoint.properties.pane.content[this.key].settings.facebook = { url: this.pageURL, tabs: 'timeline,messages,events', smallHeader: 'false', hideCover: 'false', showFacePile: 'false' };
+		this.sharePoint.storage.pane.content[this.key].settings.facebook = { url: this.pageURL, tabs: 'timeline,messages,events', smallHeader: 'false', hideCover: 'false', showFacePile: 'false' };
+		let facebook = this.sharePoint.storage.pane.content[this.key].settings.facebook;
+		this.faceBookSettings({ url: facebook.url, dataTabs: facebook.tabs, smallHeader: facebook.smallHeader, hideCover: facebook.hideCover, showFacePile: facebook.showFacePile });
 		return facebookDiv;
 	}
 
 	public rendered(params) {
 		this.element = params.element;
 		this.key = params.element.dataset['key'];
-		let facebook = this.sharePoint.properties.pane.content[this.key].settings.facebook;
-		this.faceBookSettings({ url: facebook.url, dataTabs: facebook.tabs, smallHeader: facebook.smallHeader, hideCover: facebook.hideCover, showFacePile: facebook.showFacePile });
+
 	}
 
 	public faceBookSettings(params) {
@@ -9220,7 +9237,7 @@ class Facebook extends CraterWebParts {
 			const width = (params.width) ? params.width : this.element.getBoundingClientRect().width;
 			const height = (params.height) ? params.height : '';
 			const adaptContainer = (params.adaptContainer) ? params.adaptContainer : 'true';
-			let crater = this.element.find('.crater-facebook-content');
+			let crater = this.element.querySelector('.crater-facebook-content');
 			if (crater) crater.remove();
 
 			let facebookContent = this.elementModifier.createElement({
@@ -9256,17 +9273,17 @@ class Facebook extends CraterWebParts {
 
 	public setUpPaneContent(params) {
 		this.key = params.element.dataset['key'];
-		this.element = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		this.element = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-property-content' }
 		});
 
-		if (this.sharePoint.properties.pane.content[this.key].draft.pane.content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[this.key].draft.pane.content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.pane.content;
 
 		}
-		else if (this.sharePoint.properties.pane.content[this.key].content != '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[this.key].content;
+		else if (this.sharePoint.storage.pane.content[this.key].content != '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[this.key].content;
 		} else {
 			// console.log(params)
 			this.paneContent.makeElement({
@@ -9286,10 +9303,10 @@ class Facebook extends CraterWebParts {
 								element: 'input', name: 'pageUrl',
 								value:
 									//this.defaultURL
-									this.sharePoint.properties.pane.content[this.key].draft.dom.find('.fb-page ').dataset.href
+									this.sharePoint.storage.pane.content[this.key].draft.dom.querySelector('.fb-page ').dataset.href
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'Tabs', value: this.sharePoint.properties.pane.content[this.key].settings.facebook.tabs
+								element: 'input', name: 'Tabs', value: this.sharePoint.storage.pane.content[this.key].settings.facebook.tabs
 							}),
 							this.elementModifier.cell({
 								element: 'select', name: 'hide-cover', options: ['show', 'hide']
@@ -9334,10 +9351,10 @@ class Facebook extends CraterWebParts {
 								element: 'select', name: 'container-width', options: ['true', 'false']
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'width', value: this.sharePoint.properties.pane.content[this.key].settings.facebook.width || ''
+								element: 'input', name: 'width', value: this.sharePoint.storage.pane.content[this.key].settings.facebook.width || ''
 							}),
 							this.elementModifier.cell({
-								element: 'input', name: 'height', value: this.sharePoint.properties.pane.content[this.key].settings.facebook.height || ''
+								element: 'input', name: 'height', value: this.sharePoint.storage.pane.content[this.key].settings.facebook.height || ''
 							})
 						]
 					})
@@ -9353,70 +9370,68 @@ class Facebook extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.find(".crater-property-content").monitor();
+		this.paneContent = this.sharePoint.app.querySelector(".crater-property-content").monitor();
 
-		let titlePane = this.paneContent.find('.title-pane');
-		let sizePane = this.paneContent.find('.size-pane');
-		let facebook = this.sharePoint.properties.pane.content[this.key].settings.facebook;
+		let titlePane = this.paneContent.querySelector('.title-pane');
+		let sizePane = this.paneContent.querySelector('.size-pane');
+		let facebook = this.sharePoint.storage.pane.content[this.key].settings.facebook;
 
 
-		titlePane.find('#pageUrl-cell').onChanged(value => {
+		titlePane.querySelector('#pageUrl-cell').onChanged(value => {
 			facebook.url = value;
 		});
-		titlePane.find('#Tabs-cell').onChanged(value => {
+		titlePane.querySelector('#Tabs-cell').onChanged(value => {
 			facebook.tabs = value;
 		});
-		let coverCell = titlePane.find('#hide-cover-cell');
+		let coverCell = titlePane.querySelector('#hide-cover-cell');
 		coverCell.addEventListener('change', e => {
 			switch (coverCell.value.toLowerCase()) {
 				case 'show':
-					facebook.hideCover = 'true';
+					facebook.hideCover = 'false';
 					break;
 				case 'hide':
-					facebook.hideCover = 'false';
+					facebook.hideCover = 'true';
 					break;
 				default:
 					facebook.hideCover = 'false';
 			}
 		});
 
-		let hideFacePileCell = titlePane.find('#hide-facepile-cell');
+		let hideFacePileCell = titlePane.querySelector('#hide-facepile-cell');
 		hideFacePileCell.addEventListener('change', e => {
 			switch (hideFacePileCell.value.toLowerCase()) {
 				case 'show':
-					facebook.showFacePile = 'true';
+					facebook.showFacePile = 'false';
 					break;
 				case 'hide':
-					facebook.showFacePile = 'false';
+					facebook.showFacePile = 'true';
 					break;
-				default:
-					facebook.showFacePile = 'false';
 			}
 		});
 
-		let showHeaderCell = titlePane.find('#small-header-cell');
+		let showHeaderCell = titlePane.querySelector('#small-header-cell');
 		showHeaderCell.addEventListener('change', e => {
 			switch (showHeaderCell.value.toLowerCase()) {
 				case 'show':
-					facebook.smallHeader = 'true';
+					facebook.smallHeader = 'false';
 					break;
 				case 'hide':
-					facebook.smallHeader = 'false';
+					facebook.smallHeader = 'true';
 					break;
 				default:
 					facebook.smallHeader = 'false';
 			}
 		});
 
-		sizePane.find('#width-cell').onChanged(value => {
+		sizePane.querySelector('#width-cell').onChanged(value => {
 			facebook.width = value;
 		});
 
-		sizePane.find('#height-cell').onChanged(value => {
+		sizePane.querySelector('#height-cell').onChanged(value => {
 			facebook.height = value;
 		});
 
-		let adaptCell = sizePane.find('#container-width-cell');
+		let adaptCell = sizePane.querySelector('#container-width-cell');
 		adaptCell.addEventListener('change', e => {
 			switch (adaptCell.value.toLowerCase()) {
 				case 'true':
@@ -9426,17 +9441,17 @@ class Facebook extends CraterWebParts {
 					facebook.adaptContainer = 'false';
 					break;
 				default:
-					facebook.adaptContainer = 'false';
+					facebook.adaptContainer = 'true';
 			}
 		});
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
 
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;
 
 			this.faceBookSettings({ url: facebook.url, dataTabs: facebook.tabs, smallHeader: facebook.smallHeader, hideCover: facebook.hideCover, showFacePile: facebook.showFacePile, width: facebook.width, height: facebook.height, adaptContainer: facebook.adaptContainer });
 		});
@@ -9528,14 +9543,14 @@ class BeforeAfter extends CraterWebParts {
 
 				let draggable = container.find('.crater-draggable');
 
-				if (!func.isnull(draggable)) draggable.css({ 'left': widthValue });
+				if (!this.func.isnull(draggable)) draggable.css({ 'left': widthValue });
 				container.addEventListener('mouseup', function () {
 					this.classList.remove('crater-draggable');
 					resizeElement.classList.remove('crater-resizable');
 				});
 
 				let resizable = container.find('.crater-resizable');
-				if (!func.isnull(resizable)) resizable.css({ 'width': widthValue });
+				if (!this.func.isnull(resizable)) resizable.css({ 'width': widthValue });
 			});
 			container.addEventListener('mouseup', () => {
 				dragElement.classList.remove('crater-draggable');
@@ -9551,15 +9566,15 @@ class BeforeAfter extends CraterWebParts {
 
 	public setUpPaneContent(params) {
 		let key = params.element.dataset['key'];
-		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.element = this.sharePoint.storage.pane.content[key].draft.dom;
 		this.paneContent = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-property-content' }
 		}).monitor();
-		if (this.sharePoint.properties.pane.content[key].draft.pane.content! = "") {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[key].draft.pane.content! = "") {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[key].content != "") {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		else if (this.sharePoint.storage.pane.content[key].content != "") {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].content;
 		}
 		else {
 
@@ -9604,25 +9619,25 @@ class BeforeAfter extends CraterWebParts {
 		let afterCell = this.paneContent.find('#after-cell').parentNode;
 		this.uploadImage({ parent: afterCell }, (image) => {
 			afterCell.find('#after-cell').src = image.src;
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.beforeAfter-contents').find('.crater-after').find('.afterImage').src = image.src;
+			this.sharePoint.storage.pane.content[this.key].draft.dom.find('.beforeAfter-contents').find('.crater-after').find('.afterImage').src = image.src;
 		});
 
 		let beforeCell = this.paneContent.find('#before-cell').parentNode;
 		this.uploadImage({ parent: beforeCell }, (image) => {
 			beforeCell.find('#before-cell').src = image.src;
-			this.sharePoint.properties.pane.content[this.key].draft.dom.find('.beforeAfter-contents').find('.beforeImage').src = image.src;
+			this.sharePoint.storage.pane.content[this.key].draft.dom.find('.beforeAfter-contents').find('.beforeImage').src = image.src;
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			this.element.innerHTML = this.sharePoint.properties.pane.content[this.key].draft.dom.innerHTML;
-			this.element.css(this.sharePoint.properties.pane.content[this.key].draft.dom.css());
+			this.element.innerHTML = this.sharePoint.storage.pane.content[this.key].draft.dom.innerHTML;
+			this.element.css(this.sharePoint.storage.pane.content[this.key].draft.dom.css());
 
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 		});
 	}
 }
@@ -9636,7 +9651,7 @@ class Event extends CraterWebParts {
 	public today: any;
 	public month: any;
 	public day: any;
-	public monthArray = func.trimMonthArray();
+	public monthArray = this.func.trimMonthArray();
 
 
 	constructor(params) {
@@ -9647,11 +9662,11 @@ class Event extends CraterWebParts {
 
 
 	public render(params) {
-		this.today = func.today();
-		this.month = func.isMonthValid(this.today);
-		this.day = func.isDayValid(this.today);
+		this.today = this.func.today();
+		this.month = this.func.isMonthValid(this.today);
+		this.day = this.func.isDayValid(this.today);
 
-		if (!func.isset(params.source)) {
+		if (!this.func.isset(params.source)) {
 			params.source = [
 				{
 					icon: 'https://img.icons8.com/pastel-glyph/64/000000/christmas-tree.png',
@@ -9704,7 +9719,7 @@ class Event extends CraterWebParts {
 					element: 'div', attributes: { class: 'crater-event-content-item' }, children: [
 						this.elementModifier.createElement({
 							element: 'div', attributes: { class: 'crater-event-content-item-icon' }, children: [
-								this.elementModifier.createElement({ element: 'img', attributes: { class: 'crater-event-content-item-icon-image', id: 'icon', src: func.isnull(each.icon) ? this.sharePoint.images.append : each.icon, alt: 'Event Icon' } })
+								this.elementModifier.createElement({ element: 'img', attributes: { class: 'crater-event-content-item-icon-image', id: 'icon', src: this.func.isnull(each.icon) ? this.sharePoint.images.append : each.icon, alt: 'Event Icon' } })
 							]
 						}),
 						this.elementModifier.createElement({
@@ -9744,17 +9759,17 @@ class Event extends CraterWebParts {
 
 	public setUpPaneContent(params) {
 		let key = params.element.dataset['key'];//create a key variable and set it to the webpart key
-		this.element = this.sharePoint.properties.pane.content[key].draft.dom;//define the declared element to the draft dom content
+		this.element = this.sharePoint.storage.pane.content[key].draft.dom;//define the declared element to the draft dom content
 		this.paneContent = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-property-content' }
 		}).monitor(); //monitor the content pane 
-		if (this.sharePoint.properties.pane.content[key].draft.pane.content !== '') {//check if draft pane content is not empty and set it to the pane content
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[key].draft.pane.content !== '') {//check if draft pane content is not empty and set it to the pane content
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[key].content !== '') {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		else if (this.sharePoint.storage.pane.content[key].content !== '') {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].content;
 		} else {
-			let eventList = this.sharePoint.properties.pane.content[key].draft.dom.find('.crater-event-content');
+			let eventList = this.sharePoint.storage.pane.content[key].draft.dom.find('.crater-event-content');
 			let dateListRows = eventList.findAll('.crater-event-content-item');
 			this.paneContent.makeElement({
 				element: 'div', children: [
@@ -10010,7 +10025,7 @@ class Event extends CraterWebParts {
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 		//get the content and all the events
-		let eventList = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-event-content');
+		let eventList = this.sharePoint.storage.pane.content[this.key].draft.dom.find('.crater-event-content');
 		let eventListRow = eventList.findAll('.crater-event-content-item');
 
 		let eventListRowPanePrototype = this.elementModifier.createElement({//create a row on the property pane
@@ -10143,7 +10158,7 @@ class Event extends CraterWebParts {
 			});
 		};
 
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 
 		let titlePane = this.paneContent.find('.title-pane');
 		let eventIconRowPane = this.paneContent.find('.event-icon-row-pane');
@@ -10430,21 +10445,21 @@ class Event extends CraterWebParts {
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = draftDom.innerHTML;//upate the webpart
 			this.element.css(draftDom.css());
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;
 		});
 	}
 
 	public update(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.setUpPaneContent(params);
 
 		let paneConnection = this.sharePoint.app.find('.crater-property-connection');
@@ -10476,23 +10491,23 @@ class Event extends CraterWebParts {
 			data.location = updateWindow.find('#meta-data-location').value;
 			data.start = updateWindow.find('#meta-data-start').value;
 			data.end = updateWindow.find('#meta-data-end').value;
-			source = func.extractFromJsonArray(data, params.source);
+			source = this.func.extractFromJsonArray(data, params.source);
 
 			let newContent = this.render({ source });
 			draftDom.find('.crater-event-content').innerHTML = newContent.find('.crater-event-content').innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = draftDom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = draftDom.outerHTML;
 			this.paneContent.find('.list-pane').innerHTML = this.generatePaneContent({ list: newContent.findAll('.crater-event-content-item') }).innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
 		});
 
 
-		if (!func.isnull(paneConnection)) {
+		if (!this.func.isnull(paneConnection)) {
 			paneConnection.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
 				this.element.innerHTML = draftDom.innerHTML;
 
 				this.element.css(draftDom.css());
 
-				this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
+				this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;//update webpart
 			});
 		}
 
@@ -10500,7 +10515,7 @@ class Event extends CraterWebParts {
 	}
 }
 
-class Power extends CraterWebParts {
+class PowerBI extends CraterWebParts {
 	public key: any;
 	public element: any;
 	public paneContent: any;
@@ -10520,14 +10535,14 @@ class Power extends CraterWebParts {
 
 	public render(params): any {
 		let power: any = this.createKeyedElement({
-			element: 'div', attributes: { class: 'crater-power crater-component', id: 'crater-power', 'data-type': 'power' }, children: [
+			element: 'div', attributes: { class: 'crater-powerbi crater-component', id: 'crater-powerbi', 'data-type': 'powerbi' }, children: [
 				{
 					element: 'div', attributes: { id: 'power-overlay' }, children: [
 						{ element: 'div', attributes: { id: 'power-overlay-text' } }
 					]
 				},
 				{
-					element: 'div', attributes: { class: 'crater-power-container' }, children: [
+					element: 'div', attributes: { class: 'crater-powerbi-container' }, children: [
 						{
 							element: 'div', attributes: { id: 'renderContainer' }, children: [
 								{
@@ -10538,15 +10553,15 @@ class Power extends CraterWebParts {
 							]
 						},
 						{
-							element: 'div', attributes: { class: 'crater-power-timer' }, children: [
-								{ element: 'span', attributes: { class: 'crater-power-counter' }, text: this.counter + ' Seconds to Login!' }
+							element: 'div', attributes: { class: 'crater-powerbi-timer' }, children: [
+								{ element: 'span', attributes: { class: 'crater-powerbi-counter' }, text: this.counter + ' Seconds to Login!' }
 							]
 						},
 						{
-							element: 'div', attributes: { id: 'crater-power-connect', class: 'crater-power-connect' }, children: [
+							element: 'div', attributes: { id: 'crater-powerbi-connect', class: 'crater-powerbi-connect' }, children: [
 								{
 									element: 'div', attributes: { class: 'user' }, children: [
-										{ element: 'img', attributes: { class: 'crater-power-image', alt: 'Master-User', src: this.image.loading } },
+										{ element: 'img', attributes: { class: 'crater-powerbi-image', alt: 'Master-User', src: this.image.loading } },
 										{
 											element: 'div', attributes: { class: 'login-container' }, children: [
 												{ element: 'h4', attributes: { class: 'user-header' }, text: 'Master Account' },
@@ -10559,7 +10574,7 @@ class Power extends CraterWebParts {
 								},
 								{
 									element: 'div', attributes: { class: 'user' }, children: [
-										{ element: 'img', attributes: { class: 'crater-power-image', alt: 'Logged-in-User', src: this.image.loading } },
+										{ element: 'img', attributes: { class: 'crater-powerbi-image', alt: 'Logged-in-User', src: this.image.loading } },
 										{
 											element: 'div', attributes: { class: 'login-container' }, children: [
 												{ element: 'h4', attributes: { class: 'user-header' }, text: 'Logged-In User' },
@@ -10609,13 +10624,13 @@ class Power extends CraterWebParts {
 		power.find('.login_form').innerHTML += form;
 
 		this.key = power.dataset.key;
-		this.sharePoint.properties.pane.content[this.key].settings.myPowerBi = { showNavContent: '', showFilter: '', loginType: '', code: '', username: '', tenantID: "90fa49f0-0a6c-4170-abed-92ed96ba67ca", clientSecret: 'FUq.Y0@BN4byWh6B8.H:et:?F/VX2-3a', password: '', clientId: '9605a407-7c23-4dc8-bd90-997fbc254d38', accessToken: '', embedToken: '', embedUrl: '', reports: [], reportName: [], groups: [], groupName: [], dashboards: [], dashBoardName: [], tiles: [], tileName: [], width: '100%', height: '300px' };
+		this.sharePoint.storage.pane.content[this.key].settings.myPowerBi = { showNavContent: '', showFilter: '', loginType: '', code: '', username: '', tenantID: "90fa49f0-0a6c-4170-abed-92ed96ba67ca", clientSecret: 'FUq.Y0@BN4byWh6B8.H:et:?F/VX2-3a', password: '', clientId: '9605a407-7c23-4dc8-bd90-997fbc254d38', accessToken: '', embedToken: '', embedUrl: '', reports: [], reportName: [], groups: [], groupName: [], dashboards: [], dashBoardName: [], tiles: [], tileName: [], width: '100%', height: '300px' };
 		window.onerror = (msg, url, lineNumber, columnNumber, error) => {
 			console.log(msg, url, lineNumber, columnNumber, error);
 		};
 		power.find('#master').addEventListener('click', event => {
 			let loginForm = power.find('.login_form') as any;
-			let powerConnect = power.find('.crater-power-connect') as any;
+			let powerConnect = power.find('.crater-powerbi-connect') as any;
 
 			powerConnect.style.display = "none";
 			loginForm.style.display = 'block';
@@ -10636,17 +10651,17 @@ class Power extends CraterWebParts {
 				}
 				else {
 					this.showLoading();
-					this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken = '';
-					this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.username = username.value;
-					this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.password = password.value;
+					this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.accessToken = '';
+					this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.username = username.value;
+					this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.password = password.value;
 					this.getAccessToken().then(aResponse => {
-						if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken) {
-							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups.length = 0;
-							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupName.length = 0;
+						if (this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.accessToken) {
+							this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groups.length = 0;
+							this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupName.length = 0;
 							this.getWorkSpace(aResponse);
 							renderBox.find('#render-error').style.display = 'none';
 							renderBox.style.display = "block";
-							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.loginType = 'master';
+							this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.loginType = 'master';
 							loginForm.style.display = "none";
 							if (renderBox.find('.connected')) renderBox.find('.connected').remove();
 							renderBox.makeElement({
@@ -10656,7 +10671,7 @@ class Power extends CraterWebParts {
 										element: 'div', attributes: { class: 'login-container' }, children: [
 											{ element: 'h4', text: 'Power BI Master' },
 											{ element: 'button', attributes: { id: 'master', class: 'user-button' }, text: 'Reconnect' },
-											{ element: 'p', text: `Connected using ${this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.username}` },
+											{ element: 'p', text: `Connected using ${this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.username}` },
 										]
 									}
 								]
@@ -10681,20 +10696,20 @@ class Power extends CraterWebParts {
 		power.find('#normal').addEventListener('click', event => {
 			// this.checkConsent();
 			this.startCounter();
-			this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken = '';
+			this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.accessToken = '';
 			this.requestCode().then(response => {
 				setTimeout(() => {
 					this.getAccessToken(response).then(access => {
-						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups.length = 0;
-						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupName.length = 0;
+						this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groups.length = 0;
+						this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupName.length = 0;
 						this.getWorkSpace(access);
-						if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken && this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups.length !== 0) {
-							let powerConnect = power.find('.crater-power-connect') as any;
+						if (this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.accessToken && this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groups.length !== 0) {
+							let powerConnect = power.find('.crater-powerbi-connect') as any;
 							powerConnect.style.display = "none";
 							let renderBox = power.find('#renderContainer') as any;
 							renderBox.find('#render-error').style.display = 'none';
 							renderBox.style.display = 'block';
-							power.find('.crater-power-timer').style.display = "none";
+							power.find('.crater-powerbi-timer').style.display = "none";
 							if (renderBox.find('.connected')) renderBox.find('.connected').remove();
 							renderBox.makeElement({
 								element: 'div', attributes: { class: 'connected' }, children: [
@@ -10707,7 +10722,7 @@ class Power extends CraterWebParts {
 									}
 								]
 							});
-							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.loginType = 'user';
+							this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.loginType = 'user';
 						}
 					});
 				}, 15000);
@@ -10725,7 +10740,7 @@ class Power extends CraterWebParts {
 		});
 	}
 	public checkConsent() {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 
 		let promise = new Promise((res, rej) => {
 			let host = (location.href === `https://localhost:4321/temp/workbench.html`) ? location.href : (location.origin === `https://ipigroup.sharepoint.com/`) ? location.origin : `https://ipigroup.sharepoint.com/`;
@@ -10742,26 +10757,26 @@ class Power extends CraterWebParts {
 	}
 	public startCounter() {
 		//@ts-ignore
-		this.element.find('.crater-power-timer').style.display = 'block';
+		this.element.find('.crater-powerbi-timer').style.display = 'block';
 		clearInterval(1);
 		setInterval(() => {
 			if (this.counter === 0) {
 				//@ts-ignore
-				this.element.find('.crater-power-counter').render({
+				this.element.find('.crater-powerbi-counter').render({
 					element: 'img', attributes: { class: 'crater-icon', src: this.sharePoint.images.loading, style: { width: '20px', height: '20px' } }
 				});
 			}
 			else {
 				this.counter--;
 				//@ts-ignore
-				this.element.find('.crater-power-counter').textContent = 'Please wait ' + this.counter + ' Seconds';
+				this.element.find('.crater-powerbi-counter').textContent = 'Please wait ' + this.counter + ' Seconds';
 			}
 		}, 1000);
 
 	}
 	public requestCode() {
 		let promise = new Promise((res, rej) => {
-			let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+			let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 			let host = (location.href === `https://localhost:4321/temp/workbench.html`) ? location.href : (location.origin === `https://ipigroup.sharepoint.com/`) ? location.origin : `https://ipigroup.sharepoint.com/`;
 			let state = 12345;
 			let openURL = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${draftPower.clientId}&response_type=code&redirect_uri=${host}&response_mode=query&scope=openid&state=${state}`;
@@ -10790,7 +10805,7 @@ class Power extends CraterWebParts {
 		return promise;
 	}
 	public createWorkSpace(access) {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 		let url = `https://api.powerbi.com/v1.0/myorg/groups`;
 
 		let accessString = 'Bearer ' + access;
@@ -10834,7 +10849,7 @@ class Power extends CraterWebParts {
 		return promise;
 	}
 	public cloneReport(params) {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 		let url = `https://api.powerbi.com/v1.0/myorg/reports/${params.reportID}/Clone`;
 
 		let accessString = 'Bearer ' + params.accessToken;
@@ -10867,7 +10882,7 @@ class Power extends CraterWebParts {
 		return promise;
 	}
 	public cloneTile(params) {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 		let url = `https://api.powerbi.com/v1.0/myorg/dashboards/${params.dashboardID}/tiles/${params.tileID}/Clone`;
 
 		let accessString = 'Bearer ' + params.accessToken;
@@ -10900,7 +10915,7 @@ class Power extends CraterWebParts {
 	}
 	public getReports(access, groupID, third?) {
 
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 		let url = (third) ? `https://api.powerbi.com/v1.0/myorg/reports` : `https://api.powerbi.com/v1.0/myorg/groups/${groupID}/reports`;
 
 		let accessString = 'Bearer ' + access;
@@ -10947,7 +10962,7 @@ class Power extends CraterWebParts {
 		return promise;
 	}
 	public getPages(params) {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 		let url = (params.groupID === 'none') ? `https://api.powerbi.com/v1.0/myorg/reports/${params.reportID}/pages` : `https://api.powerbi.com/v1.0/myorg/groups/${params.groupID}/reports/${params.reportID}/pages`;
 
 		let accessString = 'Bearer ' + params.accessToken;
@@ -10989,7 +11004,7 @@ class Power extends CraterWebParts {
 		return promise;
 	}
 	public getDashboards(access, groupID, third?) {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 		draftPower.dashboards.length = 0;
 		draftPower.dashBoardName.length = 0;
 		let url = (third) ? `https://api.powerbi.com/v1.0/myorg/dashboards/` : `https://api.powerbi.com/v1.0/myorg/groups/${groupID}/dashboards/`;
@@ -11040,7 +11055,7 @@ class Power extends CraterWebParts {
 		return promise;
 	}
 	public getTiles(access, groupID, dashboardID) {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 
 		let url = (groupID === 'none') ? `https://api.powerbi.com/v1.0/myorg/dashboards/${dashboardID}/tiles` : `https://api.powerbi.com/v1.0/myorg/groups/${groupID}/dashboards/${dashboardID}/tiles`;
 
@@ -11083,7 +11098,7 @@ class Power extends CraterWebParts {
 		return promise;
 	}
 	public addUser(params) {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 		let url = `https://api.powerbi.com/v1.0/myorg/groups/${params.groupID}/users`;
 		const sendLink = (draftPower.loginType.toLowerCase() === 'master') ? `identifier=${draftPower.username}&groupUserAccessRight=Admin&principalType=User` : (draftPower.loginType.toLowerCase() === 'user') ? `id=${params.groupID}&groupUserAccessRight=Admin&principalType=Group` : '';
 
@@ -11113,7 +11128,7 @@ class Power extends CraterWebParts {
 		return promise;
 	}
 	public addDashBoard(params) {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 		let url = `https://api.powerbi.com/v1.0/myorg/dashboards`;
 
 		let accessString = 'Bearer ' + params.accessToken;
@@ -11146,7 +11161,7 @@ class Power extends CraterWebParts {
 		return promise;
 	}
 	public deleteUser(params) {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 		let url = ` https://api.powerbi.com/v1.0/myorg/groups/${params.groupID}/users/${params.username}`;
 
 		let accessString = 'Bearer ' + params.accessToken;
@@ -11175,7 +11190,7 @@ class Power extends CraterWebParts {
 	}
 
 	public deleteWorkspace(params) {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 		let url = ` https://api.powerbi.com/v1.0/myorg/groups/${params.groupID}`;
 
 		let accessString = 'Bearer ' + params.accessToken;
@@ -11204,7 +11219,7 @@ class Power extends CraterWebParts {
 	}
 
 	public getWorkSpace(access) {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 		let url = `https://api.powerbi.com/v1.0/myorg/groups`;
 
 		let accessString = 'Bearer ' + access;
@@ -11264,7 +11279,7 @@ class Power extends CraterWebParts {
 
 	public getAccessToken(authCode?) {
 		let host = (location.href === `https://localhost:4321/temp/workbench.html`) ? location.href : (location.origin === `https://ipigroup.sharepoint.com/`) ? location.origin : `https://ipigroup.sharepoint.com/`;
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 		let endpoint = `client_id=${draftPower.clientId}&grant_type=Authorization_code&code=${authCode}&scope=https://analysis.windows.net/powerbi/api/Workspace.ReadWrite.All` + `&client_secret=${draftPower.clientSecret}&redirect_uri=${host}`;
 		let endpoint2 = `grant_type=password&client_id=${draftPower.clientId}&resource=https://analysis.windows.net/powerbi/api` + `&username=${draftPower.username}&password=${draftPower.password}&scope=openid`;
 		let url = (authCode) ? 'https://cors-anywhere.herokuapp.com/https://login.microsoftonline.com/common/oauth2/v2.0/token/' : 'https://cors-anywhere.herokuapp.com/https://login.microsoftonline.com/common/oauth2/token/';
@@ -11291,7 +11306,7 @@ class Power extends CraterWebParts {
 			//@ts-ignore
 			this.element.find('#login-submit').style.zIndex = 0;
 			this.element.find('#login-submit').innerHTML = 'Login';
-			this.element.find('.crater-power-counter').innerHTML = "Sorry, there was an error. Please, click the connect button to try again";
+			this.element.find('.crater-powerbi-counter').innerHTML = "Sorry, there was an error. Please, click the connect button to try again";
 			//@ts-ignore
 			this.element.find('#renderContainer').style.display = "block";
 			this.element.find('#render-text').textContent = `Please make sure your details are valid!`;
@@ -11319,7 +11334,7 @@ class Power extends CraterWebParts {
 	}
 
 	public updateToken(params) {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 
 		this.getEmbedToken({ accessToken: draftPower.accessToken, groupID: draftPower.groupId, reportID: draftPower.reportId, generateUrl: draftPower.tokenEmbed }).then(response => {
 			let embedContainer = this.element.find('#renderContainer') as any;
@@ -11337,9 +11352,9 @@ class Power extends CraterWebParts {
 	}
 
 	public getEmbedToken(params) {
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 		let tokenURL;
-		if ((!func.isset(params.generateUrl)) || (params.generateUrl.toLowerCase() === 'reportname')) {
+		if ((!this.func.isset(params.generateUrl)) || (params.generateUrl.toLowerCase() === 'reportname')) {
 			tokenURL = 'https://api.powerbi.com/v1.0/myorg/groups/' + params.groupID + '/reports/' + params.reportID + '/GenerateToken';
 		}
 		else if (params.generateUrl.toLowerCase() === 'fulldashboard') {
@@ -11363,7 +11378,7 @@ class Power extends CraterWebParts {
 					if (self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.changed) {
 						if (self.element.find('#renderContainer')) {
 							self.element.find('#renderContainer').remove();
-							let powerContainer = self.element.find('.crater-power-container') as any;
+							let powerContainer = self.element.find('.crater-powerbi-container') as any;
 							powerContainer.makeElement({
 								element: 'div', attributes: { id: 'renderContainer' }, children: [
 									{
@@ -11395,29 +11410,29 @@ class Power extends CraterWebParts {
 	}
 
 	public embedPower(params) {
-		if (!func.isset(params.tokenType)) params.tokenType = 'embed';
+		if (!this.func.isset(params.tokenType)) params.tokenType = 'embed';
 		try {
-			const newEmbed = (params.embedUrl) ? params.embedUrl : `https://app.powerbi.com/reportEmbed?reportId=${this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.reportId}&groupId=${this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId}`;
+			const newEmbed = (params.embedUrl) ? params.embedUrl : `https://app.powerbi.com/reportEmbed?reportId=${this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.reportId}&groupId=${this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupId}`;
 			window['powerbi-client'] = factory;
 			const models = window['powerbi-client'].models;
 			const newToken = (params.tokenType === "embed") ? models.TokenType.Embed : (params.tokenType === 'aad') ? models.TokenType.Aad : models.TokenType.Embed;
-			const viewMode = ((!func.isset(params.viewMode)) || (params.viewMode.toLowerCase() === 'view')) ? models.ViewMode.View : (params.viewMode.toLowerCase() === 'edit') ? models.ViewMode.Edit : models.ViewMode.View;
-			const pageName = (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.namePage) ? this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.namePage : '';
-			const dashboardId = (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedType === 'tile') ? this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.dashboardId : '';
+			const viewMode = ((!this.func.isset(params.viewMode)) || (params.viewMode.toLowerCase() === 'view')) ? models.ViewMode.View : (params.viewMode.toLowerCase() === 'edit') ? models.ViewMode.Edit : models.ViewMode.View;
+			const pageName = (this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.namePage) ? this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.namePage : '';
+			const dashboardId = (this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.embedType === 'tile') ? this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.dashboardId : '';
 
 			const config = {
 				type: params.type,
 				tokenType: newToken,
 				accessToken: params.accessToken,
 				embedUrl: newEmbed,
-				id: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.reportId,
+				id: this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.reportId,
 				dashboardId,
 				viewMode,
 				pageName,
 				permissions: models.Permissions.All,
 				settings: {
-					filterPaneEnabled: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.showFilter || false,
-					navContentPaneEnabled: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.showNavContent || false
+					filterPaneEnabled: this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.showFilter || false,
+					navContentPaneEnabled: this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.showNavContent || false
 				}
 			};
 
@@ -11427,14 +11442,14 @@ class Power extends CraterWebParts {
 			reportContainer.style.display = 'block';
 			//@ts-ignore
 			let report = powerbi.embed(reportContainer, config);
-			this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.changed = false;
-			this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedded = true;
+			this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.changed = false;
+			this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.embedded = true;
 			report.off('loaded');
 
 			report.on('loaded', () => {
-				this.tokenListener({ tokenExpiration: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.expiration, minutesToRefresh: 2, reportId: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.reportId, groupId: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId });
+				this.tokenListener({ tokenExpiration: this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.expiration, minutesToRefresh: 2, reportId: this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.reportId, groupId: this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupId });
 			});
-			if (func.isset(params.switch)) report.switchMode('edit');
+			if (this.func.isset(params.switch)) report.switchMode('edit');
 		}
 		catch (error) {
 			console.log(error.message);
@@ -11453,10 +11468,10 @@ class Power extends CraterWebParts {
 		window.onerror = (msg, url, lineNumber, columnNumber, error) => {
 			console.log(msg, url, lineNumber, columnNumber, error);
 		};
-		let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
-		if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedded) {
+		let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
+		if (this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.embedded) {
 			this.getEmbedToken({ accessToken: draftPower.accessToken, groupID: draftPower.groupId, reportID: draftPower.reportId, generateUrl: draftPower.tokenEmbed }).then(response => {
-				this.element.find('.crater-power-container').css({ width: draftPower.width, height: draftPower.height });
+				this.element.find('.crater-powerbi-container').css({ width: draftPower.width, height: draftPower.height });
 				this.element.find('#renderContainer').css({ width: '100%', height: draftPower.height });
 				this.embedPower({ accessToken: response, type: draftPower.embedType, embedUrl: draftPower.embedUrl });
 			});
@@ -11465,19 +11480,19 @@ class Power extends CraterWebParts {
 
 	public setUpPaneContent(params) {
 		let key = params.element.dataset['key'];
-		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.element = this.sharePoint.storage.pane.content[key].draft.dom;
 		this.paneContent = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-property-content' }
 		}).monitor();
 
 
-		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[key].draft.pane.content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		else if (this.sharePoint.storage.pane.content[key].content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].content;
 		} else {
-			if ((this.sharePoint.properties.pane.content[key].settings.myPowerBi.loginType === 'master')) {
+			if ((this.sharePoint.storage.pane.content[key].settings.myPowerBi.loginType === 'master')) {
 
 				this.paneContent.makeElement({
 					element: 'div', attributes: { class: 'power-pane card' }, children: [
@@ -11492,14 +11507,14 @@ class Power extends CraterWebParts {
 							element: 'div', attributes: { class: 'row' }, children: [
 								{
 									element: 'div', attributes: { class: 'message-note' }, children: [
-										{ element: 'span', attributes: { style: { color: 'green' } }, text: `POWER BI connected using ${this.sharePoint.properties.pane.content[key].settings.myPowerBi.username}` }
+										{ element: 'span', attributes: { style: { color: 'green' } }, text: `POWER BI connected using ${this.sharePoint.storage.pane.content[key].settings.myPowerBi.username}` }
 									]
 								}]
 						}),
 						this.elementModifier.createElement({
 							element: 'div', attributes: { class: 'power-embed row' }, children: [
 								this.elementModifier.cell({
-									element: 'select', name: 'WorkSpace', options: this.sharePoint.properties.pane.content[key].settings.myPowerBi.groupName
+									element: 'select', name: 'WorkSpace', options: this.sharePoint.storage.pane.content[key].settings.myPowerBi.groupName
 								}),
 								this.elementModifier.cell({
 									element: 'select', name: 'user-rights', options: ['Allow', 'Deny']
@@ -11538,7 +11553,7 @@ class Power extends CraterWebParts {
 					]
 				});
 			}
-			else if (this.sharePoint.properties.pane.content[key].settings.myPowerBi.loginType === 'user') {
+			else if (this.sharePoint.storage.pane.content[key].settings.myPowerBi.loginType === 'user') {
 
 				this.paneContent.makeElement({
 					element: 'div', attributes: { class: 'power-pane card' }, children: [
@@ -11552,7 +11567,7 @@ class Power extends CraterWebParts {
 						this.elementModifier.createElement({
 							element: 'div', attributes: { class: 'power-embed row' }, children: [
 								this.elementModifier.cell({
-									element: 'select', name: 'WorkSpace', options: this.sharePoint.properties.pane.content[key].settings.myPowerBi.groupName
+									element: 'select', name: 'WorkSpace', options: this.sharePoint.storage.pane.content[key].settings.myPowerBi.groupName
 								}),
 								this.elementModifier.cell({
 									element: 'select', name: 'user-rights', options: ['Allow', 'Deny']
@@ -11591,8 +11606,8 @@ class Power extends CraterWebParts {
 					]
 				});
 			}
-			else if (this.sharePoint.properties.pane.content[key].settings.myPowerBi.loginType === '') {
-				let userList = this.sharePoint.properties.pane.content[key].draft.dom.find('.crater-power-container');
+			else if (this.sharePoint.storage.pane.content[key].settings.myPowerBi.loginType === '') {
+				let userList = this.sharePoint.storage.pane.content[key].draft.dom.find('.crater-powerbi-container');
 				let userListRows = userList.findAll('.user');
 
 				this.paneContent.makeElement({
@@ -11747,10 +11762,10 @@ class Power extends CraterWebParts {
 		for (let i = 0; i < params.list.length; i++) {
 			userListPane.makeElement({
 				element: 'div',
-				attributes: { class: 'crater-power-user-pane row' },
+				attributes: { class: 'crater-powerbi-user-pane row' },
 				children: [
 					this.elementModifier.cell({
-						element: 'img', name: 'image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.list[i].find('.crater-power-image').src }
+						element: 'img', name: 'image', attributes: {}, dataAttributes: { class: 'crater-icon', src: params.list[i].find('.crater-powerbi-image').src }
 					}),
 					this.elementModifier.cell({
 						element: 'input', name: 'header', attribute: { class: 'crater-user-header' }, value: params.list[i].find('.user-header').textContent
@@ -11775,30 +11790,30 @@ class Power extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 		let self = this;
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
 
 		window.onerror = (msg, url, lineNumber, columnNumber, error) => {
 			console.log(msg, url, lineNumber, columnNumber, error);
 		};
 
-		if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.loginType.length !== 0) {
+		if (this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.loginType.length !== 0) {
 
 			let powerPane = this.paneContent.find('.power-pane');
 			let sizePane = this.paneContent.find('.size-pane');
-			if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.loginType.toLowerCase() === 'user') {
+			if (this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.loginType.toLowerCase() === 'user') {
 				powerPane.find('#user-rights-cell').parentElement.remove();
 			} else {
 				powerPane.find('#user-rights-cell').onChanged(value => {
 					switch (value.toLowerCase()) {
 						case 'allow':
 							this.getAccessToken().then(response => {
-								this.addUser({ accessToken: response, groupID: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId });
+								this.addUser({ accessToken: response, groupID: this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupId });
 							});
 							break;
 						case 'deny':
 							this.getAccessToken().then(response => {
-								this.deleteUser({ accessToken: response, groupID: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId, username: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.username });
+								this.deleteUser({ accessToken: response, groupID: this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupId, username: this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.username });
 							});
 							break;
 					}
@@ -12015,23 +12030,23 @@ class Power extends CraterWebParts {
 			};
 
 			powerPane.find('#WorkSpace-cell').onChanged(value => {
-				this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.changed = true;
+				this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.changed = true;
 				if (powerPane.find('#embed-type-cell')) powerPane.find('#embed-type-cell').parentElement.remove();
 				if (powerPane.find('#view-cell')) powerPane.find('#view-cell').parentElement.remove();
 				if (powerPane.find('#tile-cell')) powerPane.find('#tile-cell').parentElement.remove();
 				if (powerPane.find('#page-cell')) powerPane.find('#page-cell').parentElement.remove();
 				if (powerPane.find('#filter-panel-cell')) powerPane.find('#filter-panel-cell').parentElement.parentElement.remove();
 				if (powerPane.find('#navigation-cell')) powerPane.find('#navigation-cell').parentElement.parentElement.remove();
-				for (let group = 0; group < this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups.length; group++) {
-					for (let property in this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups[group]) {
-						if (value === this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups[group].workspaceName) {
-							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groups[group].workspaceId;
-							this.getReports(this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken, this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId);
-							this.getDashboards(this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken, this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId);
+				for (let group = 0; group < this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groups.length; group++) {
+					for (let property in this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groups[group]) {
+						if (value === this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groups[group].workspaceName) {
+							this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupId = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groups[group].workspaceId;
+							this.getReports(this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.accessToken, this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupId);
+							this.getDashboards(this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.accessToken, this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupId);
 						} else if (value.toLowerCase() === 'my workspace') {
-							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId = 'none';
-							this.getReports(this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken, this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId, 'third');
-							this.getDashboards(this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.accessToken, this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId, 'third');
+							this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupId = 'none';
+							this.getReports(this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.accessToken, this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupId, 'third');
+							this.getDashboards(this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.accessToken, this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupId, 'third');
 						}
 					}
 				}
@@ -12055,17 +12070,17 @@ class Power extends CraterWebParts {
 							powerPane.find('.power-embed').makeElement({
 								element: 'div', children: [
 									this.elementModifier.cell({
-										element: 'select', name: 'view', options: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.reportName
+										element: 'select', name: 'view', options: this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.reportName
 									})
 								]
 							});
 							self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.tileId = '';
 							self.sharePoint.properties.pane.content[self.key].settings.myPowerBi.dashboardId = '';
-							// if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.reportName.indexOf('No Reports') !== -1) {
+							// if (this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.reportName.indexOf('No Reports') !== -1) {
 							// 	powerPane.find('#view-cell').options[0].selected = true;
 							// 	powerPane.find('#view-cell').disabled = true;
 							// }
-							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedType = val.toLowerCase();
+							this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.embedType = val.toLowerCase();
 							changedReport();
 							break;
 						case 'dashboard':
@@ -12078,15 +12093,15 @@ class Power extends CraterWebParts {
 							powerPane.find('.power-embed').makeElement({
 								element: 'div', children: [
 									this.elementModifier.cell({
-										element: 'select', name: 'view', options: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.dashBoardName
+										element: 'select', name: 'view', options: this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.dashBoardName
 									})
 								]
 							});
-							// if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.dashBoardName.indexOf('No Dashboards') !== -1) {
+							// if (this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.dashBoardName.indexOf('No Dashboards') !== -1) {
 							// 	powerPane.find('#view-cell').options[0].selected = true;
 							// 	powerPane.find('#view-cell').disabled = true;
 							// }
-							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedType = val.toLowerCase();
+							this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.embedType = val.toLowerCase();
 							changedDashboard();
 							break;
 					}
@@ -12098,31 +12113,31 @@ class Power extends CraterWebParts {
 					case '16:9 (1280px x 720px)':
 						if (sizePane.find('#width-cell')) sizePane.find('#width-cell').parentElement.remove();
 						if (sizePane.find('#height-cell')) sizePane.find('#height-cell').parentElement.remove();
-						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.width = '1280px';
-						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.height = '720px';
+						this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.width = '1280px';
+						this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.height = '720px';
 						break;
 					case '4:3 (1000px x 750px)':
 						if (sizePane.find('#width-cell')) sizePane.find('#width-cell').parentElement.remove();
 						if (sizePane.find('#height-cell')) sizePane.find('#height-cell').parentElement.remove();
-						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.width = '1000px';
-						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.height = '750px';
+						this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.width = '1000px';
+						this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.height = '750px';
 						break;
 					case 'Custom Size':
 						sizePane.find('.power-embed').makeElement({
 							element: 'div', children: [
 								this.elementModifier.cell({
-									element: 'input', name: 'width', value: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.width
+									element: 'input', name: 'width', value: this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.width
 								}),
 								this.elementModifier.cell({
-									element: 'input', name: 'height', value: this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.height
+									element: 'input', name: 'height', value: this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.height
 								})
 							]
 						});
 						sizePane.find('#width-cell').onChanged(val => {
-							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.width = val;
+							this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.width = val;
 						});
 						sizePane.find('#height-cell').onChanged(val => {
-							this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.height = val;
+							this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.height = val;
 						});
 						break;
 				}
@@ -12134,7 +12149,7 @@ class Power extends CraterWebParts {
 			let layoutRecommendedRowPane = this.paneContent.find('.layout-recommended-row-pane');
 			let layoutInfoRowPane = this.paneContent.find('.layout-info-row-pane');
 			let layoutHeaderRowPane = this.paneContent.find('.layout-header-row-pane');
-			let userList = this.element.find('.crater-power-connect');
+			let userList = this.element.find('.crater-powerbi-connect');
 			let userListRow = userList.findAll('.user');
 
 			let layoutBackgroundParent = layoutRowPane.find('#backgroundcolor-cell').parentNode;
@@ -12306,7 +12321,7 @@ class Power extends CraterWebParts {
 				let iconParent = userRowPane.find('#image-cell').parentNode;
 				this.uploadImage({ parent: iconParent }, (image) => {
 					iconParent.find('#image-cell').src = image.src;
-					this.element.find('.crater-power-image').src = image.src;
+					this.element.find('.crater-powerbi-image').src = image.src;
 				});
 				userRowPane.find('#header-cell').onChanged(value => {
 					userRowDom.find('.user-header').innerHTML = value;
@@ -12326,7 +12341,7 @@ class Power extends CraterWebParts {
 
 			};
 
-			let paneItems = this.paneContent.findAll('.crater-power-user-pane');
+			let paneItems = this.paneContent.findAll('.crater-powerbi-user-pane');
 			paneItems.forEach((userRow, position) => {
 				userRowHandler(userRow, userListRow[position]);
 			});
@@ -12334,24 +12349,24 @@ class Power extends CraterWebParts {
 		}
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
-			let draftPower = this.sharePoint.properties.pane.content[this.key].settings.myPowerBi;
+			let draftPower = this.sharePoint.storage.pane.content[this.key].settings.myPowerBi;
 
-			if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.changed) {
-				if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId !== 'none') {
+			if (this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.changed) {
+				if (this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupId !== 'none') {
 					this.getEmbedToken({ accessToken: draftPower.accessToken, groupID: draftPower.groupId, reportID: draftPower.reportId, generateUrl: draftPower.tokenEmbed }).then(response => {
-						this.element.find('.crater-power-container').css({ width: draftPower.width, height: draftPower.height });
+						this.element.find('.crater-powerbi-container').css({ width: draftPower.width, height: draftPower.height });
 						this.element.find('#renderContainer').css({ width: '100%', height: draftPower.height });
 						this.embedPower({ accessToken: response, type: draftPower.embedType, embedUrl: draftPower.embedUrl });
 					});
 				} else {
 					if (draftPower.embedType === 'report') {
 						if (this.element.find('#renderContainer')) this.element.find('#renderContainer').remove();
-						let powerContainer = this.element.find('.crater-power-container') as any;
+						let powerContainer = this.element.find('.crater-powerbi-container') as any;
 						powerContainer.makeElement({
 							element: 'div', attributes: { id: 'renderContainer' }, children: [
 								{
@@ -12370,15 +12385,15 @@ class Power extends CraterWebParts {
 								}
 							]
 						});
-						this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.embedded = false;
+						this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.embedded = false;
 
 						render.find('#render-error').style.display = "none";
 						render.style.display = "block";
 					}
 				}
 			} else {
-				if (this.sharePoint.properties.pane.content[this.key].settings.myPowerBi.groupId !== 'none') {
-					this.element.find('.crater-power-container').css({ width: draftPower.width, height: draftPower.height });
+				if (this.sharePoint.storage.pane.content[this.key].settings.myPowerBi.groupId !== 'none') {
+					this.element.find('.crater-powerbi-container').css({ width: draftPower.width, height: draftPower.height });
 					this.element.find('#renderContainer').css({ width: '100%', height: draftPower.height });
 				} else {
 					let powerIframe = this.element.find('#renderContainer').find('iframe');
@@ -12429,7 +12444,7 @@ class Birthday extends CraterWebParts {
 		});
 
 		this.key = this.key || birthday.dataset.key;
-		this.sharePoint.properties.pane.content[this.key].settings.myBirthdays = {
+		this.sharePoint.storage.pane.content[this.key].settings.myBirthdays = {
 			fetched: false,
 			mode: 'Birthday',
 			interval: 999,
@@ -12442,42 +12457,41 @@ class Birthday extends CraterWebParts {
 
 	public rendered(params) {
 		this.key = params.element.dataset.key;
-		this.element = params.element;
 		this.getUser();
 
-		params.element.find('.birthday-loading-text').textContent = 'Fetching Employee Directory, Please wait...';
+		params.element.querySelector('.birthday-loading-text').textContent = 'Fetching Employee Directory, Please wait...';
 
-		if (!this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.fetched) {
+		if (!this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.fetched) {
 			setTimeout(() => {
-				if (this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users.length !== 0) {
-					let renderedCount = (this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.count) ? this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.count : this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users.length;
-					let birthdayDiv = params.element.find('.crater-birthday-div');
-					let birthdayLoading = params.element.find('.birthday-loading') as any;
+				if (this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users.length !== 0) {
+					let renderedCount = (this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.count) ? this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.count : this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users.length;
+					let birthdayDiv = params.element.querySelector('.crater-birthday-div');
+					let birthdayLoading = params.element.querySelector('.birthday-loading') as any;
 					birthdayLoading.style.display = 'none';
-					if (this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.mode.toLowerCase() === 'birthday') {
+					if (this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.mode.toLowerCase() === 'birthday') {
 						for (let i = 0; i < renderedCount; i++) {
-							const phoneExists = (this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].phone) ? `<a href="tel:${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].phone}">
+							const phoneExists = (this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].phone) ? `<a href="tel:${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/call-icon-16876.png"
 								alt=""></a>
-								<a href="sms:${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].phone}">
+								<a href="sms:${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/bubble-message-icon-74535.png"
 								alt=""></a>
 								` : '';
 
-							let birthdayHTML = `<div class="birthday" divid="${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].id}">
+							let birthdayHTML = `<div class="birthday" divid="${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].id}">
 										<div class="birthday-image">
 											<img class="name-image1" 
-												src=${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].image}
+												src=${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].image}
 												alt="">
 										</div>
 										<div class="div">
-											<div class="name"><span class="personName">${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].displayName}</span>
+											<div class="name"><span class="personName">${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].displayName}</span>
 												<img class="name-image" src="https://img.icons8.com/material-sharp/24/000000/birthday.png"
 													alt=""><br>
 											</div>
-											<span class="title">${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].mail}</span>
-											<div class="date"><span class="birthDate">${new Date(this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].birthDate).toString().split(`${new Date(this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].birthDate).getFullYear()}`)[0]}</span>
-												<a href="mailto:${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].mail}?Subject=Happy%20Birthday%20${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].firstName}">
+											<span class="title">${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].mail}</span>
+											<div class="date"><span class="birthDate">${new Date(this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].birthDate).toString().split(`${new Date(this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].birthDate).getFullYear()}`)[0]}</span>
+												<a href="mailto:${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].mail}?Subject=Happy%20Birthday%20${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].firstName}">
 													<img class="img" src="https://img.icons8.com/material-two-tone/24/000000/composing-mail.png"
 														alt=""></a>
 													${phoneExists}	
@@ -12487,29 +12501,29 @@ class Birthday extends CraterWebParts {
 
 							birthdayDiv.innerHTML += birthdayHTML;
 						}
-					} else if (this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.mode.toLowerCase() === 'anniversary') {
+					} else if (this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.mode.toLowerCase() === 'anniversary') {
 						for (let i = 0; i < renderedCount; i++) {
-							const phoneExists = (this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].phone) ? `<a href="tel:${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].phone}">
+							const phoneExists = (this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].phone) ? `<a href="tel:${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/call-icon-16876.png"
 								alt=""></a>
-								<a href="sms:${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].phone}">
+								<a href="sms:${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/bubble-message-icon-74535.png"
 								alt=""></a>
 								` : '';
-							let birthdayHTML = `<div class="birthday" divid="${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].id}">
+							let birthdayHTML = `<div class="birthday" divid="${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].id}">
 									<div class="birthday-image">
 										<img class="name-image1"
-											src=${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].image}
+											src=${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].image}
 											alt="">
 									</div>
 									<div class="div">
-										<div class="name"><span class="personName">${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].displayName}</span>
+										<div class="name"><span class="personName">${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].displayName}</span>
 											<img class="name-image" src="https://img.icons8.com/material-sharp/24/000000/birthday.png"
 												alt=""><br>
 										</div>
-										<span class="title">${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].mail}</span>
-										<div class="date"><span class="birthDate">${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].anniversary}</span>
-											<a href="mailto:${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].mail}?Subject=Happy%20Birthday%20${this.sharePoint.properties.pane.content[this.key].settings.myBirthdays.users[i].firstName}">
+										<span class="title">${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].mail}</span>
+										<div class="date"><span class="birthDate">${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].anniversary}</span>
+											<a href="mailto:${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].mail}?Subject=Happy%20Birthday%20${this.sharePoint.storage.pane.content[this.key].settings.myBirthdays.users[i].firstName}">
 												<img class="img" src="https://img.icons8.com/material-two-tone/24/000000/composing-mail.png"
 													alt=""></a>
 											${phoneExists}
@@ -12520,7 +12534,7 @@ class Birthday extends CraterWebParts {
 						}
 					}
 				} else {
-					params.element.find('.birthday-loading-text').textContent = 'Taking longer than expected. Please check your internet connection';
+					params.element.querySelector('.birthday-loading-text').textContent = 'Taking longer than expected. Please check your internet connection';
 				}
 			}, 12000);
 		}
@@ -12549,17 +12563,17 @@ class Birthday extends CraterWebParts {
 	}
 
 	public getUser = async () => {
-		let draftBirthday = this.sharePoint.properties.pane.content[this.key].settings.myBirthdays;
+		let draftBirthday = this.sharePoint.storage.pane.content[this.key].settings.myBirthdays;
 		draftBirthday.users = [];
 		let self = this;
 
 		let getImage = (imgID, element?) => {
-			const setSource = (element) ? element : this.element;
+			const setSource = (element) ? element : document;
 			this.sharePoint.connection.getWithGraph().then((client) => {
 				client.api(`/users/${imgID}/photo/$value`)
 					.responseType('blob')
 					.get((error: any, result: any, rawResponse?: any) => {
-						if (!func.setNotNull(result)) return;
+						if (!this.func.setNotNull(result)) return;
 						if (draftBirthday.users.length !== 0) {
 							for (let p = 0; p < draftBirthday.users.length; p++) {
 								if (draftBirthday.users[p].id === imgID) {
@@ -12567,10 +12581,10 @@ class Birthday extends CraterWebParts {
 									const blobUrl = URL.createObjectURL(myBlob);
 									draftBirthday.users[p].photo = result;
 									draftBirthday.users[p].image = blobUrl;
-									if ((setSource.find('.birthday')) && (!setSource.find('.no-users'))) {
-										let renderedBirthdays = setSource.findAll('.birthday') as any;
+									if ((setSource.querySelector('.birthday')) && (!setSource.querySelector('.no-users'))) {
+										let renderedBirthdays = setSource.querySelectorAll('.birthday') as any;
 										if (renderedBirthdays[p].getAttribute('divid') === imgID) {
-											renderedBirthdays[p].find('.name-image1').src = blobUrl;
+											renderedBirthdays[p].querySelector('.name-image1').src = blobUrl;
 										}
 									}
 								}
@@ -12584,7 +12598,7 @@ class Birthday extends CraterWebParts {
 			this.sharePoint.connection.getWithGraph().then(client => {
 				client.api(`/users/${dptID}/department`)
 					.get((error: any, result: any, rawResponse?: any) => {
-						if (!func.setNotNull(result)) return;
+						if (!this.func.setNotNull(result)) return;
 						if (draftBirthday.users.length !== 0) {
 							for (let p = 0; p < draftBirthday.users.length; p++) {
 								if (draftBirthday.users[p].id === dptID) {
@@ -12600,23 +12614,23 @@ class Birthday extends CraterWebParts {
 			this.sharePoint.connection.getWithGraph().then((client) => {
 				client.api(`/users/${bthID}/birthday`)
 					.get((error: any, result: any, rawResponse?: any) => {
-						if (!func.setNotNull(result)) return;
+						if (!this.func.setNotNull(result)) return;
 						if (draftBirthday.users.length !== 0) {
 							for (let p = 0; p < draftBirthday.users.length; p++) {
 								if (draftBirthday.users[p].id === bthID) {
 									const birthday = result['value'];
 									if (birthday.indexOf('T') != -1) {
-										let year = birthday.split('T')[0].split('-')[0];
+										let year = `${new Date().getFullYear()}`;
 										let month = birthday.split('T')[0].split('-')[1];
 										let day = birthday.split('T')[0].split('-')[2];
 										let newDate = month + '/' + day + '/' + year;
 
 										draftBirthday.users[p].birthDate = newDate;
 										if (draftBirthday.mode.toLowerCase() === 'birthday') {
-											if ((this.element.find('.birthday')) && (!this.element.find('.no-users'))) {
-												let renderedBirthdays = this.element.findAll('.birthday') as any;
+											if ((document.querySelector('.birthday')) && (!document.querySelector('.no-users'))) {
+												let renderedBirthdays = document.querySelectorAll('.birthday') as any;
 												if (renderedBirthdays[p].getAttribute('divid') === bthID) {
-													renderedBirthdays[p].find('.birthDate').textContent = new Date(draftBirthday.users[p].birthDate).toString().split(`${new Date(draftBirthday.users[p].birthDate).getFullYear()}`)[0];
+													renderedBirthdays[p].querySelector('.birthDate').textContent = new Date(draftBirthday.users[p].birthDate).toString().split(`${new Date(draftBirthday.users[p].birthDate).getFullYear()}`)[0];
 												}
 											}
 										}
@@ -12632,7 +12646,7 @@ class Birthday extends CraterWebParts {
 			this.sharePoint.connection.getWithGraph().then(client => {
 				client.api(`/users/${hID}/hireDate`)
 					.get((error: any, result: any, rawResponse?: any) => {
-						if (!func.setNotNull(result)) return;
+						if (!this.func.setNotNull(result)) return;
 						if (draftBirthday.users.length !== 0) {
 							for (let p = 0; p < draftBirthday.users.length; p++) {
 								if (draftBirthday.users[p].id === hID) {
@@ -12659,10 +12673,10 @@ class Birthday extends CraterWebParts {
 										draftBirthday.users[p].year = self.getDAYS(daysLeft).year;
 
 										if (draftBirthday.mode.toLowerCase() === 'anniversary') {
-											if ((this.element.find('.birthday')) && (!this.element.find('.no-users'))) {
-												let renderedBirthdays = this.element.findAll('.birthday') as any;
+											if ((document.querySelector('.birthday')) && (!document.querySelector('.no-users'))) {
+												let renderedBirthdays = document.querySelectorAll('.birthday') as any;
 												if (renderedBirthdays[p].getAttribute('divid') === hID) {
-													renderedBirthdays[p].find('.birthDate').textContent = draftBirthday.users[p].anniversary;
+													renderedBirthdays[p].querySelector('.birthDate').textContent = draftBirthday.users[p].anniversary;
 												}
 											}
 										}
@@ -12707,288 +12721,307 @@ class Birthday extends CraterWebParts {
 
 	public setUpPaneContent(params) {
 		let key = params.element.dataset['key'];//create a key variable and set it to the webpart key
-		this.element = this.sharePoint.properties.pane.content[key].draft.dom;//define the declared element to the draft dom content
-		let draftBirthday = this.sharePoint.properties.pane.content[key].settings.myBirthdays;
+		this.element = this.sharePoint.storage.pane.content[key].draft.dom;//define the declared element to the draft dom content
+		let draftBirthday = this.sharePoint.storage.pane.content[key].settings.myBirthdays;
 
 		this.paneContent = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-property-content' }
 		}).monitor(); //monitor the content pane 
-		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[key].draft.pane.content.length !== 0) {//check if draft pane content is not empty and set it to the pane content
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		else if (this.sharePoint.storage.pane.content[key].content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].content;
 		} else {
-			let birthdayList = this.sharePoint.properties.pane.content[key].draft.dom.find('.crater-birthday-div');
-			let birthdayListRows = birthdayList.findAll('.birthday');
+			let birthdayList = this.sharePoint.storage.pane.content[key].draft.dom.querySelector('.crater-birthday-div');
+			let birthdayListRows = birthdayList.querySelectorAll('.birthday');
 
-			this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'title-pane card' }, children: [
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'card-title' }, children: [
-							{ element: 'h2', attributes: { class: 'title' }, text: 'Customize Birthday' }
-						]
-					}),
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'row' }, children: [
-							{
-								element: 'div', attributes: { class: 'message-note' }, children: [
-									{
-										element: 'div', attributes: { class: 'message-text' }, children: [
-											{ element: 'p', attributes: { style: { color: 'green' } }, text: `MODE: Birthday/Anniversary.` },
-											{ element: 'p', attributes: { style: { color: 'green' } }, text: `INTERVAL: In Anniversary Mode, enter “999” to show all anniversaries, or enter a number to only show employees that have the set anniversary (e.g 10 -> 10 years)` },
-											{ element: 'p', attributes: { style: { color: 'green' } }, text: `COUNT: The number of items to display.` },
-											{ element: 'p', attributes: { style: { color: 'green' } }, text: `DAYSFUTURE: enter the number of days into the future (starting from the current date) to include in the list.` },
-											{ element: 'p', attributes: { style: { color: 'green' } }, text: `DAYSPAST: enter the number of days to keep the birthday/anniversary in the list after it has passed.` }
-										]
-									}
-								]
-							}
-						]
-					}),
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'title-settings row' }, children: [
-							this.elementModifier.cell({
-								element: 'select', name: 'mode', options: ['Birthday', 'Anniversary'], value: this.sharePoint.properties.pane.content[key].settings.myBirthdays.mode
-							}),
-							this.elementModifier.cell({
-								element: 'input', name: 'Interval', value: this.sharePoint.properties.pane.content[key].settings.myBirthdays.interval
-							}),
-							this.elementModifier.cell({
-								element: 'input', name: 'daysFuture', value: ''
-							}),
-							this.elementModifier.cell({
-								element: 'input', name: 'daysPast', value: ''
-							}),
-							this.elementModifier.cell({
-								element: 'input', name: 'count', value: this.sharePoint.properties.pane.content[key].settings.myBirthdays.count || ''
-							}),
-							this.elementModifier.cell({
-								element: 'select', name: 'sortBy', options: ['Name', 'Birthday', 'Anniversary'], value: this.sharePoint.properties.pane.content[key].settings.myBirthdays.sortBy
-							}),
-							this.elementModifier.cell({
-								element: 'select', name: 'order', options: ['Ascending', 'Descending']
-							})
-						]
-					})
-				]
-			});
-
-			this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'section-pane card' }, children: [
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'card-title' }, children: [
-							{ element: 'h2', attributes: { class: 'title' }, text: 'Edit Section' }
-						]
-					}),
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'row' }, children: [
-							this.elementModifier.cell({
-								element: 'input', name: 'section-height', value: this.element.find('.crater-birthday-div').css()['max-height']
-							})
-						]
-					})
-				]
-			});
-
-			this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'header-pane card' }, children: [
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'card-title' }, children: [
-							{ element: 'h2', attributes: { class: 'title' }, text: 'Edit Header' }
-						]
-					}),
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'row' }, children: [
-							this.elementModifier.cell({
-								element: 'input', name: 'Image', value: this.element.find('.crater-birthday-header-img').src
-							}),
-							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.find('.crater-birthday-header-title').css()['font-size']
-							}),
-							this.elementModifier.cell({
-								element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.find('.crater-birthday-header-title').css()['font-family']
-							}),
-							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.find('.crater-birthday-header-title').css()['color']
-							}),
-							this.elementModifier.cell({
-								element: 'input', name: 'background-color', value: this.element.find('.crater-birthday-header').css()['color']
-							}),
-							this.elementModifier.cell({
-								element: 'select', name: 'toggle', options: ['Show', 'Hide']
-							}),
-							this.elementModifier.cell({
-								element: 'input', name: 'text', value: this.element.find('.crater-birthday-header-title').textContent
-							}),
-							this.elementModifier.cell({
-								element: 'input', name: 'header-height', value: this.element.find('.crater-birthday-header').css()['height']
-							})
-						]
-					})
-				]
-			});
-
-			this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'name-pane card' }, children: [
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'card-title' }, children: [
-							{ element: 'h2', attributes: { class: 'title' }, text: 'Edit Name' }
-						]
-					}),
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'row' }, children: [
-							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.find('.personName').css()['font-size']
-							}),
-							this.elementModifier.cell({
-								element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.find('.personName').css()['font-family']
-							}),
-							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.find('.personName').css()['color']
-							})
-						]
-					})
-				]
-			});
-
-			this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'job-title-pane card' }, children: [
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'card-title' }, children: [
-							{ element: 'h2', attributes: { class: 'title' }, text: 'Edit Title Font' }
-						]
-					}),
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'row' }, children: [
-							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.find('.title').css()['font-size']
-							}),
-							this.elementModifier.cell({
-								element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.find('.title').css()['font-family']
-							}),
-							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.find('.title').css()['color']
-							}),
-						]
-					})
-				]
-			});
-
-			this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'birthday-pane card' }, children: [
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'card-title' }, children: [
-							{ element: 'h2', attributes: { class: 'title' }, text: 'Edit BirthDay Font' }
-						]
-					}),
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'row' }, children: [
-							this.elementModifier.cell({
-								element: 'input', name: 'fontSize', value: this.element.find('.birthDate').css()['font-size']
-							}),
-							this.elementModifier.cell({
-								element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.find('.birthDate').css()['font-family']
-							}),
-							this.elementModifier.cell({
-								element: 'input', name: 'color', value: this.element.find('.birthDate').css()['color']
-							})
-						]
-					})
-				]
-			});
-
-			this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'update-pane card' }, children: [
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'card-title' }, children: [
-							{ element: 'h2', attributes: { class: 'title' }, text: 'Update Directory' }
-						]
-					}),
-					this.elementModifier.createElement(
-						{
+			if (draftBirthday.fetched) {
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'title-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								{ element: 'h2', attributes: { class: 'title' }, text: 'Customize Birthday' }
+							]
+						}),
+						this.elementModifier.createElement({
 							element: 'div', attributes: { class: 'row' }, children: [
-								this.elementModifier.createElement({
+								{
 									element: 'div', attributes: { class: 'message-note' }, children: [
 										{
 											element: 'div', attributes: { class: 'message-text' }, children: [
-												{ element: 'p', attributes: { id: 'update-message', style: { color: 'green' } }, text: `Click this button to update the user directory` },
+												{ element: 'p', attributes: { style: { color: 'green' } }, text: `MODE: Birthday/Anniversary.` },
+												{ element: 'p', attributes: { style: { color: 'green' } }, text: `INTERVAL: In Anniversary Mode, enter “999” to show all anniversaries, or enter a number to only show employees that have the set anniversary (e.g 10 -> 10 years)` },
+												{ element: 'p', attributes: { style: { color: 'green' } }, text: `COUNT: The number of items to display.` },
+												{ element: 'p', attributes: { style: { color: 'green' } }, text: `DAYSFUTURE: enter the number of days into the future (starting from the current date) to include in the list.` },
+												{ element: 'p', attributes: { style: { color: 'green' } }, text: `DAYSPAST: enter the number of days to keep the birthday/anniversary in the list after it has passed.` }
 											]
 										}
 									]
-								}),
-								this.elementModifier.createElement(
-									{ element: 'button', attributes: { id: 'fetch-birthday', class: 'user-button', style: { margin: '0 auto !important' } }, text: '' }
-								)
+								}
 							]
-						}
-					)
-				]
-			});
-			if (draftBirthday.fetched) {
-				this.paneContent.find('#update-message').textContent = 'Directory Updated! Sort the list to view it';
-				this.paneContent.find('#fetch-birthday').innerHTML = 'UPDATED';
-			} else {
-				this.paneContent.find('#update-message').textContent = 'Click this button to update the user directory';
-				this.paneContent.find('#fetch-birthday').innerHTML = 'UPDATE';
-			}
-			this.paneContent.find('.title-settings').find('#Interval-cell').readOnly = true;
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'title-settings row' }, children: [
+								this.elementModifier.cell({
+									element: 'select', name: 'mode', options: ['Birthday', 'Anniversary'], value: this.sharePoint.storage.pane.content[key].settings.myBirthdays.mode
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'Interval', value: this.sharePoint.storage.pane.content[key].settings.myBirthdays.interval
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'daysFuture', value: ''
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'daysPast', value: ''
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'count', value: this.sharePoint.storage.pane.content[key].settings.myBirthdays.count || ''
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'sortBy', options: ['Name', 'Birthday', 'Anniversary'], value: this.sharePoint.storage.pane.content[key].settings.myBirthdays.sortBy
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'order', options: ['Ascending', 'Descending']
+								})
+							]
+						})
+					]
+				});
 
-			this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'user-pane card' }, children: [
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'card-title' }, children: [
-							{ element: 'h2', attributes: { class: 'title' }, text: 'OPTIONS' }
-						]
-					}),
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'section-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								{ element: 'h2', attributes: { class: 'title' }, text: 'Edit Section' }
+							]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'row' }, children: [
+								this.elementModifier.cell({
+									element: 'input', name: 'section-height', value: this.element.querySelector('.crater-birthday-div').css()['max-height']
+								})
+							]
+						})
+					]
+				});
 
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'display-options row' }, children: [
-							this.elementModifier.cell({
-								element: 'select', name: 'nameField', options: ['id', 'FullName', 'FirstName', 'LastName', 'Mail', 'Title', 'Phone', 'Birthday/Anniversary']
-							}),
-							this.elementModifier.cell({
-								element: 'select', name: 'titleField', options: ['id', 'FullName', 'FirstName', 'LastName', 'Mail', 'Title', 'Phone', 'Birthday/Anniversary']
-							}),
-							this.elementModifier.cell({
-								element: 'select', name: 'birthdayField', options: ['id', 'FullName', 'FirstName', 'LastName', 'Mail', 'Title', 'Phone', 'Birthday/Anniversary']
-							})
-						]
-					})
-				]
-			});
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'header-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								{ element: 'h2', attributes: { class: 'title' }, text: 'Edit Header' }
+							]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'row' }, children: [
+								this.elementModifier.cell({
+									element: 'input', name: 'Image', value: this.element.querySelector('.crater-birthday-header-img').src
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'fontSize', value: this.element.querySelector('.crater-birthday-header-title').css()['font-size']
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.querySelector('.crater-birthday-header-title').css()['font-family']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'color', value: this.element.querySelector('.crater-birthday-header-title').css()['color']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'background-color', value: this.element.querySelector('.crater-birthday-header').css()['color']
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'toggle', options: ['Show', 'Hide']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'text', value: this.element.querySelector('.crater-birthday-header-title').textContent
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'header-height', value: this.element.querySelector('.crater-birthday-header').css()['height']
+								})
+							]
+						})
+					]
+				});
 
-			this.paneContent.makeElement({
-				element: 'div', attributes: { class: 'background-color-pane card' }, children: [
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'card-title' }, children: [
-							{ element: 'h2', attributes: { class: 'title' }, text: 'Change Row Background' }
-						]
-					}),
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'name-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								{ element: 'h2', attributes: { class: 'title' }, text: 'Edit Name' }
+							]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'row' }, children: [
+								this.elementModifier.cell({
+									element: 'input', name: 'fontSize', value: this.element.querySelector('.personName').css()['font-size']
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.querySelector('.personName').css()['font-family']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'color', value: this.element.querySelector('.personName').css()['color']
+								})
+							]
+						})
+					]
+				});
 
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'message-note' }, children: [
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'job-title-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								{ element: 'h2', attributes: { class: 'title' }, text: 'Edit Title Font' }
+							]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'row' }, children: [
+								this.elementModifier.cell({
+									element: 'input', name: 'fontSize', value: this.element.querySelector('.title').css()['font-size']
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.querySelector('.title').css()['font-family']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'color', value: this.element.querySelector('.title').css()['color']
+								}),
+							]
+						})
+					]
+				});
+
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'birthday-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								{ element: 'h2', attributes: { class: 'title' }, text: 'Edit BirthDay Font' }
+							]
+						}),
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'row' }, children: [
+								this.elementModifier.cell({
+									element: 'input', name: 'fontSize', value: this.element.querySelector('.birthDate').css()['font-size']
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'fontFamily', options: ['Comic Sans MS', 'Impact', 'Bookman', 'Garamond', 'Palatino', 'Georgia', 'Verdana', 'Times New Roman', 'Arial'], value: this.element.querySelector('.birthDate').css()['font-family']
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'color', value: this.element.querySelector('.birthDate').css()['color']
+								})
+							]
+						})
+					]
+				});
+
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'update-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								{ element: 'h2', attributes: { class: 'title' }, text: 'Update Directory' }
+							]
+						}),
+						this.elementModifier.createElement(
 							{
-								element: 'div', attributes: { class: 'message-text' }, children: [
-									{ element: 'p', attributes: { id: 'update-message', style: { color: 'green' } }, text: `Enter the position of the birthday card e.g 1` },
-									{ element: 'p', attributes: { id: 'update-message', style: { color: 'green' } }, text: `If you wish to alter multiple positions enter the positions as 1, 2, 3 etc...` }
+								element: 'div', attributes: { class: 'row' }, children: [
+									this.elementModifier.createElement({
+										element: 'div', attributes: { class: 'message-note' }, children: [
+											{
+												element: 'div', attributes: { class: 'message-text' }, children: [
+													{ element: 'p', attributes: { id: 'update-message', style: { color: 'green' } }, text: `Click this button to update the user directory` },
+												]
+											}
+										]
+									}),
+									this.elementModifier.createElement(
+										{ element: 'button', attributes: { id: 'fetch-birthday', class: 'user-button', style: { margin: '0 auto !important' } }, text: '' }
+									)
 								]
 							}
-						]
-					}),
+						)
+					]
+				});
+				if (draftBirthday.fetched) {
+					this.paneContent.querySelector('#update-message').textContent = 'Directory Updated! Sort the list to view it';
+					this.paneContent.querySelector('#fetch-birthday').innerHTML = 'UPDATED';
+				} else {
+					this.paneContent.querySelector('#update-message').textContent = 'Click this button to update the user directory';
+					this.paneContent.querySelector('#fetch-birthday').innerHTML = 'UPDATE';
+				}
+				this.paneContent.querySelector('.title-settings').querySelector('#Interval-cell').readOnly = true;
 
-					this.elementModifier.createElement({
-						element: 'div', attributes: { class: 'display-options row' }, children: [
-							this.elementModifier.cell({
-								element: 'input', name: 'position'
-							}),
-							this.elementModifier.cell({
-								element: 'input', name: 'backgroundColor'
-							})
-						]
-					})
-				]
-			});
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'user-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								{ element: 'h2', attributes: { class: 'title' }, text: 'OPTIONS' }
+							]
+						}),
+
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'display-options row' }, children: [
+								this.elementModifier.cell({
+									element: 'select', name: 'nameField', options: ['id', 'FullName', 'FirstName', 'LastName', 'Mail', 'Title', 'Phone', 'Birthday/Anniversary']
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'titleField', options: ['id', 'FullName', 'FirstName', 'LastName', 'Mail', 'Title', 'Phone', 'Birthday/Anniversary']
+								}),
+								this.elementModifier.cell({
+									element: 'select', name: 'birthdayField', options: ['id', 'FullName', 'FirstName', 'LastName', 'Mail', 'Title', 'Phone', 'Birthday/Anniversary']
+								})
+							]
+						})
+					]
+				});
+
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'background-color-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'card-title' }, children: [
+								{ element: 'h2', attributes: { class: 'title' }, text: 'Change Row Background' }
+							]
+						}),
+
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'message-note' }, children: [
+								{
+									element: 'div', attributes: { class: 'message-text' }, children: [
+										{ element: 'p', attributes: { id: 'update-message', style: { color: 'green' } }, text: `Enter the position of the birthday card e.g 1` },
+										{ element: 'p', attributes: { id: 'update-message', style: { color: 'green' } }, text: `If you wish to alter multiple positions enter the positions as 1, 2, 3 etc...` }
+									]
+								}
+							]
+						}),
+
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'display-options row' }, children: [
+								this.elementModifier.cell({
+									element: 'input', name: 'position'
+								}),
+								this.elementModifier.cell({
+									element: 'input', name: 'backgroundColor'
+								})
+							]
+						})
+					]
+				});
+			} else {
+				this.paneContent.makeElement({
+					element: 'div', attributes: { class: 'notification-pane card' }, children: [
+						this.elementModifier.createElement({
+							element: 'div', attributes: { class: 'message-note' }, children: [
+								{
+									element: 'div', attributes: { class: 'message-text' }, children: [
+										{ element: 'p', attributes: { id: 'update-message', style: { color: 'green' } }, text: `Please Wait, fetching content from employee directory` },
+										{
+											element: 'img', attributes: { class: 'birthday-loading-image crater-icon', src: this.sharePoint.images.loading, style: { width: '20px', height: '20px' } }
+										}
+									]
+								}
+							]
+						})
+					]
+				});
+			}
 
 		}
 
@@ -13018,7 +13051,7 @@ class Birthday extends CraterWebParts {
 						element: 'input', name: 'birthdayBackground', value: params.list[i].css()['background-color']
 					}),
 					this.elementModifier.cell({
-						element: 'input', name: 'birthdayName', value: params.list[i].find('.personName').textContent
+						element: 'input', name: 'birthdayName', value: params.list[i].querySelector('.personName').textContent
 					})
 				]
 			});
@@ -13032,577 +13065,578 @@ class Birthday extends CraterWebParts {
 	public listenPaneContent(params) {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
-		this.paneContent = this.sharePoint.app.find('.crater-property-content').monitor();
-		let draftBirthday = this.sharePoint.properties.pane.content[this.key].settings.myBirthdays;
-		let birthdayList = this.sharePoint.properties.pane.content[this.key].draft.dom.find('.crater-birthday-div');
-		let birthdayListRow = birthdayList.findAll('.birthday') as any;
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
+		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
+		let draftBirthday = this.sharePoint.storage.pane.content[this.key].settings.myBirthdays;
+		let birthdayList = this.sharePoint.storage.pane.content[this.key].draft.dom.querySelector('.crater-birthday-div');
+		let birthdayListRow = birthdayList.querySelectorAll('.birthday') as any;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
 		draftBirthday.sortUsers = [];
 
-		let titlePane = this.paneContent.find('.title-pane');
-		let optionsPane = this.paneContent.find('.user-pane');
-		let namePane = this.paneContent.find('.name-pane');
-		let jobPane = this.paneContent.find('.job-title-pane');
-		let birthdayPane = this.paneContent.find('.birthday-pane');
-		let headerPane = this.paneContent.find('.header-pane');
-		let sectionPane = this.paneContent.find('.section-pane');
-		let bgColorPane = this.paneContent.find('.background-color-pane');
+		if (draftBirthday.fetched) {
+			let titlePane = this.paneContent.querySelector('.title-pane');
+			let optionsPane = this.paneContent.querySelector('.user-pane');
+			let namePane = this.paneContent.querySelector('.name-pane');
+			let jobPane = this.paneContent.querySelector('.job-title-pane');
+			let birthdayPane = this.paneContent.querySelector('.birthday-pane');
+			let headerPane = this.paneContent.querySelector('.header-pane');
+			let sectionPane = this.paneContent.querySelector('.section-pane');
+			let bgColorPane = this.paneContent.querySelector('.background-color-pane');
 
-		let orderCell = titlePane.find('#order-cell');
-		let sortCell = titlePane.find('#sortBy-cell');
-		let modeCell = titlePane.find('#mode-cell');
-		let count = titlePane.find('#count-cell');
-		let future = titlePane.find('#daysFuture-cell');
-		let past = titlePane.find('#daysPast-cell');
-		let nameField = optionsPane.find('#nameField-cell');
-		let titleField = optionsPane.find('#titleField-cell');
-		let birthdayField = optionsPane.find('#birthdayField-cell');
+			let orderCell = titlePane.querySelector('#order-cell');
+			let sortCell = titlePane.querySelector('#sortBy-cell');
+			let modeCell = titlePane.querySelector('#mode-cell');
+			let count = titlePane.querySelector('#count-cell');
+			let future = titlePane.querySelector('#daysFuture-cell');
+			let past = titlePane.querySelector('#daysPast-cell');
+			let nameField = optionsPane.querySelector('#nameField-cell');
+			let titleField = optionsPane.querySelector('#titleField-cell');
+			let birthdayField = optionsPane.querySelector('#birthdayField-cell');
 
-		window.onerror = (msg, url, lineNumber, columnNumber, error) => {
-			console.log(msg, url, lineNumber, columnNumber, error);
-		};
+			window.onerror = (msg, url, lineNumber, columnNumber, error) => {
+				console.log(msg, url, lineNumber, columnNumber, error);
+			};
 
-		bgColorPane.find('#position-cell').onChanged(value => {
-			if (value.indexOf(',') !== -1) {
-				draftBirthday.position = value.split(',');
-			} else {
-				draftBirthday.position = parseInt(value);
-			}
-		});
-
-		let rowCell = bgColorPane.find('#backgroundColor-cell').parentNode;
-		this.pickColor({ parent: rowCell, cell: rowCell.find('#backgroundColor-cell') }, (backgroundColor) => {
-			if (draftBirthday.position) {
-				if (typeof draftBirthday.position === 'object') {
-					for (let each of draftBirthday.position) {
-						birthdayListRow[parseInt(each.trim()) - 1].css({ backgroundColor });
-					}
+			bgColorPane.querySelector('#position-cell').onChanged(value => {
+				if (value.indexOf(',') !== -1) {
+					draftBirthday.position = value.split(',');
 				} else {
-					birthdayListRow[draftBirthday.position - 1].css({ backgroundColor });
+					draftBirthday.position = parseInt(value);
 				}
-			}
-			rowCell.find('#backgroundColor-cell').value = backgroundColor;
-			rowCell.find('#backgroundColor-cell').setAttribute('value', backgroundColor);
-		});
+			});
 
-		let toggleDisplay = headerPane.find('#toggle-cell');
-		toggleDisplay.addEventListener('change', e => {
-			switch (toggleDisplay.value.toLowerCase()) {
-				case 'show':
-					draftDom.find('.crater-birthday-header').style.display = 'flex';
-					break;
-				case 'hide':
-					draftDom.find('.crater-birthday-header').style.display = 'none';
-					break;
-			}
-		});
+			let rowCell = bgColorPane.querySelector('#backgroundColor-cell').parentNode;
+			this.pickColor({ parent: rowCell, cell: rowCell.querySelector('#backgroundColor-cell') }, (backgroundColor) => {
+				if (draftBirthday.position) {
+					if (typeof draftBirthday.position === 'object') {
+						for (let each of draftBirthday.position) {
+							birthdayListRow[parseInt(each.trim()) - 1].css({ backgroundColor });
+						}
+					} else {
+						birthdayListRow[draftBirthday.position - 1].css({ backgroundColor });
+					}
+				}
+				rowCell.querySelector('#backgroundColor-cell').value = backgroundColor;
+				rowCell.querySelector('#backgroundColor-cell').setAttribute('value', backgroundColor);
+			});
 
-		nameField.addEventListener('change', event => {
-			switch (nameField.value.toLowerCase()) {
-				case 'id':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.personName').textContent = person.id;
-								}
-							});
-						}
-					}
-					break;
-				case 'fullname':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.personName').textContent = person.displayName;
-								}
-							});
-						}
-					}
-					break;
-				case 'firstname':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.personName').textContent = person.firstName;
-								}
-							});
-						}
-					}
-					break;
-				case 'lastname':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.personName').textContent = person.lastName;
-								}
-							});
-						}
-					}
-					break;
-				case 'mail':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.personName').textContent = person.mail;
-								}
-							});
-						}
-					}
-					break;
-				case 'title':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.personName').textContent = person.Title;
-								}
-							});
-						}
-					}
-					break;
-				case 'phone':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.personName').textContent = person.phone;
-								}
-							});
-						}
-					}
-					break;
-				case 'birthday/anniversary':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									if (draftBirthday.mode.toLowerCase() === "birthday") {
-										div.find('.personName').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
-									} else {
-										div.find('.personName').textContent = person.anniversary;
+			let toggleDisplay = headerPane.querySelector('#toggle-cell');
+			toggleDisplay.addEventListener('change', e => {
+				switch (toggleDisplay.value.toLowerCase()) {
+					case 'show':
+						draftDom.querySelector('.crater-birthday-header').style.display = 'flex';
+						break;
+					case 'hide':
+						draftDom.querySelector('.crater-birthday-header').style.display = 'none';
+						break;
+				}
+			});
+
+			nameField.addEventListener('change', event => {
+				switch (nameField.value.toLowerCase()) {
+					case 'id':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.personName').textContent = person.id;
 									}
-								}
-							});
+								});
+							}
 						}
-					}
-					break;
-			}
-		});
-
-
-		titleField.addEventListener('change', event => {
-			switch (titleField.value.toLowerCase()) {
-				case 'id':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.title').textContent = person.id;
-								}
-							});
-						}
-					}
-					break;
-				case 'fullname':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.title').textContent = person.displayName;
-								}
-							});
-						}
-					}
-					break;
-				case 'firstname':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.title').textContent = person.firstName;
-								}
-							});
-						}
-					}
-					break;
-				case 'lastname':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.title').textContent = person.lastName;
-								}
-							});
-						}
-					}
-					break;
-				case 'mail':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.title').textContent = person.mail;
-								}
-							});
-						}
-					}
-					break;
-				case 'title':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.title').textContent = person.Title;
-								}
-							});
-						}
-					}
-					break;
-				case 'phone':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.title').textContent = person.phone;
-								}
-							});
-						}
-					}
-					break;
-				case 'birthday/anniversary':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									if (draftBirthday.mode.toLowerCase() === "birthday") {
-										div.find('.title').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
-									} else {
-										div.find('.title').textContent = person.anniversary;
+						break;
+					case 'fullname':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.personName').textContent = person.displayName;
 									}
-								}
-							});
+								});
+							}
 						}
-					}
-					break;
-			}
-		});
-
-
-		birthdayField.addEventListener('change', event => {
-			switch (birthdayField.value.toLowerCase()) {
-				case 'id':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.birthDate').textContent = person.id;
-								}
-							});
-						}
-					}
-					break;
-				case 'fullname':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.birthDate').textContent = person.displayName;
-								}
-							});
-						}
-					}
-					break;
-				case 'firstname':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.birthDate').textContent = person.firstName;
-								}
-							});
-						}
-					}
-					break;
-				case 'lastname':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.birthDate').textContent = person.lastName;
-								}
-							});
-						}
-					}
-					break;
-				case 'mail':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.birthDate').textContent = person.mail;
-								}
-							});
-						}
-					}
-					break;
-				case 'title':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.birthDate').textContent = person.Title;
-								}
-							});
-						}
-					}
-					break;
-				case 'phone':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									div.find('.birthDate').textContent = person.phone;
-								}
-							});
-						}
-					}
-					break;
-				case 'birthday/anniversary':
-					for (let person of draftBirthday.users) {
-						if (!birthdayList.find('.no-users')) {
-							birthdayListRow.forEach(div => {
-								if (div.getAttribute('divid') === person.id) {
-									if (draftBirthday.mode.toLowerCase() === "birthday") {
-										div.find('.birthDate').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
-									} else {
-										div.find('.birthDate').textContent = person.anniversary;
+						break;
+					case 'firstname':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.personName').textContent = person.firstName;
 									}
-								}
-							});
+								});
+							}
 						}
-					}
-					break;
-			}
-		});
-
-		headerPane.find('#text-cell').onChanged(value => {
-			draftDom.find('.crater-birthday-header-title').textContent = value;
-		});
-
-		let nameColorCell = namePane.find('#color-cell').parentNode;
-		this.pickColor({ parent: nameColorCell, cell: nameColorCell.find('#color-cell') }, (color) => {
-			draftDom.findAll('.personName').forEach(element => {
-				element.css({ color });
+						break;
+					case 'lastname':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.personName').textContent = person.lastName;
+									}
+								});
+							}
+						}
+						break;
+					case 'mail':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.personName').textContent = person.mail;
+									}
+								});
+							}
+						}
+						break;
+					case 'title':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.personName').textContent = person.Title;
+									}
+								});
+							}
+						}
+						break;
+					case 'phone':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.personName').textContent = person.phone;
+									}
+								});
+							}
+						}
+						break;
+					case 'birthday/anniversary':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										if (draftBirthday.mode.toLowerCase() === "birthday") {
+											div.querySelector('.personName').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
+										} else {
+											div.querySelector('.personName').textContent = person.anniversary;
+										}
+									}
+								});
+							}
+						}
+						break;
+				}
 			});
-			nameColorCell.find('#color-cell').value = color;
-			nameColorCell.find('#color-cell').setAttribute('value', color);
-		});
 
-		let headerCellParent = headerPane.find('#Image-cell').parentNode;
-		this.uploadImage({ parent: headerCellParent }, (image) => {
-			headerCellParent.find('#Image-cell').src = image.src;
-			draftDom.find('.crater-birthday-header-img').src = image.src;
-		});
 
-		let headerColorCell = headerPane.find('#color-cell').parentNode;
-		this.pickColor({ parent: headerColorCell, cell: headerColorCell.find('#color-cell') }, (color) => {
-			draftDom.find('.crater-birthday-header-title').css({ color });
-			headerColorCell.find('#color-cell').value = color;
-			headerColorCell.find('#color-cell').setAttribute('value', color);
-		});
-
-		let headerBackgroundColorCell = headerPane.find('#background-color-cell').parentNode;
-		this.pickColor({ parent: headerBackgroundColorCell, cell: headerBackgroundColorCell.find('#background-color-cell') }, (backgroundColor) => {
-			draftDom.find('.crater-birthday-header').css({ backgroundColor });
-			headerBackgroundColorCell.find('#background-color-cell').value = backgroundColor;
-			headerBackgroundColorCell.find('#background-color-cell').setAttribute('value', backgroundColor);
-		});
-
-		let jobColorCell = jobPane.find('#color-cell').parentNode;
-		this.pickColor({ parent: jobColorCell, cell: jobColorCell.find('#color-cell') }, (color) => {
-			draftDom.findAll('.title').forEach(element => {
-				element.css({ color });
+			titleField.addEventListener('change', event => {
+				switch (titleField.value.toLowerCase()) {
+					case 'id':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.title').textContent = person.id;
+									}
+								});
+							}
+						}
+						break;
+					case 'fullname':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.title').textContent = person.displayName;
+									}
+								});
+							}
+						}
+						break;
+					case 'firstname':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.title').textContent = person.firstName;
+									}
+								});
+							}
+						}
+						break;
+					case 'lastname':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.title').textContent = person.lastName;
+									}
+								});
+							}
+						}
+						break;
+					case 'mail':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.title').textContent = person.mail;
+									}
+								});
+							}
+						}
+						break;
+					case 'title':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.title').textContent = person.Title;
+									}
+								});
+							}
+						}
+						break;
+					case 'phone':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.title').textContent = person.phone;
+									}
+								});
+							}
+						}
+						break;
+					case 'birthday/anniversary':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										if (draftBirthday.mode.toLowerCase() === "birthday") {
+											div.querySelector('.title').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
+										} else {
+											div.querySelector('.title').textContent = person.anniversary;
+										}
+									}
+								});
+							}
+						}
+						break;
+				}
 			});
-			jobColorCell.find('#color-cell').value = color;
-			jobColorCell.find('#color-cell').setAttribute('value', color);
-		});
 
-		let birthdayColorCell = birthdayPane.find('#color-cell').parentNode;
-		this.pickColor({ parent: birthdayColorCell, cell: birthdayColorCell.find('#color-cell') }, (color) => {
-			draftDom.findAll('.birthDate').forEach(element => {
-				element.css({ color });
+
+			birthdayField.addEventListener('change', event => {
+				switch (birthdayField.value.toLowerCase()) {
+					case 'id':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.birthDate').textContent = person.id;
+									}
+								});
+							}
+						}
+						break;
+					case 'fullname':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.birthDate').textContent = person.displayName;
+									}
+								});
+							}
+						}
+						break;
+					case 'firstname':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.birthDate').textContent = person.firstName;
+									}
+								});
+							}
+						}
+						break;
+					case 'lastname':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.birthDate').textContent = person.lastName;
+									}
+								});
+							}
+						}
+						break;
+					case 'mail':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.birthDate').textContent = person.mail;
+									}
+								});
+							}
+						}
+						break;
+					case 'title':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.birthDate').textContent = person.Title;
+									}
+								});
+							}
+						}
+						break;
+					case 'phone':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										div.querySelector('.birthDate').textContent = person.phone;
+									}
+								});
+							}
+						}
+						break;
+					case 'birthday/anniversary':
+						for (let person of draftBirthday.users) {
+							if (!birthdayList.querySelector('.no-users')) {
+								birthdayListRow.forEach(div => {
+									if (div.getAttribute('divid') === person.id) {
+										if (draftBirthday.mode.toLowerCase() === "birthday") {
+											div.querySelector('.birthDate').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
+										} else {
+											div.querySelector('.birthDate').textContent = person.anniversary;
+										}
+									}
+								});
+							}
+						}
+						break;
+				}
 			});
-			birthdayColorCell.find('#color-cell').value = color;
-			birthdayColorCell.find('#color-cell').setAttribute('value', color);
-		});
 
-		namePane.find('#fontSize-cell').onChanged(value => {
-			draftDom.findAll('.personName').forEach(element => {
-				element.css({ fontSize: value });
+			headerPane.querySelector('#text-cell').onChanged(value => {
+				draftDom.querySelector('.crater-birthday-header-title').textContent = value;
 			});
-		});
 
-		jobPane.find('#fontSize-cell').onChanged(value => {
-			draftDom.findAll('.title').forEach(element => {
-				element.css({ fontSize: value });
+			let nameColorCell = namePane.querySelector('#color-cell').parentNode;
+			this.pickColor({ parent: nameColorCell, cell: nameColorCell.querySelector('#color-cell') }, (color) => {
+				draftDom.querySelectorAll('.personName').forEach(element => {
+					element.css({ color });
+				});
+				nameColorCell.querySelector('#color-cell').value = color;
+				nameColorCell.querySelector('#color-cell').setAttribute('value', color);
 			});
-		});
 
-		sectionPane.find('#section-height-cell').onChanged(value => {
-			draftDom.find('.crater-birthday-div').css({ maxHeight: value });
-		});
-
-		headerPane.find('#header-height-cell').onChanged(value => {
-			draftDom.find('.crater-birthday-header').css({ height: value });
-			draftDom.find('.crater-birthday-header-img').css({ height: value });
-			draftDom.find('.crater-birthday-header-img').css({ width: value });
-		});
-
-		birthdayPane.find('#fontSize-cell').onChanged(value => {
-			draftDom.findAll('.birthDate').forEach(element => {
-				element.css({ fontSize: value });
+			let headerCellParent = headerPane.querySelector('#Image-cell').parentNode;
+			this.uploadImage({ parent: headerCellParent }, (image) => {
+				headerCellParent.querySelector('#Image-cell').src = image.src;
+				draftDom.querySelector('.crater-birthday-header-img').src = image.src;
 			});
-		});
 
-		namePane.find('#fontFamily-cell').onChanged(value => {
-			draftDom.findAll('.personName').forEach(element => {
-				element.css({ fontFamily: value });
+			let headerColorCell = headerPane.querySelector('#color-cell').parentNode;
+			this.pickColor({ parent: headerColorCell, cell: headerColorCell.querySelector('#color-cell') }, (color) => {
+				draftDom.querySelector('.crater-birthday-header-title').css({ color });
+				headerColorCell.querySelector('#color-cell').value = color;
+				headerColorCell.querySelector('#color-cell').setAttribute('value', color);
 			});
-		});
 
-		headerPane.find('#fontFamily-cell').onChanged(value => {
-			draftDom.find('.crater-birthday-header-title').css({ fontFamily: value });
-		});
-
-		headerPane.find('#fontSize-cell').onChanged(value => {
-			draftDom.find('.crater-birthday-header-title').css({ fontSize: value });
-		});
-
-		jobPane.find('#fontFamily-cell').onChanged(value => {
-			draftDom.findAll('.title').forEach(element => {
-				element.css({ fontFamily: value });
+			let headerBackgroundColorCell = headerPane.querySelector('#background-color-cell').parentNode;
+			this.pickColor({ parent: headerBackgroundColorCell, cell: headerBackgroundColorCell.querySelector('#background-color-cell') }, (backgroundColor) => {
+				draftDom.querySelector('.crater-birthday-header').css({ backgroundColor });
+				headerBackgroundColorCell.querySelector('#background-color-cell').value = backgroundColor;
+				headerBackgroundColorCell.querySelector('#background-color-cell').setAttribute('value', backgroundColor);
 			});
-		});
 
-		birthdayPane.find('#fontFamily-cell').onChanged(value => {
-			draftDom.findAll('.birthDate').forEach(element => {
-				element.css({ fontFamily: value });
+			let jobColorCell = jobPane.querySelector('#color-cell').parentNode;
+			this.pickColor({ parent: jobColorCell, cell: jobColorCell.querySelector('#color-cell') }, (color) => {
+				draftDom.querySelectorAll('.title').forEach(element => {
+					element.css({ color });
+				});
+				jobColorCell.querySelector('#color-cell').value = color;
+				jobColorCell.querySelector('#color-cell').setAttribute('value', color);
 			});
-		});
 
-		modeCell.addEventListener('change', event => {
-			let modeDiv = draftDom.findAll('.birthday');
-			switch (modeCell.value.toLowerCase()) {
-				case 'birthday':
-					draftBirthday.mode = modeCell.value;
-					for (let person of draftBirthday.users) {
-						for (let position = 0; position < draftBirthday.users.length; position++) {
-							if ((modeDiv[position]) && (!modeDiv[position].find('.no-users'))) {
-								if (modeDiv[position].getAttribute('divid') === person.id) {
-									modeDiv[position].find('.birthDate').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
+			let birthdayColorCell = birthdayPane.querySelector('#color-cell').parentNode;
+			this.pickColor({ parent: birthdayColorCell, cell: birthdayColorCell.querySelector('#color-cell') }, (color) => {
+				draftDom.querySelectorAll('.birthDate').forEach(element => {
+					element.css({ color });
+				});
+				birthdayColorCell.querySelector('#color-cell').value = color;
+				birthdayColorCell.querySelector('#color-cell').setAttribute('value', color);
+			});
+
+			namePane.querySelector('#fontSize-cell').onChanged(value => {
+				draftDom.querySelectorAll('.personName').forEach(element => {
+					element.css({ fontSize: value });
+				});
+			});
+
+			jobPane.querySelector('#fontSize-cell').onChanged(value => {
+				draftDom.querySelectorAll('.title').forEach(element => {
+					element.css({ fontSize: value });
+				});
+			});
+
+			sectionPane.querySelector('#section-height-cell').onChanged(value => {
+				draftDom.querySelector('.crater-birthday-div').css({ maxHeight: value });
+			});
+
+			headerPane.querySelector('#header-height-cell').onChanged(value => {
+				draftDom.querySelector('.crater-birthday-header').css({ height: value });
+				draftDom.querySelector('.crater-birthday-header-img').css({ height: value });
+				draftDom.querySelector('.crater-birthday-header-img').css({ width: value });
+			});
+
+			birthdayPane.querySelector('#fontSize-cell').onChanged(value => {
+				draftDom.querySelectorAll('.birthDate').forEach(element => {
+					element.css({ fontSize: value });
+				});
+			});
+
+			namePane.querySelector('#fontFamily-cell').onChanged(value => {
+				draftDom.querySelectorAll('.personName').forEach(element => {
+					element.css({ fontFamily: value });
+				});
+			});
+
+			headerPane.querySelector('#fontFamily-cell').onChanged(value => {
+				draftDom.querySelector('.crater-birthday-header-title').css({ fontFamily: value });
+			});
+
+			headerPane.querySelector('#fontSize-cell').onChanged(value => {
+				draftDom.querySelector('.crater-birthday-header-title').css({ fontSize: value });
+			});
+
+			jobPane.querySelector('#fontFamily-cell').onChanged(value => {
+				draftDom.querySelectorAll('.title').forEach(element => {
+					element.css({ fontFamily: value });
+				});
+			});
+
+			birthdayPane.querySelector('#fontFamily-cell').onChanged(value => {
+				draftDom.querySelectorAll('.birthDate').forEach(element => {
+					element.css({ fontFamily: value });
+				});
+			});
+
+			modeCell.addEventListener('change', event => {
+				let modeDiv = draftDom.querySelectorAll('.birthday');
+				switch (modeCell.value.toLowerCase()) {
+					case 'birthday':
+						draftBirthday.mode = modeCell.value;
+						for (let person of draftBirthday.users) {
+							for (let position = 0; position < draftBirthday.users.length; position++) {
+								if ((modeDiv[position]) && (!modeDiv[position].querySelector('.no-users'))) {
+									if (modeDiv[position].getAttribute('divid') === person.id) {
+										modeDiv[position].querySelector('.birthDate').textContent = new Date(person.birthDate).toString().split(`${new Date(person.birthDate).getFullYear()}`)[0];
+									}
 								}
 							}
 						}
-					}
 
-					if (!titlePane.find('.title-settings').find('#Interval-cell').readOnly) {
-						draftBirthday.interval = 999;
-						titlePane.find('.title-settings').find('#Interval-cell').value = draftBirthday.interval;
-						titlePane.find('.title-settings').find('#Interval-cell').readOnly = true;
-					}
-					break;
-				case 'anniversary':
-					draftBirthday.mode = modeCell.value;
-					for (let person of draftBirthday.users) {
-						for (let position = 0; position < draftBirthday.users.length; position++) {
-							if ((modeDiv[position]) && (!modeDiv[position].find('.no-users'))) {
-								if (modeDiv[position].getAttribute('divid') === person.id) {
-									modeDiv[position].find('.birthDate').textContent = person.anniversary;
+						if (!titlePane.querySelector('.title-settings').querySelector('#Interval-cell').readOnly) {
+							draftBirthday.interval = 999;
+							titlePane.querySelector('.title-settings').querySelector('#Interval-cell').value = draftBirthday.interval;
+							titlePane.querySelector('.title-settings').querySelector('#Interval-cell').readOnly = true;
+						}
+						break;
+					case 'anniversary':
+						draftBirthday.mode = modeCell.value;
+						for (let person of draftBirthday.users) {
+							for (let position = 0; position < draftBirthday.users.length; position++) {
+								if ((modeDiv[position]) && (!modeDiv[position].querySelector('.no-users'))) {
+									if (modeDiv[position].getAttribute('divid') === person.id) {
+										modeDiv[position].querySelector('.birthDate').textContent = person.anniversary;
+									}
 								}
 							}
 						}
-					}
-					console.log(draftBirthday.users);
+						console.log(draftBirthday.users);
 
-					if (titlePane.find('.title-settings').find('#Interval-cell').readOnly) {
-						titlePane.find('.title-settings').find('#Interval-cell').value = draftBirthday.interval;
-						titlePane.find('.title-settings').find('#Interval-cell').readOnly = false;
-					}
-
-					break;
-				default:
-					draftBirthday.mode = 'Birthday';
-			}
-		});
-
-		titlePane.find('.title-settings').find('#Interval-cell').onChanged(value => {
-			draftBirthday.interval = parseInt(value);
-		});
-
-		sortCell.addEventListener('change', event => {
-			switch (sortCell.value.toLowerCase()) {
-				case 'name':
-					draftBirthday.sortBy = sortCell.value;
-					break;
-				case 'birthday':
-					draftBirthday.sortBy = sortCell.value;
-					break;
-				case 'anniversary':
-					draftBirthday.sortBy = sortCell.value;
-					break;
-				default:
-					draftBirthday.sortBy = 'birthday';
-			}
-		});
-
-		orderCell.addEventListener('change', event => {
-			switch (orderCell.value.toLowerCase()) {
-				case 'ascending':
-
-					let byDate = (draftBirthday.sortUsers.length !== 0) ? draftBirthday.sortUsers.slice(0) : draftBirthday.users.slice(0);
-
-					byDate.sort((a, b) => {
-						if (draftBirthday.sortBy.toLowerCase() === 'name') {
-							if (a.firstName < b.firstName) return -1;
-							if (b.firstName < a.firstName) return 1;
-							return 0;
+						if (titlePane.querySelector('.title-settings').querySelector('#Interval-cell').readOnly) {
+							titlePane.querySelector('.title-settings').querySelector('#Interval-cell').value = draftBirthday.interval;
+							titlePane.querySelector('.title-settings').querySelector('#Interval-cell').readOnly = false;
 						}
 
-						if (draftBirthday.sortBy.toLowerCase() === 'birthday') {
-							if (new Date(a.birthDate) < new Date(b.birthDate)) return -1;
-							if (new Date(b.birthDate) < new Date(a.birthDate)) return 1;
-							return 0;
-						}
+						break;
+					default:
+						draftBirthday.mode = 'Birthday';
+				}
+			});
 
-						if (draftBirthday.sortBy.toLowerCase() === 'anniversary') {
-							if (new Date(a.hireDate) > new Date(b.hireDate)) return -1;
-							if (new Date(b.hireDate) > new Date(a.hireDate)) return 1;
-							return 0;
-						}
-					});
+			titlePane.querySelector('.title-settings').querySelector('#Interval-cell').onChanged(value => {
+				draftBirthday.interval = parseInt(value);
+			});
 
-					let craterBirthdayDiv = draftDom.find('.crater-birthday-div');
-					let birthdays = craterBirthdayDiv.findAll('.birthday') as any;
-					craterBirthdayDiv.innerHTML = '';
-					const counted = (draftBirthday.count) ? draftBirthday.count : byDate.length;
+			sortCell.addEventListener('change', event => {
+				switch (sortCell.value.toLowerCase()) {
+					case 'name':
+						draftBirthday.sortBy = sortCell.value;
+						break;
+					case 'birthday':
+						draftBirthday.sortBy = sortCell.value;
+						break;
+					case 'anniversary':
+						draftBirthday.sortBy = sortCell.value;
+						break;
+					default:
+						draftBirthday.sortBy = 'birthday';
+				}
+			});
 
-					if (draftBirthday.mode.toLowerCase() === 'anniversary') {
-						if (draftBirthday.interval == 999) {
-							for (let i = 0; i < counted; i++) {
-								const phoneExists = (byDate[i].phone) ? `<a href="tel:${byDate[i].phone}">
+			orderCell.addEventListener('change', event => {
+				switch (orderCell.value.toLowerCase()) {
+					case 'ascending':
+
+						let byDate = (draftBirthday.sortUsers.length !== 0) ? draftBirthday.sortUsers.slice(0) : draftBirthday.users.slice(0);
+
+						byDate.sort((a, b) => {
+							if (draftBirthday.sortBy.toLowerCase() === 'name') {
+								if (a.firstName < b.firstName) return -1;
+								if (b.firstName < a.firstName) return 1;
+								return 0;
+							}
+
+							if (draftBirthday.sortBy.toLowerCase() === 'birthday') {
+								if (new Date(a.birthDate) < new Date(b.birthDate)) return -1;
+								if (new Date(b.birthDate) < new Date(a.birthDate)) return 1;
+								return 0;
+							}
+
+							if (draftBirthday.sortBy.toLowerCase() === 'anniversary') {
+								if (new Date(a.hireDate) > new Date(b.hireDate)) return -1;
+								if (new Date(b.hireDate) > new Date(a.hireDate)) return 1;
+								return 0;
+							}
+						});
+
+						let craterBirthdayDiv = draftDom.querySelector('.crater-birthday-div');
+						let birthdays = craterBirthdayDiv.querySelectorAll('.birthday') as any;
+						craterBirthdayDiv.innerHTML = '';
+						const counted = (draftBirthday.count) ? draftBirthday.count : byDate.length;
+
+						if (draftBirthday.mode.toLowerCase() === 'anniversary') {
+							if (draftBirthday.interval == 999) {
+								for (let i = 0; i < counted; i++) {
+									const phoneExists = (byDate[i].phone) ? `<a href="tel:${byDate[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/call-icon-16876.png"
 								alt=""></a>
 								<a href="sms:${byDate[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/bubble-message-icon-74535.png"
 								alt=""></a>
 								` : '';
-								let craterBirthdayHTML = `
+									let craterBirthdayHTML = `
 							<div class="birthday" divid="${byDate[i].id}">
 								<div class="birthday-image">
 									<img class="name-image1"
@@ -13623,20 +13657,20 @@ class Birthday extends CraterWebParts {
 									</div>
 								</div>
 							</div>`;
-								craterBirthdayDiv.innerHTML += craterBirthdayHTML;
-							}
-						} else {
-							for (let i = 0; i < byDate.length; i++) {
-								const phoneExists = (byDate[i].phone) ? `<a href="tel:${byDate[i].phone}">
+									craterBirthdayDiv.innerHTML += craterBirthdayHTML;
+								}
+							} else {
+								for (let i = 0; i < byDate.length; i++) {
+									const phoneExists = (byDate[i].phone) ? `<a href="tel:${byDate[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/call-icon-16876.png"
 								alt=""></a>
 								<a href="sms:${byDate[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/bubble-message-icon-74535.png"
 								alt=""></a>
 								` : '';
-								if (byDate[i].year === draftBirthday.interval) {
-									console.log('retrieving users where year = ' + draftBirthday.interval + 'inside the code now ascending');
-									let craterBirthdayHTML = `
+									if (byDate[i].year === draftBirthday.interval) {
+										console.log('retrieving users where year = ' + draftBirthday.interval + 'inside the code now ascending');
+										let craterBirthdayHTML = `
 								<div class="birthday" divid="${byDate[i].id}">
 									<div class="birthday-image">
 										<img class="name-image1"
@@ -13658,28 +13692,28 @@ class Birthday extends CraterWebParts {
 									</div>
 								</div>`;
 
-									craterBirthdayDiv.innerHTML += craterBirthdayHTML;
+										craterBirthdayDiv.innerHTML += craterBirthdayHTML;
+									}
 								}
 							}
-						}
-						if (craterBirthdayDiv.innerHTML.length === 0) {
-							let craterBirthdayHTML = `
+							if (craterBirthdayDiv.innerHTML.length === 0) {
+								let craterBirthdayHTML = `
 								<div style="padding:.5em;" class="no-users birthday">
 									<p>Sorry, No users found</p>
 								</div>`;
 
-							craterBirthdayDiv.innerHTML = craterBirthdayHTML;
-						}
-					} else if (draftBirthday.mode.toLowerCase() === 'birthday') {
-						for (let i = 0; i < counted; i++) {
-							const phoneExists = (byDate[i].phone) ? `<a href="tel:${byDate[i].phone}">
+								craterBirthdayDiv.innerHTML = craterBirthdayHTML;
+							}
+						} else if (draftBirthday.mode.toLowerCase() === 'birthday') {
+							for (let i = 0; i < counted; i++) {
+								const phoneExists = (byDate[i].phone) ? `<a href="tel:${byDate[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/call-icon-16876.png"
 								alt=""></a>
 								<a href="sms:${byDate[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/bubble-message-icon-74535.png"
 								alt=""></a>
 								` : '';
-							let craterBirthdayHTML = `<div class="birthday" divid="${byDate[i].id}">
+								let craterBirthdayHTML = `<div class="birthday" divid="${byDate[i].id}">
 							<div class="birthday-image">
 								<img class="name-image1"
 									src=${byDate[i].image}
@@ -13699,51 +13733,51 @@ class Birthday extends CraterWebParts {
 								</div>
 							</div>
 						</div>`;
-							craterBirthdayDiv.innerHTML += craterBirthdayHTML;
+								craterBirthdayDiv.innerHTML += craterBirthdayHTML;
+							}
 						}
-					}
-					break;
+						break;
 
-				case 'descending':
-					let byDate2 = (draftBirthday.sortUsers.length !== 0) ? draftBirthday.sortUsers.slice(0) : draftBirthday.users.slice(0);
+					case 'descending':
+						let byDate2 = (draftBirthday.sortUsers.length !== 0) ? draftBirthday.sortUsers.slice(0) : draftBirthday.users.slice(0);
 
-					byDate2.sort((a, b) => {
-						if (draftBirthday.sortBy.toLowerCase() === 'name') {
-							if (a.firstName > b.firstName) return -1;
-							if (b.firstName > a.firstName) return 1;
-							return 0;
-						}
+						byDate2.sort((a, b) => {
+							if (draftBirthday.sortBy.toLowerCase() === 'name') {
+								if (a.firstName > b.firstName) return -1;
+								if (b.firstName > a.firstName) return 1;
+								return 0;
+							}
 
-						if (draftBirthday.sortBy.toLowerCase() === 'birthday') {
-							if (new Date(a.birthDate) > new Date(b.birthDate)) return -1;
-							if (new Date(b.birthDate) > new Date(a.birthDate)) return 1;
-							return 0;
-						}
+							if (draftBirthday.sortBy.toLowerCase() === 'birthday') {
+								if (new Date(a.birthDate) > new Date(b.birthDate)) return -1;
+								if (new Date(b.birthDate) > new Date(a.birthDate)) return 1;
+								return 0;
+							}
 
-						if (draftBirthday.sortBy.toLowerCase() === 'anniversary') {
-							if (new Date(a.hireDate) < new Date(b.hireDate)) return -1;
-							if (new Date(b.hireDate) < new Date(a.hireDate)) return 1;
-							return 0;
-						}
-					});
+							if (draftBirthday.sortBy.toLowerCase() === 'anniversary') {
+								if (new Date(a.hireDate) < new Date(b.hireDate)) return -1;
+								if (new Date(b.hireDate) < new Date(a.hireDate)) return 1;
+								return 0;
+							}
+						});
 
-					let craterBirthdayDiv2 = draftDom.find('.crater-birthday-div');
+						let craterBirthdayDiv2 = draftDom.querySelector('.crater-birthday-div');
 
-					craterBirthdayDiv2.innerHTML = '';
-					const anotherCount = (draftBirthday.count) ? draftBirthday.count : byDate2.length;
+						craterBirthdayDiv2.innerHTML = '';
+						const anotherCount = (draftBirthday.count) ? draftBirthday.count : byDate2.length;
 
-					if (draftBirthday.mode.toLowerCase() === 'anniversary') {
-						if (draftBirthday.interval == 999) {
-							console.log('mode: ' + draftBirthday.mode, 'descending', draftBirthday.interval);
-							for (let i = 0; i < anotherCount; i++) {
-								const phoneExists = (byDate2[i].phone) ? `<a href="tel:${byDate2[i].phone}">
+						if (draftBirthday.mode.toLowerCase() === 'anniversary') {
+							if (draftBirthday.interval == 999) {
+								console.log('mode: ' + draftBirthday.mode, 'descending', draftBirthday.interval);
+								for (let i = 0; i < anotherCount; i++) {
+									const phoneExists = (byDate2[i].phone) ? `<a href="tel:${byDate2[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/call-icon-16876.png"
 								alt=""></a>
 								<a href="sms:${byDate2[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/bubble-message-icon-74535.png"
 								alt=""></a>
 								` : '';
-								let craterBirthdayHTML2 = `<div class="birthday" divid="${byDate2[i].id}">
+									let craterBirthdayHTML2 = `<div class="birthday" divid="${byDate2[i].id}">
 								<div class="birthday-image">
 									<img class="name-image1"
 										src=${byDate2[i].image}
@@ -13763,19 +13797,19 @@ class Birthday extends CraterWebParts {
 									</div>
 								</div>
 							</div>`;
-								craterBirthdayDiv2.innerHTML += craterBirthdayHTML2;
-							}
-						} else {
-							for (let x = 0; x < anotherCount; x++) {
-								if (byDate2[x].year === draftBirthday.interval) {
-									const phoneExists = (byDate2[x].phone) ? `<a href="tel:${byDate2[x].phone}">
+									craterBirthdayDiv2.innerHTML += craterBirthdayHTML2;
+								}
+							} else {
+								for (let x = 0; x < anotherCount; x++) {
+									if (byDate2[x].year === draftBirthday.interval) {
+										const phoneExists = (byDate2[x].phone) ? `<a href="tel:${byDate2[x].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/call-icon-16876.png"
 								alt=""></a>
 								<a href="sms:${byDate2[x].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/bubble-message-icon-74535.png"
 								alt=""></a>
 								` : '';
-									let craterBirthdayHTML2 = `<div class="birthday" divid="${byDate2[x].id}">
+										let craterBirthdayHTML2 = `<div class="birthday" divid="${byDate2[x].id}">
 									<div class="birthday-image">
 										<img class="name-image1"
 											src=${byDate2[x].image}
@@ -13796,29 +13830,29 @@ class Birthday extends CraterWebParts {
 									</div>
 								</div>`;
 
-									craterBirthdayDiv2.innerHTML += craterBirthdayHTML2;
+										craterBirthdayDiv2.innerHTML += craterBirthdayHTML2;
+									}
 								}
 							}
-						}
-						if (craterBirthdayDiv2.innerHTML.length === 0) {
-							let craterBirthdayHTML2 = `
+							if (craterBirthdayDiv2.innerHTML.length === 0) {
+								let craterBirthdayHTML2 = `
 								<div style="padding:.5em;" class="no-users birthday">
 									<p>Sorry, No users found</p>
 								</div>`;
-							craterBirthdayDiv2.innerHTML = craterBirthdayHTML2;
-						}
+								craterBirthdayDiv2.innerHTML = craterBirthdayHTML2;
+							}
 
-					} else {
-						if (draftBirthday.mode.toLowerCase() === 'birthday') {
-							for (let i = 0; i < anotherCount; i++) {
-								const phoneExists = (byDate2[i].phone) ? `<a href="tel:${byDate2[i].phone}">
+						} else {
+							if (draftBirthday.mode.toLowerCase() === 'birthday') {
+								for (let i = 0; i < anotherCount; i++) {
+									const phoneExists = (byDate2[i].phone) ? `<a href="tel:${byDate2[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/call-icon-16876.png"
 								alt=""></a>
 								<a href="sms:${byDate2[i].phone}">
 							<img class="img" src="http://www.free-icons-download.net/images/bubble-message-icon-74535.png"
 								alt=""></a>
 								` : '';
-								let craterBirthdayHTML2 = `<div class="birthday" divid="${byDate2[i].id}">
+									let craterBirthdayHTML2 = `<div class="birthday" divid="${byDate2[i].id}">
 								<div class="birthday-image">
 									<img class="name-image1"
 										src=${byDate2[i].image}
@@ -13838,147 +13872,177 @@ class Birthday extends CraterWebParts {
 									</div>
 								</div>
 							</div>`;
-								craterBirthdayDiv2.innerHTML += craterBirthdayHTML2;
+									craterBirthdayDiv2.innerHTML += craterBirthdayHTML2;
+								}
 							}
 						}
-					}
 
-					break;
-			}
-		});
-
-		count.onChanged(value => {
-			if (typeof value === "number") draftBirthday.count = value;
-			else if (typeof value === "string") draftBirthday.count = parseInt(value);
-		});
-
-		let addDays = (givenDate) => {
-			let date = new Date(Number(new Date()));
-			date.setDate(date.getDate() + parseInt(givenDate));
-			return date;
-		};
-
-		let subtractDays = (givenDate) => {
-			let date = new Date(Number(new Date()));
-			date.setDate(date.getDate() - parseInt(givenDate));
-			return date;
-		};
-
-		let sortArrayAsc = (arrayToPush, array, numberCount) => {
-			array.sort((a, b) => {
-				if (a.newBirthDate < b.newBirthDate) return -1;
-				if (b.newBirthDate < a.newBirthDate) return 1;
+						break;
+				}
 			});
 
-			for (let i = 0; i < numberCount; i++) {
-				if (arrayToPush.length === 0) {
-					arrayToPush.push(array[i]);
-				} else {
-					if (arrayToPush.indexOf(array[i]) === -1) {
-						arrayToPush.push(array[i]);
-					}
-				}
-			}
-		};
-
-		let sortArrayDes = (arrayToPush, array, numberCount) => {
-			array.sort((a, b) => {
-				if (a.newBirthDate > b.newBirthDate) return -1;
-				if (b.newBirthDate > a.newBirthDate) return 1;
+			count.onChanged(value => {
+				if (typeof value === "number") draftBirthday.count = value;
+				else if (typeof value === "string") draftBirthday.count = parseInt(value);
 			});
 
-			for (let i = 0; i < numberCount; i++) {
-				if (arrayToPush.length === 0) {
-					arrayToPush.push(array[i]);
-				} else {
-					if (arrayToPush.indexOf(array[i]) === -1) {
+			let addDays = (givenDate) => {
+				let date = new Date(Number(new Date()));
+				date.setDate(date.getDate() + parseInt(givenDate));
+				return date;
+			};
+
+			let subtractDays = (givenDate) => {
+				let date = new Date(Number(new Date()));
+				date.setDate(date.getDate() - parseInt(givenDate));
+				return date;
+			};
+
+			let sortArrayAsc = (arrayToPush, array, numberCount) => {
+				array.sort((a, b) => {
+					if (a.newBirthDate < b.newBirthDate) return -1;
+					if (b.newBirthDate < a.newBirthDate) return 1;
+				});
+
+				for (let i = 0; i < numberCount; i++) {
+					if (arrayToPush.length === 0) {
 						arrayToPush.push(array[i]);
-					}
-				}
-			}
-		};
-
-		future.addEventListener('change', e => {
-			let value = future.value;
-
-			if (draftBirthday.mode.toLowerCase() === 'birthday') {
-				draftBirthday.beforeYear = parseInt(value);
-				let futureSort = [];
-				for (let z = 0; z < draftBirthday.users.length; z++) {
-					let birthMonth = new Date(draftBirthday.users[z].birthDate).getMonth() + 1;
-					let userBirthDate = new Date(draftBirthday.users[z].birthDate).getDate();
-					let newBirthDate = new Date(`${birthMonth}/${userBirthDate}/${new Date().getFullYear()}`);
-					draftBirthday.users[z].newBirthDate = newBirthDate;
-
-					if ((draftBirthday.users[z].newBirthDate <= new Date(`12/31/${new Date().getFullYear()}`)) && (draftBirthday.users[z].newBirthDate >= new Date())) {
-						if (futureSort.length === 0) {
-							futureSort.push(draftBirthday.users[z]);
-						} else {
-							if (futureSort.indexOf(draftBirthday.users[z]) === -1) {
-								futureSort.push(draftBirthday.users[z]);
-							}
+					} else {
+						if (arrayToPush.indexOf(array[i]) === -1) {
+							arrayToPush.push(array[i]);
 						}
 					}
 				}
+			};
 
-				sortArrayAsc(draftBirthday.sortUsers, futureSort, parseInt(value));
-			}
+			let sortArrayDes = (arrayToPush, array, numberCount) => {
+				array.sort((a, b) => {
+					if (a.newBirthDate > b.newBirthDate) return -1;
+					if (b.newBirthDate > a.newBirthDate) return 1;
+				});
 
-			if (draftBirthday.mode.toLowerCase() === 'anniversary') {
-				draftBirthday.beforeYear = parseInt(value);
-				let futureSort = [];
-				for (let z = 0; z < draftBirthday.users.length; z++) {
-					let date = new Date();
-					//@ts-ignore
-					let personHireDate = new Date(draftBirthday.users[z].hireDate);
-					let timeLeft = date.getTime() - personHireDate.getTime();
-
-					let daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-					let hoursLeft = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-					let minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-					let secondsLeft = Math.floor((timeLeft % (1000 * 60)) / (1000));
-
-					draftBirthday.users[z].newBirthDate = this.getDAYS(daysLeft).year;
-					if (this.getDAYS(daysLeft).month >= 5) {
-						if (futureSort.length === 0) {
-							futureSort.push(draftBirthday.users[z]);
-						} else {
-							if (futureSort.indexOf(draftBirthday.users[z]) === -1) {
-								futureSort.push(draftBirthday.users[z]);
-							}
+				for (let i = 0; i < numberCount; i++) {
+					if (arrayToPush.length === 0) {
+						arrayToPush.push(array[i]);
+					} else {
+						if (arrayToPush.indexOf(array[i]) === -1) {
+							arrayToPush.push(array[i]);
 						}
 					}
 				}
+			};
 
-				sortArrayDes(draftBirthday.sortUsers, futureSort, parseInt(value));
-			}
-		});
+			future.addEventListener('change', e => {
+				let value = future.value;
 
-		past.addEventListener('change', e => {
-			let value = past.value;
+				if (draftBirthday.mode.toLowerCase() === 'birthday') {
+					draftBirthday.beforeYear = parseInt(value);
+					let futureSort = [];
+					for (let z = 0; z < draftBirthday.users.length; z++) {
+						let birthMonth = new Date(draftBirthday.users[z].birthDate).getMonth() + 1;
+						let userBirthDate = new Date(draftBirthday.users[z].birthDate).getDate();
+						let newBirthDate = new Date(`${birthMonth}/${userBirthDate}/${new Date().getFullYear()}`);
+						draftBirthday.users[z].newBirthDate = newBirthDate;
 
-			if (draftBirthday.mode.toLowerCase() === 'birthday') {
-				draftBirthday.endAnniversaryAfter = parseInt(value);
+						if ((draftBirthday.users[z].newBirthDate <= new Date(`12/31/${new Date().getFullYear()}`)) && (draftBirthday.users[z].newBirthDate >= new Date())) {
+							if (futureSort.length === 0) {
+								futureSort.push(draftBirthday.users[z]);
+							} else {
+								if (futureSort.indexOf(draftBirthday.users[z]) === -1) {
+									futureSort.push(draftBirthday.users[z]);
+								}
+							}
+						}
+					}
 
-				let pastSort = [];
-				for (let z = 0; z < draftBirthday.users.length; z++) {
-					let birthMonth = new Date(draftBirthday.users[z].birthDate).getMonth() + 1;
-					let userBirthDate = new Date(draftBirthday.users[z].birthDate).getDate();
-					let newBirthDate = new Date(`${birthMonth}/${userBirthDate}/${new Date().getFullYear()}`);
-					draftBirthday.users[z].newBirthDate = newBirthDate;
+					sortArrayAsc(draftBirthday.sortUsers, futureSort, parseInt(value));
+				}
 
-					if ((draftBirthday.users[z].newBirthDate <= new Date()) && (draftBirthday.users[z].newBirthDate >= new Date(`01/01/${new Date().getFullYear()}`))) {
-						if (pastSort.length === 0) {
-							pastSort.push(draftBirthday.users[z]);
-						} else {
-							if (pastSort.indexOf(draftBirthday.users[z]) === -1) {
+				if (draftBirthday.mode.toLowerCase() === 'anniversary') {
+					draftBirthday.beforeYear = parseInt(value);
+					let futureSort = [];
+					for (let z = 0; z < draftBirthday.users.length; z++) {
+						let date = new Date();
+						//@ts-ignore
+						let personHireDate = new Date(draftBirthday.users[z].hireDate);
+						let timeLeft = date.getTime() - personHireDate.getTime();
+
+						let daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+						let hoursLeft = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+						let minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+						let secondsLeft = Math.floor((timeLeft % (1000 * 60)) / (1000));
+
+						draftBirthday.users[z].newBirthDate = this.getDAYS(daysLeft).year;
+						if (this.getDAYS(daysLeft).month >= 5) {
+							if (futureSort.length === 0) {
+								futureSort.push(draftBirthday.users[z]);
+							} else {
+								if (futureSort.indexOf(draftBirthday.users[z]) === -1) {
+									futureSort.push(draftBirthday.users[z]);
+								}
+							}
+						}
+					}
+
+					sortArrayDes(draftBirthday.sortUsers, futureSort, parseInt(value));
+				}
+			});
+
+			past.addEventListener('change', e => {
+				let value = past.value;
+
+				if (draftBirthday.mode.toLowerCase() === 'birthday') {
+					draftBirthday.endAnniversaryAfter = parseInt(value);
+
+					let pastSort = [];
+					for (let z = 0; z < draftBirthday.users.length; z++) {
+						let birthMonth = new Date(draftBirthday.users[z].birthDate).getMonth() + 1;
+						let userBirthDate = new Date(draftBirthday.users[z].birthDate).getDate();
+						let newBirthDate = new Date(`${birthMonth}/${userBirthDate}/${new Date().getFullYear()}`);
+						draftBirthday.users[z].newBirthDate = newBirthDate;
+
+						if ((draftBirthday.users[z].newBirthDate <= new Date()) && (draftBirthday.users[z].newBirthDate >= new Date(`01/01/${new Date().getFullYear()}`))) {
+							if (pastSort.length === 0) {
 								pastSort.push(draftBirthday.users[z]);
+							} else {
+								if (pastSort.indexOf(draftBirthday.users[z]) === -1) {
+									pastSort.push(draftBirthday.users[z]);
+								}
+							}
+						}
+
+						if (pastSort.length === 0) {
+							if ((draftBirthday.users[z].newBirthDate <= new Date()) && (draftBirthday.users[z].newBirthDate >= new Date(`01/01/${new Date().getFullYear() - 1}`))) {
+								if (pastSort.length === 0) {
+									pastSort.push(draftBirthday.users[z]);
+								} else {
+									if (pastSort.indexOf(draftBirthday.users[z]) === -1) {
+										pastSort.push(draftBirthday.users[z]);
+									}
+								}
 							}
 						}
 					}
 
-					if (pastSort.length === 0) {
-						if ((draftBirthday.users[z].newBirthDate <= new Date()) && (draftBirthday.users[z].newBirthDate >= new Date(`01/01/${new Date().getFullYear() - 1}`))) {
+					sortArrayDes(draftBirthday.sortUsers, pastSort, parseInt(value));
+				}
+
+				if (draftBirthday.mode.toLowerCase() === 'anniversary') {
+					draftBirthday.beforeYear = parseInt(value);
+					let pastSort = [];
+					for (let z = 0; z < draftBirthday.users.length; z++) {
+						let date = new Date();
+						//@ts-ignore
+						let personHireDate = new Date(draftBirthday.users[z].hireDate);
+						let timeLeft = date.getTime() - personHireDate.getTime();
+
+						let daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+						let hoursLeft = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+						let minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+						let secondsLeft = Math.floor((timeLeft % (1000 * 60)) / (1000));
+
+						draftBirthday.users[z].newBirthDate = this.getDAYS(daysLeft).year;
+						if (this.getDAYS(daysLeft).month < 5) {
 							if (pastSort.length === 0) {
 								pastSort.push(draftBirthday.users[z]);
 							} else {
@@ -13988,69 +14052,40 @@ class Birthday extends CraterWebParts {
 							}
 						}
 					}
+
+					sortArrayDes(draftBirthday.sortUsers, pastSort, parseInt(value));
 				}
+			});
 
-				sortArrayDes(draftBirthday.sortUsers, pastSort, parseInt(value));
-			}
-
-			if (draftBirthday.mode.toLowerCase() === 'anniversary') {
-				draftBirthday.beforeYear = parseInt(value);
-				let pastSort = [];
-				for (let z = 0; z < draftBirthday.users.length; z++) {
-					let date = new Date();
-					//@ts-ignore
-					let personHireDate = new Date(draftBirthday.users[z].hireDate);
-					let timeLeft = date.getTime() - personHireDate.getTime();
-
-					let daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-					let hoursLeft = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-					let minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-					let secondsLeft = Math.floor((timeLeft % (1000 * 60)) / (1000));
-
-					draftBirthday.users[z].newBirthDate = this.getDAYS(daysLeft).year;
-					if (this.getDAYS(daysLeft).month < 5) {
-						if (pastSort.length === 0) {
-							pastSort.push(draftBirthday.users[z]);
-						} else {
-							if (pastSort.indexOf(draftBirthday.users[z]) === -1) {
-								pastSort.push(draftBirthday.users[z]);
-							}
+			this.paneContent.querySelector('.update-pane').querySelector('#fetch-birthday').addEventListener('click', event => {
+				try {
+					draftBirthday.fetched = false;
+					this.paneContent.querySelector('#update-message').textContent = 'Fetching directory now... Please wait';
+					this.paneContent.querySelector('#fetch-birthday').render({
+						element: 'img', attributes: { class: 'birthday-loading-image crater-icon', src: this.sharePoint.images.loading, style: { width: '20px', height: '20px' } }
+					});
+					setTimeout(() => {
+						if (draftBirthday.fetched) {
+							this.paneContent.querySelector('#update-message').textContent = 'Directory Updated! Sort the list to view it';
+							this.paneContent.querySelector('#fetch-birthday').innerHTML = 'UPDATED';
 						}
-					}
+					}, 7000);
+					this.getUser();
+				} catch (error) {
+					console.log(error.message);
 				}
+			});
 
-				sortArrayDes(draftBirthday.sortUsers, pastSort, parseInt(value));
-			}
-		});
-
-		this.paneContent.find('.update-pane').find('#fetch-birthday').addEventListener('click', event => {
-			try {
-				draftBirthday.fetched = false;
-				this.paneContent.find('#update-message').textContent = 'Fetching directory now... Please wait';
-				this.paneContent.find('#fetch-birthday').render({
-					element: 'img', attributes: { class: 'birthday-loading-image crater-icon', src: this.sharePoint.images.loading, style: { width: '20px', height: '20px' } }
-				});
-				setTimeout(() => {
-					if (draftBirthday.fetched) {
-						this.paneContent.find('#update-message').textContent = 'Directory Updated! Sort the list to view it';
-						this.paneContent.find('#fetch-birthday').innerHTML = 'UPDATED';
-					}
-				}, 7000);
-				this.getUser();
-			} catch (error) {
-				console.log(error.message);
-			}
-		});
-
+		}
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
-		this.paneContent.getParents('.crater-edit-window').find('#crater-editor-save').addEventListener('click', event => {
+		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = draftDom.innerHTML;
 			this.element.css(draftDom.css());
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;
 		});
 	}
 }
@@ -14070,7 +14105,7 @@ class Twitter extends CraterWebParts {
 
 	public render(params) {
 		let twitter = this.createKeyedElement({
-			element: 'div', attributes: { class: 'crater-twitter crater-component', 'data-type': 'twitter' }, children: [
+			element: 'div', attributes: { class: 'crater-twitter crater-component', 'data-type': 'twitter', style: { maxHeight: '500px' } }, children: [
 				{ element: 'div', attributes: { class: 'crater-twitter-feed' } }
 			]
 		});
@@ -14078,7 +14113,7 @@ class Twitter extends CraterWebParts {
 
 		this.key = twitter.dataset.key;
 
-		this.sharePoint.properties.pane.content[this.key].settings.twitter = {
+		this.sharePoint.storage.pane.content[this.key].settings.twitter = {
 			'data-width': '1000',
 			'data-height': '500',
 			'data-link-color': '#d6ff27',
@@ -14099,11 +14134,11 @@ class Twitter extends CraterWebParts {
 	}
 
 	public runTwitter() {
-		let twitterObj = this.sharePoint.properties.pane.content[this.key].settings.twitter;
+		let twitterObj = this.sharePoint.storage.pane.content[this.key].settings.twitter;
 		let self = this;
 
 		if (twitterObj['data-tweet-limit']) {
-			this.element.style.maxHeight = twitterObj['data-height'];
+			this.element.style.maxHeight = `${twitterObj['data-height']}px`;
 		} else {
 			this.element.style.maxHeight = '100%';
 		}
@@ -14193,17 +14228,17 @@ class Twitter extends CraterWebParts {
 
 	public setUpPaneContent(params) {
 		let key = params.element.dataset['key'];
-		this.element = this.sharePoint.properties.pane.content[key].draft.dom;
+		this.element = this.sharePoint.storage.pane.content[key].draft.dom;
 		this.paneContent = this.elementModifier.createElement({
 			element: 'div', attributes: { class: 'crater-property-content' }
 		}).monitor();
-		let twitterObj = this.sharePoint.properties.pane.content[key].settings.twitter;
+		let twitterObj = this.sharePoint.storage.pane.content[key].settings.twitter;
 
-		if (this.sharePoint.properties.pane.content[key].draft.pane.content.length !== 0) {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].draft.pane.content;
+		if (this.sharePoint.storage.pane.content[key].draft.pane.content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].draft.pane.content;
 		}
-		else if (this.sharePoint.properties.pane.content[key].content.length !== 0) {
-			this.paneContent.innerHTML = this.sharePoint.properties.pane.content[key].content;
+		else if (this.sharePoint.storage.pane.content[key].content.length !== 0) {
+			this.paneContent.innerHTML = this.sharePoint.storage.pane.content[key].content;
 		} else {
 
 			this.paneContent.makeElement({
@@ -14275,8 +14310,8 @@ class Twitter extends CraterWebParts {
 		this.element = params.element;
 		this.key = this.element.dataset['key'];
 		this.paneContent = this.sharePoint.app.querySelector('.crater-property-content').monitor();
-		let draftDom = this.sharePoint.properties.pane.content[this.key].draft.dom;
-		let twitterObj = this.sharePoint.properties.pane.content[this.key].settings.twitter;
+		let draftDom = this.sharePoint.storage.pane.content[this.key].draft.dom;
+		let twitterObj = this.sharePoint.storage.pane.content[this.key].settings.twitter;
 
 		let twitterOptions = this.paneContent.querySelector('.twitter-options-pane');
 		let twitterSize = this.paneContent.querySelector('.twitter-size-pane');
@@ -14310,14 +14345,14 @@ class Twitter extends CraterWebParts {
 		});
 
 		this.paneContent.addEventListener('mutated', event => {
-			this.sharePoint.properties.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
-			this.sharePoint.properties.pane.content[this.key].draft.html = this.sharePoint.properties.pane.content[this.key].draft.dom.outerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.pane.content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].draft.html = this.sharePoint.storage.pane.content[this.key].draft.dom.outerHTML;
 		});
 
 		this.paneContent.getParents('.crater-edit-window').querySelector('#crater-editor-save').addEventListener('click', event => {
 			this.element.innerHTML = draftDom.innerHTML;
 			this.element.css(draftDom.css());
-			this.sharePoint.properties.pane.content[this.key].content = this.paneContent.innerHTML;
+			this.sharePoint.storage.pane.content[this.key].content = this.paneContent.innerHTML;
 		});
 	}
 }
@@ -14338,9 +14373,9 @@ class Twitter extends CraterWebParts {
 		return employeeDirectory[params.action](params);
 	};
 
-	CraterWebParts.prototype['power'] = params => {
-		let power = new Power({ sharePoint: params.sharePoint });
-		return power[params.action](params);
+	CraterWebParts.prototype['powerbi'] = params => {
+		let powerbi = new PowerBI({ sharePoint: params.sharePoint });
+		return powerbi[params.action](params);
 	};
 
 	CraterWebParts.prototype['event'] = params => {
@@ -14398,9 +14433,9 @@ class Twitter extends CraterWebParts {
 		return countdown[params.action](params);
 	};
 
-	CraterWebParts.prototype['button'] = params => {
-		let button = new Button({ sharePoint: params.sharePoint });
-		return button[params.action](params);
+	CraterWebParts.prototype['buttons'] = params => {
+		let buttons = new Buttons({ sharePoint: params.sharePoint });
+		return buttons[params.action](params);
 	};
 
 	CraterWebParts.prototype['icons'] = params => {

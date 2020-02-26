@@ -1,5 +1,5 @@
 import { ElementModifier } from "./ElementModifier";
-import func from "./func";
+import { Func } from './Func';
 import { PropertyPane } from "./PropertyPane";
 import { CraterWebParts } from "./CraterWebParts";
 import { ColorPicker } from "./ColorPicker";
@@ -14,5 +14,5 @@ require('./../styles/animations.css');
 require('./../styles/root.css');
 
 export {
-    ElementModifier, func, PropertyPane, CraterWebParts, ColorPicker, Connection, BaseClientSideWebPart, Images
+    ElementModifier, Func, PropertyPane, CraterWebParts, ColorPicker, Connection, BaseClientSideWebPart, Images
 };

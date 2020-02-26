@@ -52,7 +52,7 @@
     text-align: center;
     flex-direction: column;
     position: relative;
-    min-height: 80px;
+    min-height: 100px;
     overflow: auto;
 }
 

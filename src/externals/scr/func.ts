@@ -791,6 +791,32 @@ class Func {
 		return arr;
 	}
 
+	public onObjectChanged = (obj, callback) => {
+		const handler = {
+			get(target, property, receiver) {
+				try {
+					// @ts-ignore
+					return new Proxy(target[property], handler);
+				} catch (err) {
+					// @ts-ignore
+					return Reflect.get(target, property, receiver);
+				}
+			},
+			defineProperty(target, property, descriptor) {
+				callback();
+				// @ts-ignore
+				return Reflect.defineProperty(target, property, descriptor);
+			},
+			deleteProperty(target, property) {
+				callback();
+				// @ts-ignore
+				return Reflect.deleteProperty(target, property);
+			}
+		};
+		// @ts-ignore
+		return new Proxy(obj, handler);
+	}
+
 	public async runParallel(functions, callBack) {
 		var results = {};
 		for (var f in functions) {
@@ -825,6 +851,4 @@ class Func {
 	}
 }
 
-let func = new Func();
-
-export default func;
+export { Func };

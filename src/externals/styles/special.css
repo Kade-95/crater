@@ -134,3 +134,17 @@
     grid-template-columns: repeat(3, max-content);
     justify-content: left;
 }
+
+.crater ::-webkit-scrollbar {
+    width: 2px;
+    height: 5px;
+}
+
+.crater ::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+}
+
+.crater ::-webkit-scrollbar-thumb:hover {
+    background: var(--light-accient-color);
+    transition-duration: .5s;
+}
